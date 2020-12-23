@@ -44,6 +44,12 @@ namespace DvMod.ZSounds
                     Terminal.Log(GetPath(component));
             });
 
+            Register("zsounds.dumpSteamAudio", _ =>
+            {
+                foreach (var component in Component.FindObjectsOfType<LocoAudioSteam>())
+                    Terminal.Log(GetPath(component));
+            });
+
             Register("zsounds.resetDieselAudio", _ =>
             {
                 if (PlayerManager.Car?.carType != TrainCarType.LocoDiesel)

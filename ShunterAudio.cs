@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace DvMod.ZSounds
 {
-    public static class DieselAudio
+    public static class ShunterAudio
     {
         private static float originalMinPitch;
         private static float originalMaxPitch;
@@ -25,7 +25,7 @@ namespace DvMod.ZSounds
             }
         }
 
-        public static void ResetAudio(LocoAudioDiesel __instance)
+        public static void ResetAudio(LocoAudioShunter __instance)
         {
             var engineAudio = __instance.engineAudio;
             if (originalMinPitch == default)
@@ -36,29 +36,29 @@ namespace DvMod.ZSounds
                 originalEngineOffClip = __instance.engineOffClip;
             }
 
-            if (Main.settings.dieselStartupSound != null)
-                __instance.engineOnClip = FileAudio.Load(Main.settings.dieselStartupSound);
+            if (Main.settings.shunterStartupSound != null)
+                __instance.engineOnClip = FileAudio.Load(Main.settings.shunterStartupSound);
             else
                 __instance.engineOnClip = originalEngineOnClip;
 
-            SetEngineClip(engineAudio, Main.settings.dieselEngineSound, Main.settings.dieselEnginePitch);
+            SetEngineClip(engineAudio, Main.settings.shunterEngineSound, Main.settings.shunterEnginePitch);
 
-            if (Main.settings.dieselShutdownSound != null)
-                __instance.engineOffClip = FileAudio.Load(Main.settings.dieselShutdownSound);
+            if (Main.settings.shunterShutdownSound != null)
+                __instance.engineOffClip = FileAudio.Load(Main.settings.shunterShutdownSound);
             else
                 __instance.engineOffClip = originalEngineOffClip;
         }
 
         public static void ResetAllAudio()
         {
-            foreach (var audio in Component.FindObjectsOfType<LocoAudioDiesel>())
+            foreach (var audio in Component.FindObjectsOfType<LocoAudioShunter>())
                 ResetAudio(audio);
         }
 
-        [HarmonyPatch(typeof(LocoAudioDiesel), nameof(LocoAudioDiesel.SetupForCar))]
+        [HarmonyPatch(typeof(LocoAudioShunter), nameof(LocoAudioShunter.SetupForCar))]
         public static class SetupForCarPatch
         {
-            public static void Postfix(LocoAudioDiesel __instance)
+            public static void Postfix(LocoAudioShunter __instance)
             {
                 ResetAudio(__instance);
             }

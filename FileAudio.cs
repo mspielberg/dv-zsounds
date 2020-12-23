@@ -22,11 +22,11 @@ namespace DvMod.ZSounds
 
         private static readonly Dictionary<string, AudioType> AudioTypes = new Dictionary<string, AudioType>()
         {
-            {"aif", AudioType.AIFF},
-            {"aiff", AudioType.AIFF},
-            {"mp3", AudioType.MPEG},
-            {"ogg", AudioType.OGGVORBIS},
-            {"wav", AudioType.WAV},
+            {".aif", AudioType.AIFF},
+            {".aiff", AudioType.AIFF},
+            {".mp3", AudioType.MPEG},
+            {".ogg", AudioType.OGGVORBIS},
+            {".wav", AudioType.WAV},
         };
     }
 }
