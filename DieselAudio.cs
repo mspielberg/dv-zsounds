@@ -9,6 +9,7 @@ namespace DvMod.ZSounds
         private static float originalMaxPitch;
         private static AudioClip? originalEngineOnClip;
         private static AudioClip? originalEngineOffClip;
+        private static AudioClip? originalHornHitClip;
 
         public static void SetEngineClip(LayeredAudio engineAudio, string? name, float startPitch)
         {
@@ -25,6 +26,19 @@ namespace DvMod.ZSounds
             }
         }
 
+        private static AudioSource GetHornHitSource(LayeredAudio hornAudio)
+        {
+            return hornAudio.transform.Find("train_horn_01_hit").GetComponent<AudioSource>();
+        }
+
+        private static void SetHornHit(LayeredAudio hornAudio, string? name)
+        {
+            if (name == null)
+                GetHornHitSource(hornAudio).clip = originalHornHitClip;
+            else
+                GetHornHitSource(hornAudio).clip = FileAudio.Load(name);
+        }
+
         public static void ResetAudio(LocoAudioDiesel __instance)
         {
             var engineAudio = __instance.engineAudio;
@@ -34,6 +48,7 @@ namespace DvMod.ZSounds
                 originalMaxPitch = engineAudio.maxPitch;
                 originalEngineOnClip = __instance.engineOnClip;
                 originalEngineOffClip = __instance.engineOffClip;
+                originalHornHitClip = GetHornHitSource(__instance.hornAudio).clip;
             }
 
             if (Main.settings.dieselStartupSound != null)
@@ -47,6 +62,9 @@ namespace DvMod.ZSounds
                 __instance.engineOffClip = FileAudio.Load(Main.settings.dieselShutdownSound);
             else
                 __instance.engineOffClip = originalEngineOffClip;
+
+            SetHornHit(__instance.hornAudio, Main.settings.dieselHornHitSound);
+            LayeredAudioUtils.SetClip(__instance.hornAudio, Main.settings.dieselHornLoopSound, Main.settings.dieselHornPitch);
         }
 
         public static void ResetAllAudio()

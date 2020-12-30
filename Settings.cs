@@ -16,11 +16,17 @@ namespace DvMod.ZSounds
         public string? shunterEngineSound = null;
         public float shunterEnginePitch = 1;
         public string? shunterShutdownSound = null;
+        public string? shunterHornHitSound = null;
+        public string? shunterHornLoopSound = null;
+        public float shunterHornPitch = 1;
 
-        public string? dieselStartupSound = null;
+        public string? dieselStartupSound = "EMD_SD70ACe_Startup.ogg";
         public string? dieselEngineSound = "EMD_567C.ogg";
         public float dieselEnginePitch = 1;
         public string? dieselShutdownSound = null;
+        public string? dieselHornHitSound = "Leslie_A200_Hit.ogg";
+        public string? dieselHornLoopSound = "Leslie_A200_Loop.ogg";
+        public float dieselHornPitch = 1;
 
         public string? steamWhistleSound = "Manns_Creek_3_Chime.ogg";
         public float steamWhistlePitch = 1;
@@ -63,10 +69,13 @@ namespace DvMod.ZSounds
             changed |= DrawSoundSelector("DE2 startup", ref shunterStartupSound);
             changed |= DrawSoundSelector("DE2 engine", ref shunterEnginePitch, ref shunterEngineSound);
             changed |= DrawSoundSelector("DE2 shutdown", ref shunterShutdownSound);
+            changed |= DrawSoundSelector("DE2 horn", ref shunterHornPitch, ref shunterHornLoopSound);
 
             changed |= DrawSoundSelector("DE6 startup", ref dieselStartupSound);
             changed |= DrawSoundSelector("DE6 engine", ref dieselEnginePitch, ref dieselEngineSound);
             changed |= DrawSoundSelector("DE6 shutdown", ref dieselShutdownSound);
+            changed |= DrawSoundSelector("DE6 horn hit", ref dieselHornHitSound);
+            changed |= DrawSoundSelector("DE6 horn loop", ref dieselHornPitch, ref dieselHornLoopSound);
 
             changed |= DrawSoundSelector("SH282 whistle", ref steamWhistlePitch, ref steamWhistleSound);
 

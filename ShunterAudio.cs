@@ -5,35 +5,36 @@ namespace DvMod.ZSounds
 {
     public static class ShunterAudio
     {
-        private static float originalMinPitch;
-        private static float originalMaxPitch;
         private static AudioClip? originalEngineOnClip;
         private static AudioClip? originalEngineOffClip;
+        private static AudioClip? originalHornHitClip;
 
         public static void SetEngineClip(LayeredAudio engineAudio, string? name, float startPitch)
         {
             LayeredAudioUtils.SetClip(engineAudio, name, startPitch);
+        }
+
+        private static AudioSource GetHornHitSource(LayeredAudio hornAudio)
+        {
+            return hornAudio.transform.Find("train_horn_01_hit").GetComponent<AudioSource>();
+        }
+
+        private static void SetHornHit(LayeredAudio hornAudio, string? name)
+        {
             if (name == null)
-            {
-                engineAudio.minPitch = originalMinPitch;
-                engineAudio.maxPitch = originalMaxPitch;
-            }
+                GetHornHitSource(hornAudio).clip = originalHornHitClip;
             else
-            {
-                engineAudio.minPitch = 275f / 575f;
-                engineAudio.maxPitch = 825f / 575f;
-            }
+                GetHornHitSource(hornAudio).clip = FileAudio.Load(name);
         }
 
         public static void ResetAudio(LocoAudioShunter __instance)
         {
             var engineAudio = __instance.engineAudio;
-            if (originalMinPitch == default)
+            if (originalEngineOnClip == default)
             {
-                originalMinPitch = engineAudio.minPitch;
-                originalMaxPitch = engineAudio.maxPitch;
                 originalEngineOnClip = __instance.engineOnClip;
                 originalEngineOffClip = __instance.engineOffClip;
+                originalHornHitClip = GetHornHitSource(__instance.hornAudio).clip;
             }
 
             if (Main.settings.shunterStartupSound != null)
@@ -47,6 +48,9 @@ namespace DvMod.ZSounds
                 __instance.engineOffClip = FileAudio.Load(Main.settings.shunterShutdownSound);
             else
                 __instance.engineOffClip = originalEngineOffClip;
+
+            SetHornHit(__instance.hornAudio, Main.settings.dieselHornHitSound);
+            LayeredAudioUtils.SetClip(__instance.hornAudio, Main.settings.shunterHornLoopSound, Main.settings.shunterHornPitch);
         }
 
         public static void ResetAllAudio()
