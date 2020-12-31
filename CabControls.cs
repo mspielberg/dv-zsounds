@@ -15,7 +15,7 @@ namespace DvMod.ZSounds
                 if (spec.name == "C horn" && spec is Lever leverSpec)
                 {
                     if (leverSpec.jointDamper == 3) // DE6
-                        leverSpec.jointDamper = 4.5f;
+                        leverSpec.jointDamper = 5f;
                 }
             }
         }
