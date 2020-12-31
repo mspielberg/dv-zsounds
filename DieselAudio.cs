@@ -13,7 +13,7 @@ namespace DvMod.ZSounds
 
         public static void SetEngineClip(LayeredAudio engineAudio, string? name, float startPitch)
         {
-            LayeredAudioUtils.SetClip(engineAudio, name, startPitch);
+            AudioUtils.SetClip("DE6 engine loop", engineAudio, name, startPitch);
             if (name == null)
             {
                 engineAudio.minPitch = originalMinPitch;
@@ -64,7 +64,11 @@ namespace DvMod.ZSounds
                 __instance.engineOffClip = originalEngineOffClip;
 
             SetHornHit(__instance.hornAudio, Main.settings.dieselHornHitSound);
-            LayeredAudioUtils.SetClip(__instance.hornAudio, Main.settings.dieselHornLoopSound, Main.settings.dieselHornPitch);
+            AudioUtils.SetClip(
+                "DE6 horn loop",
+                __instance.hornAudio,
+                Main.settings.dieselHornLoopSound,
+                Main.settings.dieselHornPitch);
         }
 
         public static void ResetAllAudio()

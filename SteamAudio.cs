@@ -7,7 +7,11 @@ namespace DvMod.ZSounds
     {
         public static void ResetAudio(LocoAudioSteam __instance)
         {
-            LayeredAudioUtils.SetClip(__instance.whistleAudio, Main.settings.steamWhistleSound, Main.settings.steamWhistlePitch);
+            AudioUtils.SetClip(
+                "SH282 whistle",
+                __instance.whistleAudio,
+                Main.settings.steamWhistleSound,
+                Main.settings.steamWhistlePitch);
         }
 
         public static void ResetAllAudio()

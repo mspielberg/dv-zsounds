@@ -5,52 +5,46 @@ namespace DvMod.ZSounds
 {
     public static class ShunterAudio
     {
-        private static AudioClip? originalEngineOnClip;
-        private static AudioClip? originalEngineOffClip;
-        private static AudioClip? originalHornHitClip;
-
-        public static void SetEngineClip(LayeredAudio engineAudio, string? name, float startPitch)
-        {
-            LayeredAudioUtils.SetClip(engineAudio, name, startPitch);
-        }
-
         private static AudioSource GetHornHitSource(LayeredAudio hornAudio)
         {
             return hornAudio.transform.Find("train_horn_01_hit").GetComponent<AudioSource>();
         }
 
-        private static void SetHornHit(LayeredAudio hornAudio, string? name)
+        private static void SetHornHit(LayeredAudio hornAudio)
         {
-            if (name == null)
-                GetHornHitSource(hornAudio).clip = originalHornHitClip;
-            else
-                GetHornHitSource(hornAudio).clip = FileAudio.Load(name);
+            var source = GetHornHitSource(hornAudio);
+            var clip = source.clip;
+            AudioUtils.SetClip(
+                "DE2 horn hit",
+                ref clip,
+                Main.settings.shunterHornHitSound,
+                Main.settings.shunterHornHitEnabled);
+            source.clip = clip;
         }
 
         public static void ResetAudio(LocoAudioShunter __instance)
         {
-            var engineAudio = __instance.engineAudio;
-            if (originalEngineOnClip == default)
-            {
-                originalEngineOnClip = __instance.engineOnClip;
-                originalEngineOffClip = __instance.engineOffClip;
-                originalHornHitClip = GetHornHitSource(__instance.hornAudio).clip;
-            }
-
-            if (Main.settings.shunterStartupSound != null)
-                __instance.engineOnClip = FileAudio.Load(Main.settings.shunterStartupSound);
-            else
-                __instance.engineOnClip = originalEngineOnClip;
-
-            SetEngineClip(engineAudio, Main.settings.shunterEngineSound, Main.settings.shunterEnginePitch);
-
-            if (Main.settings.shunterShutdownSound != null)
-                __instance.engineOffClip = FileAudio.Load(Main.settings.shunterShutdownSound);
-            else
-                __instance.engineOffClip = originalEngineOffClip;
-
-            SetHornHit(__instance.hornAudio, Main.settings.dieselHornHitSound);
-            LayeredAudioUtils.SetClip(__instance.hornAudio, Main.settings.shunterHornLoopSound, Main.settings.shunterHornPitch);
+            AudioUtils.SetClip(
+                "DE2 startup",
+                ref __instance.engineOnClip,
+                Main.settings.shunterStartupSound,
+                Main.settings.shunterStartupEnabled);
+            AudioUtils.SetClip(
+                "DE2 engine loop",
+                __instance.engineAudio,
+                Main.settings.shunterEngineSound,
+                Main.settings.shunterEnginePitch);
+            AudioUtils.SetClip(
+                "DE2 shutdown",
+                ref __instance.engineOffClip,
+                Main.settings.shunterShutdownSound,
+                Main.settings.shunterShutdownEnabled);
+            SetHornHit(__instance.hornAudio);
+            AudioUtils.SetClip(
+                "DE2 horn loop",
+                __instance.hornAudio,
+                Main.settings.shunterHornLoopSound,
+                Main.settings.shunterHornPitch);
         }
 
         public static void ResetAllAudio()
