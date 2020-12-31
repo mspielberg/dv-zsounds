@@ -8,8 +8,14 @@ namespace DvMod.ZSounds
 {
     public static class FileAudio
     {
+        private static readonly Dictionary<string, AudioClip> cache = new Dictionary<string, AudioClip>();
+
         public static AudioClip Load(string name)
         {
+            if (cache.TryGetValue(name, out var clip))
+            {
+                return clip;
+            }
             var path = Path.Combine(Main.mod?.Path, name);
             var audioType = AudioTypes[Path.GetExtension(path)];
             var webRequest = UnityWebRequestMultimedia.GetAudioClip(new Uri(path).AbsoluteUri, audioType);
@@ -17,7 +23,9 @@ namespace DvMod.ZSounds
             while (!async.isDone)
             {
             }
-            return DownloadHandlerAudioClip.GetContent(webRequest);
+            clip = DownloadHandlerAudioClip.GetContent(webRequest);
+            cache[name] = clip;
+            return clip;
         }
 
         private static readonly Dictionary<string, AudioType> AudioTypes = new Dictionary<string, AudioType>()
@@ -28,5 +36,7 @@ namespace DvMod.ZSounds
             {".ogg", AudioType.OGGVORBIS},
             {".wav", AudioType.WAV},
         };
+
+        public static AudioClip Silent = AudioClip.Create("silent", 1, 1, 44100, false);
     }
 }
