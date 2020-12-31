@@ -7,14 +7,17 @@ namespace DvMod.ZSounds
     {
         private static float originalMinPitch;
         private static float originalMaxPitch;
-        private static AudioClip? originalEngineOnClip;
-        private static AudioClip? originalEngineOffClip;
-        private static AudioClip? originalHornHitClip;
 
-        public static void SetEngineClip(LayeredAudio engineAudio, string? name, float startPitch)
+        public static void SetEngineClip(LayeredAudio engineAudio)
         {
-            AudioUtils.SetClip("DE6 engine loop", engineAudio, name, startPitch);
-            if (name == null)
+            AudioUtils.SetClip(
+                "DE6 engine loop",
+                engineAudio,
+                Main.settings.dieselEngineSound,
+                enabled: true,
+                Main.settings.dieselEnginePitch);
+
+            if (Main.settings.dieselEngineSound == null)
             {
                 engineAudio.minPitch = originalMinPitch;
                 engineAudio.maxPitch = originalMaxPitch;
@@ -26,17 +29,16 @@ namespace DvMod.ZSounds
             }
         }
 
-        private static AudioSource GetHornHitSource(LayeredAudio hornAudio)
+        private static void SetHornHit(LayeredAudio hornAudio)
         {
-            return hornAudio.transform.Find("train_horn_01_hit").GetComponent<AudioSource>();
-        }
-
-        private static void SetHornHit(LayeredAudio hornAudio, string? name)
-        {
-            if (name == null)
-                GetHornHitSource(hornAudio).clip = originalHornHitClip;
-            else
-                GetHornHitSource(hornAudio).clip = FileAudio.Load(name);
+            var source = hornAudio.transform.Find("train_horn_01_hit").GetComponent<AudioSource>();
+            var clip = source.clip;
+            AudioUtils.SetClip(
+                "DE6 horn hit",
+                ref clip,
+                Main.settings.dieselHornHitSound,
+                Main.settings.dieselHornHitEnabled);
+            source.clip = clip;
         }
 
         public static void ResetAudio(LocoAudioDiesel __instance)
@@ -46,28 +48,28 @@ namespace DvMod.ZSounds
             {
                 originalMinPitch = engineAudio.minPitch;
                 originalMaxPitch = engineAudio.maxPitch;
-                originalEngineOnClip = __instance.engineOnClip;
-                originalEngineOffClip = __instance.engineOffClip;
-                originalHornHitClip = GetHornHitSource(__instance.hornAudio).clip;
             }
 
-            if (Main.settings.dieselStartupSound != null)
-                __instance.engineOnClip = FileAudio.Load(Main.settings.dieselStartupSound);
-            else
-                __instance.engineOnClip = originalEngineOnClip;
+            AudioUtils.SetClip(
+                "DE6 startup",
+                ref __instance.engineOnClip,
+                Main.settings.dieselStartupSound,
+                Main.settings.dieselStartupEnabled);
 
-            SetEngineClip(engineAudio, Main.settings.dieselEngineSound, Main.settings.dieselEnginePitch);
+            SetEngineClip(engineAudio);
 
-            if (Main.settings.dieselShutdownSound != null)
-                __instance.engineOffClip = FileAudio.Load(Main.settings.dieselShutdownSound);
-            else
-                __instance.engineOffClip = originalEngineOffClip;
+            AudioUtils.SetClip(
+                "DE6 shutdown",
+                ref __instance.engineOffClip,
+                Main.settings.dieselShutdownSound,
+                Main.settings.dieselShutdownEnabled);
 
-            SetHornHit(__instance.hornAudio, Main.settings.dieselHornHitSound);
+            SetHornHit(__instance.hornAudio);
             AudioUtils.SetClip(
                 "DE6 horn loop",
                 __instance.hornAudio,
                 Main.settings.dieselHornLoopSound,
+                Main.settings.dieselHornLoopEnabled,
                 Main.settings.dieselHornPitch);
         }
 

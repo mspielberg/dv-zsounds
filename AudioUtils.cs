@@ -13,7 +13,7 @@ namespace DvMod.ZSounds
         }
 
         private static readonly Dictionary<string, AudioSettings> Defaults = new Dictionary<string, AudioSettings>();
-        public static void SetClip(string tag, LayeredAudio audio, string? name, float startPitch)
+        public static void SetClip(string tag, LayeredAudio audio, string? name, bool enabled, float startPitch)
         {
             if (!Defaults.ContainsKey(tag))
             {
@@ -24,20 +24,27 @@ namespace DvMod.ZSounds
                 };
             }
 
-            if (name == null)
+            if (!enabled)
+            {
+                foreach (var layer in audio.layers)
+                    layer.source.mute = true;
+            }
+            else if (name == null)
             {
                 var defaults = Defaults[tag];
                 audio.layers[0].source.clip = defaults.clip;
+                audio.layers[0].source.mute = false;
                 audio.layers[0].startPitch = defaults.startPitches[0] * startPitch;
                 for (int i = 1; i < audio.layers.Length; i++)
                 {
-                    audio.layers[i].source.mute = false;
                     audio.layers[i].startPitch = defaults.startPitches[i] * startPitch;
+                    audio.layers[i].source.mute = false;
                 }
             }
             else
             {
                 audio.layers[0].source.clip = FileAudio.Load(name);
+                audio.layers[0].source.mute = false;
                 audio.layers[0].startPitch = startPitch;
                 for (int i = 1; i < audio.layers.Length; i++)
                     audio.layers[i].source.mute = true;

@@ -33,7 +33,8 @@ namespace DvMod.ZSounds
                 "DE2 engine loop",
                 __instance.engineAudio,
                 Main.settings.shunterEngineSound,
-                Main.settings.shunterEnginePitch);
+                enabled: true,
+                startPitch: Main.settings.shunterEnginePitch);
             AudioUtils.SetClip(
                 "DE2 shutdown",
                 ref __instance.engineOffClip,
@@ -44,6 +45,7 @@ namespace DvMod.ZSounds
                 "DE2 horn loop",
                 __instance.hornAudio,
                 Main.settings.shunterHornLoopSound,
+                Main.settings.shunterHornLoopEnabled,
                 Main.settings.shunterHornPitch);
         }
 

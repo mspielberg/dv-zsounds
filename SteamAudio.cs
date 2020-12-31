@@ -11,6 +11,7 @@ namespace DvMod.ZSounds
                 "SH282 whistle",
                 __instance.whistleAudio,
                 Main.settings.steamWhistleSound,
+                enabled: true,
                 Main.settings.steamWhistlePitch);
         }
 
