@@ -15,12 +15,16 @@ namespace DvMod.ZSounds
         // DE2
         public bool shunterStartupEnabled = true;
         public string? shunterStartupSound = null;
+        public float shunterFadeInStart = 0.18f;
+        public float shunterFadeInDuration = 2f;
 
         public string? shunterEngineSound = null;
         public float shunterEnginePitch = 1;
 
         public bool shunterShutdownEnabled = true;
         public string? shunterShutdownSound = null;
+        public float shunterFadeOutStart = 0.27f;
+        public float shunterFadeOutDuration = 1f;
 
         public bool shunterHornHitEnabled = true;
         public string? shunterHornHitSound = null;
@@ -32,12 +36,16 @@ namespace DvMod.ZSounds
         // DE6
         public bool dieselStartupEnabled = true;
         public string? dieselStartupSound = "EMD_SD70ACe_Startup.ogg";
+        public float dieselFadeInStart = 0.18f;
+        public float dieselFadeInDuration = 2f;
 
         public string? dieselEngineSound = "EMD_567C.ogg";
         public float dieselEnginePitch = 1;
 
         public bool dieselShutdownEnabled = true;
         public string? dieselShutdownSound = null;
+        public float dieselFadeOutStart = 0.27f;
+        public float dieselFadeOutDuration = 1f;
 
         public bool dieselHornHitEnabled = true;
         public string? dieselHornHitSound = "Leslie_A200_Hit.ogg";
@@ -115,22 +123,47 @@ namespace DvMod.ZSounds
             return changed;
         }
 
+        private bool DrawEngineTransitionSelector(string label, ref string? sample, ref bool enabled, ref float fadeStart, ref float fadeDuration)
+        {
+            bool changed = false;
+            GUILayout.BeginHorizontal();
+
+            GUILayout.Label(label);
+            var soundFileOptions = SoundLibrary.SoundFiles.Prepend("(Default)");
+            var selected = sample == null ? 0 : Math.Max(soundFileOptions.ToList().IndexOf(sample), 0);
+            changed |= UnityModManager.UI.PopupToggleGroup(ref selected, soundFileOptions.ToArray(), label);
+            if (changed)
+                sample = selected == 0 ? null : SoundLibrary.SoundFiles[selected - 1];
+
+            GUILayout.Label("Enabled");
+            var newEnabled = GUILayout.Toggle(enabled, "");
+            changed |= newEnabled != enabled;
+            enabled = newEnabled;
+
+            UnityModManager.UI.DrawFloatField(ref fadeStart, "Fade start");
+            UnityModManager.UI.DrawFloatField(ref fadeDuration, "Fade duration");
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            return changed;
+        }
+
         public void Draw()
         {
             bool changed = false;
 
             GUILayout.BeginVertical("box");
-            changed |= DrawSoundSelector("DE2 startup", ref shunterStartupSound, ref shunterStartupEnabled);
+            changed |= DrawEngineTransitionSelector("DE2 startup", ref shunterStartupSound, ref shunterStartupEnabled, ref shunterFadeInStart, ref shunterFadeInDuration);
             changed |= DrawSoundSelector("DE2 engine", ref shunterEngineSound, ref shunterEnginePitch);
-            changed |= DrawSoundSelector("DE2 shutdown", ref shunterShutdownSound, ref shunterShutdownEnabled);
+            changed |= DrawEngineTransitionSelector("DE2 shutdown", ref shunterShutdownSound, ref shunterShutdownEnabled, ref shunterFadeOutStart, ref shunterFadeOutDuration);
             changed |= DrawSoundSelector("DE2 horn hit", ref shunterHornHitSound, ref shunterHornHitEnabled);
             changed |= DrawSoundSelector("DE2 horn loop", ref shunterHornLoopSound, ref shunterHornLoopEnabled, ref shunterHornPitch);
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("box");
-            changed |= DrawSoundSelector("DE6 startup", ref dieselStartupSound, ref dieselStartupEnabled);
+            changed |= DrawEngineTransitionSelector("DE6 startup", ref dieselStartupSound, ref dieselStartupEnabled, ref dieselFadeInStart, ref dieselFadeInDuration);
             changed |= DrawSoundSelector("DE6 engine", ref dieselEngineSound, ref dieselEnginePitch);
-            changed |= DrawSoundSelector("DE6 shutdown", ref dieselShutdownSound, ref dieselShutdownEnabled);
+            changed |= DrawEngineTransitionSelector("DE6 shutdown", ref dieselShutdownSound, ref dieselShutdownEnabled, ref dieselFadeOutStart, ref dieselFadeOutDuration);
             changed |= DrawSoundSelector("DE6 horn hit", ref dieselHornHitSound, ref dieselHornHitEnabled);
             changed |= DrawSoundSelector("DE6 horn loop", ref dieselHornLoopSound, ref dieselHornLoopEnabled, ref dieselHornPitch);
             GUILayout.EndVertical();
@@ -160,17 +193,42 @@ namespace DvMod.ZSounds
         private static readonly HashSet<string> SupportedExtensions = new HashSet<string>() { ".aif", ".mp3", ".ogg", ".wav" };
         private static float lastCheck = 0;
         private static string[] soundFiles = new string[0];
+
+        private static IEnumerable<string> EnumerateModDirectories()
+        {
+            return UnityModManager.modEntries
+                .Where(mod => mod.Requirements.ContainsKey(Main.mod!.Info.Id))
+                .Append(Main.mod!)
+                .Select(mod => mod.Path);
+        }
+
+        private static IEnumerable<string> EnumerateFiles(string modDirectoryPath)
+        {
+            return Directory.EnumerateFiles(modDirectoryPath)
+                .Where(path => SupportedExtensions.Contains(Path.GetExtension(path).ToLower()))
+                .Select(Path.GetFileName);
+        }
+
+        private static IEnumerable<string> EnumerateAllFiles()
+        {
+            return EnumerateModDirectories().SelectMany(EnumerateFiles);
+        }
+
         public static string[] SoundFiles {
             get
             {
-                if (lastCheck + 10 < Time.time)
+                try
                 {
-                    soundFiles = Directory.EnumerateFiles(Main.mod?.Path)
-                        .Where(path => SupportedExtensions.Contains(Path.GetExtension(path).ToLower()))
-                        .Select(Path.GetFileName)
-                        .OrderBy(x => x)
-                        .ToArray();
-                    lastCheck = Time.time;
+                    if (lastCheck + 10 < Time.time)
+                    {
+                        soundFiles = EnumerateAllFiles().OrderBy(x => x).ToArray();
+                        lastCheck = Time.time;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                    soundFiles = new string[0];
                 }
                 return soundFiles;
             }

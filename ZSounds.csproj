@@ -20,6 +20,7 @@
     <Reference Include="BezierCurves" />
     <Reference Include="DV.BrakeSystem" />
     <Reference Include="DV.Utils" />
+    <Reference Include="NAudio" />
     <Reference Include="UnityEngine" />
     <Reference Include="UnityEngine.AudioModule" />
     <Reference Include="UnityEngine.CoreModule" />

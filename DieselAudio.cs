@@ -1,4 +1,5 @@
 using HarmonyLib;
+using System.Collections;
 using UnityEngine;
 
 namespace DvMod.ZSounds
@@ -85,6 +86,51 @@ namespace DvMod.ZSounds
             public static void Postfix(LocoAudioDiesel __instance)
             {
                 ResetAudio(__instance);
+            }
+        }
+
+        [HarmonyPatch(typeof(LocoAudioDiesel), nameof(LocoAudioDiesel.EngineAudioHandle))]
+        public static class EngineAudioHandlePatch
+        {
+            public static bool Prefix(bool engineTurnedOn, LocoAudioDiesel __instance, ref IEnumerator __result)
+            {
+                __result = EngineAudioHandle(__instance, engineTurnedOn);
+                return false;
+            }
+
+            private static IEnumerator EngineAudioHandle(LocoAudioDiesel __instance, bool engineTurnedOn)
+            {
+                __instance.IsEngineVolumeFadeActive = true;
+                if (engineTurnedOn)
+                {
+                    __instance.engineOnClip.Play(__instance.playEngineAt.position, 1f, 1f, 0f, 1f, 500f, default(AudioSourceCurves), null, __instance.playEngineAt);
+                }
+                else
+                {
+                    __instance.engineOffClip.Play(__instance.playEngineAt.position, 1f, 1f, 0f, 1f, 500f, default(AudioSourceCurves), null, __instance.playEngineAt);
+                }
+                yield return WaitFor.Seconds(engineTurnedOn ? Main.settings.dieselFadeInStart : Main.settings.dieselFadeOutStart);
+                float startTime = Time.realtimeSinceStartup;
+                float duration = (engineTurnedOn ? Main.settings.dieselFadeInDuration : Main.settings.dieselFadeOutDuration);
+                float startEngVol = __instance.engineAudio.masterVolume;
+                float startEngPistonVol = __instance.enginePistonAudio.masterVolume;
+                float startElectricMotorVol = __instance.electricMotorAudio.masterVolume;
+                int endVolume = (engineTurnedOn ? 1 : 0);
+                float endEnginePistonVolume = (engineTurnedOn ? __instance.neutralEnginePistonVolume : 0f);
+                while (true)
+                {
+                    float num = (Time.realtimeSinceStartup - startTime) / duration;
+                    __instance.engineAudio.masterVolume = Mathf.Lerp(startEngVol, endVolume, num);
+                    __instance.enginePistonAudio.masterVolume = Mathf.Lerp(startEngPistonVol, endEnginePistonVolume, num);
+                    __instance.electricMotorAudio.masterVolume = Mathf.Lerp(startElectricMotorVol, endVolume, num);
+                    if (num >= 1f)
+                    {
+                        break;
+                    }
+                    yield return null;
+                }
+                __instance.IsEngineVolumeFadeActive = false;
+                __instance.engineAudioCoro = null;
             }
         }
     }

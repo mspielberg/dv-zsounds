@@ -40,8 +40,20 @@ namespace DvMod.ZSounds
 
             Register("zsounds.dumpDieselAudio", _ =>
             {
-                foreach (var component in Component.FindObjectsOfType<LocoAudioDiesel>())
-                    Terminal.Log(GetPath(component));
+                if (PlayerManager.Car == null || PlayerManager.Car.carType != TrainCarType.LocoDiesel)
+                    return;
+                var audio = PlayerManager.Car.transform.GetComponentInChildren<LocoAudioDiesel>();
+                Terminal.Log($"engineOn.Length = {audio.engineOnClip.length}");
+                Terminal.Log($"engineOff.Length = {audio.engineOffClip.length}");
+            });
+
+            Register("zsounds.dumpShunterAudio", _ =>
+            {
+                if (PlayerManager.Car == null || PlayerManager.Car.carType != TrainCarType.LocoShunter)
+                    return;
+                var audio = PlayerManager.Car.transform.GetComponentInChildren<LocoAudioShunter>();
+                Terminal.Log($"engineOn.Length = {audio.engineOnClip.length}");
+                Terminal.Log($"engineOff.Length = {audio.engineOffClip.length}");
             });
 
             Register("zsounds.dumpSteamAudio", _ =>
