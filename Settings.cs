@@ -14,11 +14,11 @@ namespace DvMod.ZSounds
 
         // DE2
         public bool shunterStartupEnabled = true;
-        public string? shunterStartupSound = null;
+        public string? shunterStartupSound = "OM402LA_Startup";
         public float shunterFadeInStart = 0.18f;
         public float shunterFadeInDuration = 2f;
 
-        public string? shunterEngineSound = null;
+        public string? shunterEngineSound = "OM402LA_Loop";
         public float shunterEnginePitch = 1;
 
         public bool shunterShutdownEnabled = true;
@@ -27,19 +27,19 @@ namespace DvMod.ZSounds
         public float shunterFadeOutDuration = 1f;
 
         public bool shunterHornHitEnabled = true;
-        public string? shunterHornHitSound = null;
+        public string? shunterHornHitSound = "Leslie_A200_Hit.ogg";
 
         public bool shunterHornLoopEnabled = true;
-        public string? shunterHornLoopSound = null;
+        public string? shunterHornLoopSound = "Leslie_A200_Loop.ogg";
         public float shunterHornPitch = 1;
 
         // DE6
         public bool dieselStartupEnabled = true;
-        public string? dieselStartupSound = "EMD_SD70ACe_Startup.ogg";
-        public float dieselFadeInStart = 0.18f;
+        public string? dieselStartupSound = "645E3_Startup.ogg";
+        public float dieselFadeInStart = 10f;
         public float dieselFadeInDuration = 2f;
 
-        public string? dieselEngineSound = "EMD_567C.ogg";
+        public string? dieselEngineSound = "645E3_idle.ogg";
         public float dieselEnginePitch = 1;
 
         public bool dieselShutdownEnabled = true;
@@ -48,10 +48,10 @@ namespace DvMod.ZSounds
         public float dieselFadeOutDuration = 1f;
 
         public bool dieselHornHitEnabled = true;
-        public string? dieselHornHitSound = "Leslie_A200_Hit.ogg";
+        public string? dieselHornHitSound = "RS3L_start";
 
         public bool dieselHornLoopEnabled = true;
-        public string? dieselHornLoopSound = "Leslie_A200_Loop.ogg";
+        public string? dieselHornLoopSound = "RS3L_loop";
         public float dieselHornPitch = 1;
 
         // SH282

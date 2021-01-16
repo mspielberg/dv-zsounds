@@ -6,6 +6,6 @@
   "ManagerVersion": "0.22.14.0",
   "AssemblyName": "ZSounds.dll",
   "EntryMethod": "DvMod.ZSounds.Main.Load",
-  "HomePage": "https://www.nexusmods.com/derailvalley/mods/???",
+  "HomePage": "https://www.nexusmods.com/derailvalley/mods/249",
   "Repository": "https://raw.githubusercontent.com/mspielberg/dv-zsounds/master/resources/repository.json"
 }
