@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <RootNamespace>DvMod.ZSounds</RootNamespace>
-    <InformationalVersion>0.5.0</InformationalVersion>
+    <InformationalVersion>0.3.0</InformationalVersion>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -17,9 +17,6 @@
     <PublicizeAssembly Include="DV.BrakeSystem" Private="True" Readonly="True" />
     <Reference Include="Assembly-CSharp" />
     <Reference Include="0Harmony" />
-    <Reference Include="BezierCurves" />
-    <Reference Include="DV.BrakeSystem" />
-    <Reference Include="DV.Utils" />
     <Reference Include="NAudio" />
     <Reference Include="UnityEngine" />
     <Reference Include="UnityEngine.AudioModule" />
