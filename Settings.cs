@@ -54,6 +54,9 @@ namespace DvMod.ZSounds
         public string? dieselHornLoopSound = "RS3L_loop.ogg";
         public float dieselHornPitch = 1;
 
+        public string? dieselBellSound = "Graham_White_E_Bell.ogg";
+        public float dieselBellPitch = 1f;
+
         // SH282
         public string? steamWhistleSound = "Manns_Creek_3_Chime.ogg";
         public float steamWhistlePitch = 1;
@@ -173,6 +176,7 @@ namespace DvMod.ZSounds
             changed |= DrawEngineTransitionSelector("DE6 startup", ref dieselStartupSound, ref dieselStartupEnabled, ref dieselFadeInStart, ref dieselFadeInDuration);
             changed |= DrawSoundSelector("DE6 engine", ref dieselEngineSound, ref dieselEnginePitch);
             changed |= DrawEngineTransitionSelector("DE6 shutdown", ref dieselShutdownSound, ref dieselShutdownEnabled, ref dieselFadeOutStart, ref dieselFadeOutDuration);
+            changed |= DrawSoundSelector("DE6 bell", ref dieselBellSound, ref dieselBellPitch);
             changed |= DrawSoundSelector("DE6 horn hit", ref dieselHornHitSound, ref dieselHornHitEnabled);
             changed |= DrawSoundSelector("DE6 horn loop", ref dieselHornLoopSound, ref dieselHornLoopEnabled, ref dieselHornPitch);
             GUILayout.EndVertical();

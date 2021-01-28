@@ -1,3 +1,4 @@
+using DV.CabControls;
 using HarmonyLib;
 using System.Collections;
 using UnityEngine;
@@ -27,6 +28,22 @@ namespace DvMod.ZSounds
             {
                 engineAudio.minPitch = 1f;
                 engineAudio.maxPitch = 825f / 275f;
+            }
+        }
+
+        private static void SetBell(LocoAudioDiesel audio)
+        {
+            var audioSource = audio.transform.Find("Horn/ZSounds bell").GetComponent<AudioSource>();
+            if (Main.settings.dieselBellSound == null)
+            {
+                audioSource.Stop();
+                audioSource.volume = 0;
+            }
+            else
+            {
+                audioSource.clip = FileAudio.Load(Main.settings.dieselBellSound);
+                audioSource.pitch = Main.settings.dieselBellPitch;
+                audioSource.volume = 1;
             }
         }
 
@@ -65,6 +82,8 @@ namespace DvMod.ZSounds
                 Main.settings.dieselShutdownSound,
                 Main.settings.dieselShutdownEnabled);
 
+            SetBell(__instance);
+
             SetHornHit(__instance.hornAudio);
             AudioUtils.SetClip(
                 "DE6 horn loop",
@@ -85,7 +104,16 @@ namespace DvMod.ZSounds
         {
             public static void Postfix(LocoAudioDiesel __instance)
             {
+                SetupBell(__instance);
                 ResetAudio(__instance);
+            }
+
+            private static void SetupBell(LocoAudioDiesel __instance)
+            {
+                var originalHornLoop = __instance.transform.Find("Horn/LocoDiesel_Horn_Layered/train_horn_01_loop").GetComponent<AudioSource>();
+                var bellSource = GameObject.Instantiate(originalHornLoop, __instance.transform.Find("Horn"));
+                bellSource.name = "ZSounds bell";
+                bellSource.loop = false;
             }
         }
 
@@ -131,6 +159,39 @@ namespace DvMod.ZSounds
                 }
                 __instance.IsEngineVolumeFadeActive = false;
                 __instance.engineAudioCoro = null;
+            }
+        }
+    }
+
+    public static class DieselBell
+    {
+        [HarmonyPatch(typeof(DieselDashboardControls), nameof(DieselDashboardControls.Init))]
+        public static class InitPatch
+        {
+            public static void Postfix(DieselDashboardControls __instance)
+            {
+                __instance.StartCoroutine(SetupBellLamp(__instance));
+            }
+
+            private static IEnumerator SetupBellLamp(DieselDashboardControls __instance)
+            {
+                yield return null;
+
+                var bellAudioSource = TrainCar.Resolve(__instance.gameObject).transform.Find("AudioDiesel(Clone)/Horn/ZSounds bell").GetComponent<AudioSource>();
+
+                var bellButton = __instance.transform.Find("offset/C bell button").GetComponent<ButtonBase>();
+                bellButton.SetValue(bellAudioSource.loop ? 1 : 0);
+
+                var bellLampControl = __instance.transform.Find("offset/I Indicator lamps/I bell_lamp").GetComponent<LampControl>();
+                bellLampControl.lampInd = __instance.transform.Find("offset/I Indicator lamps/I bell_lamp/lamp emmision indicator").GetComponent<IndicatorEmission>();
+                bellLampControl.SetLampState(bellAudioSource.loop ? LampControl.LampState.On : LampControl.LampState.Off);
+
+                bellButton.ValueChanged += (ValueChangedEventArgs e) => {
+                    bellLampControl.SetLampState(e.newValue >= 0.5f ? LampControl.LampState.On : LampControl.LampState.Off);
+                    bellAudioSource.loop = e.newValue >= 0.5f;
+                    if (bellAudioSource.loop && !bellAudioSource.isPlaying)
+                        bellAudioSource.Play();
+                };
             }
         }
     }

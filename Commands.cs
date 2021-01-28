@@ -34,8 +34,7 @@ namespace DvMod.ZSounds
         {
             Register("zsounds.dumpCar", _ =>
             {
-                foreach (var component in PlayerManager.Car.GetComponents<Component>())
-                    Terminal.Log(component.GetType().Name);
+                Terminal.Log(PlayerManager.Car.gameObject.DumpHierarchy());
             });
 
             Register("zsounds.dumpDieselAudio", _ =>
@@ -69,11 +68,67 @@ namespace DvMod.ZSounds
                 DieselAudio.ResetAudio(PlayerManager.Car.GetComponentInChildren<LocoAudioDiesel>());
             });
 
+            Register("zsounds.dumpAudioSources", _ =>
+            {
+                if (PlayerManager.Car == null)
+                    return;
+                foreach (var source in PlayerManager.Car.GetComponentsInChildren<AudioSource>())
+                {
+                    Terminal.Log(source.GetPath());
+                    Terminal.Log(source.DumpFields());
+                }
+            });
+
+            Register("zsounds.dumpHornAudioSource", _ =>
+            {
+                Terminal.Log(PlayerManager.Car.GetComponent<Horn>().hit.GetPath());
+            });
+
             Register("zsounds.showAudioState", _ =>
             {
                 foreach (var source in PlayerManager.Car.GetComponentsInChildren<AudioSource>())
                 {
                     Terminal.Log($"{GetPath(source)} {source.name}: pitch={source.pitch}, volume={source.volume}");
+                }
+            });
+
+            Register("zsounds.dumpInteriorPath", args =>
+            {
+                if (PlayerManager.Car == null)
+                    return;
+                var path = string.Join(" ", args.Select(a => a.String));
+                var transform = PlayerManager.Car.loadedInterior.transform.Find(path);
+                Terminal.Log(transform == null ? "(null)" : GetPath(transform));
+            });
+
+            Register("zsounds.toggleInteriorLamp", args =>
+            {
+                if (PlayerManager.Car?.loadedInterior == null)
+                    return;
+                var name = string.Join(" ", args.Select(a => a.String));
+                foreach (var lampControl in PlayerManager.Car.loadedInterior.GetComponentsInChildren<LampControl>())
+                {
+                    if (lampControl.name == name)
+                    {
+                        if (lampControl.lampState == LampControl.LampState.On)
+                            lampControl.SetLampState(LampControl.LampState.Off);
+                        else
+                            lampControl.SetLampState(LampControl.LampState.On);
+                    }
+                }
+            });
+
+            Register("zsounds.dumpInteriorLamp", args =>
+            {
+                if (PlayerManager.Car?.loadedInterior == null)
+                    return;
+                var name = string.Join(" ", args.Select(a => a.String));
+                foreach (var lampControl in PlayerManager.Car.loadedInterior.GetComponentsInChildren<LampControl>())
+                {
+                    if (lampControl.name == name)
+                    {
+                        Terminal.Log($"lampInd={lampControl.lampInd.GetPath()}");
+                    }
                 }
             });
         }
