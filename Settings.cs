@@ -14,11 +14,11 @@ namespace DvMod.ZSounds
 
         // DE2
         public bool shunterStartupEnabled = true;
-        public string? shunterStartupSound = "OM402LA_Startup";
+        public string? shunterStartupSound = "OM402LA_Startup.ogg";
         public float shunterFadeInStart = 0.18f;
         public float shunterFadeInDuration = 2f;
 
-        public string? shunterEngineSound = "OM402LA_Loop";
+        public string? shunterEngineSound = "OM402LA_Loop.ogg";
         public float shunterEnginePitch = 1;
 
         public bool shunterShutdownEnabled = true;
@@ -48,10 +48,10 @@ namespace DvMod.ZSounds
         public float dieselFadeOutDuration = 1f;
 
         public bool dieselHornHitEnabled = true;
-        public string? dieselHornHitSound = "RS3L_start";
+        public string? dieselHornHitSound = "RS3L_start.ogg";
 
         public bool dieselHornLoopEnabled = true;
-        public string? dieselHornLoopSound = "RS3L_loop";
+        public string? dieselHornLoopSound = "RS3L_loop.ogg";
         public float dieselHornPitch = 1;
 
         // SH282
