@@ -19,14 +19,21 @@ namespace DvMod.ZSounds
             try
             {
                 var loaded = Settings.Load<Settings>(modEntry);
+                modEntry.Logger.Log($"Loaded settings version: {loaded.version}");
                 if (loaded.version == modEntry.Info.Version)
+                {
                     settings = loaded;
+                }
                 else
-                    settings = new Settings();
+                {
+                    settings = new Settings(modEntry.Info.Version);
+                    modEntry.Logger.Log($"Reset to default settings for version {settings.version}");
+                }
             }
-            catch
+            catch (Exception e)
             {
-                settings = new Settings();
+                Debug.Log(e.ToString());
+                settings = new Settings(modEntry.Info.Version);
             }
 
             modEntry.OnGUI = OnGui;

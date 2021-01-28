@@ -10,7 +10,7 @@ namespace DvMod.ZSounds
     public class Settings : UnityModManager.ModSettings, IDrawable
     {
         public bool enableLogging;
-        public readonly string? version = Main.mod?.Info.Version;
+        public string? version;
 
         // DE2
         public bool shunterStartupEnabled = true;
@@ -57,6 +57,15 @@ namespace DvMod.ZSounds
         // SH282
         public string? steamWhistleSound = "Manns_Creek_3_Chime.ogg";
         public float steamWhistlePitch = 1;
+
+        public Settings()
+        {
+        }
+
+        public Settings(string version)
+        {
+            this.version = version;
+        }
 
         private bool DrawSoundSelector(string label, ref string? sample, ref bool enabled)
         {
@@ -172,16 +181,22 @@ namespace DvMod.ZSounds
             changed |= DrawSoundSelector("SH282 whistle", ref steamWhistleSound, ref steamWhistlePitch);
             GUILayout.EndVertical();
 
-            if (changed)
-            {
-                DieselAudio.ResetAllAudio();
-                ShunterAudio.ResetAllAudio();
-                SteamAudio.ResetAllAudio();
-            }
             enableLogging = GUILayout.Toggle(enableLogging, "Enable logging");
         }
 
-        public override void Save(UnityModManager.ModEntry entry) => Save<Settings>(this, entry);
+        public override void Save(UnityModManager.ModEntry entry)
+        {
+            Main.DebugLog(() => $"Saving settings for version {version}");
+            Save<Settings>(this, entry);
+            Apply();
+        }
+
+        public void Apply()
+        {
+            DieselAudio.ResetAllAudio();
+            ShunterAudio.ResetAllAudio();
+            SteamAudio.ResetAllAudio();
+        }
 
         public void OnChange()
         {
