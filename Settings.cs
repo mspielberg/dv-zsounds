@@ -43,7 +43,7 @@ namespace DvMod.ZSounds
         public float dieselEnginePitch = 1;
 
         public bool dieselShutdownEnabled = true;
-        public string? dieselShutdownSound = null;
+        public string? dieselShutdownSound = "645E3_Shutdown.ogg";
         public float dieselFadeOutStart = 0.27f;
         public float dieselFadeOutDuration = 1f;
 
