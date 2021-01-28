@@ -25,8 +25,8 @@ namespace DvMod.ZSounds
             }
             else
             {
-                engineAudio.minPitch = 275f / 575f;
-                engineAudio.maxPitch = 825f / 575f;
+                engineAudio.minPitch = 1f;
+                engineAudio.maxPitch = 825f / 275f;
             }
         }
 
