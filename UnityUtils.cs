@@ -15,15 +15,5 @@ namespace DvMod.ZSounds
             return string.Join("\n",
                 gameObject.GetComponentsInChildren<Component>().Select(c => $"{GetPath(c)} {c.GetType()} {c.transform.localPosition}"));
         }
-
-        public static string DumpFields(this AudioSource source)
-        {
-            return
-                $"minDistance={source.minDistance}" +
-                $",maxDistance={source.maxDistance}" +
-                $",pitch={source.pitch}" +
-                $",rolloffMode={source.rolloffMode}" +
-                $",volume={source.volume}";
-        }
     }
 }
