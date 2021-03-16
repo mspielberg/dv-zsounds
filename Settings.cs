@@ -9,7 +9,6 @@ namespace DvMod.ZSounds
 {
     public class Settings : UnityModManager.ModSettings, IDrawable
     {
-        public bool enableLogging;
         public string? version;
 
         // DE2
@@ -60,6 +59,11 @@ namespace DvMod.ZSounds
         // SH282
         public string? steamWhistleSound = "Manns_Creek_3_Chime.ogg";
         public float steamWhistlePitch = 1;
+
+        [Draw("Horn quill depth", Min = 0, Max = 100)]
+        public float hornQuillDepth = 3;
+        [Draw("Enable logging")]
+        public bool enableLogging;
 
         public Settings()
         {
@@ -162,30 +166,28 @@ namespace DvMod.ZSounds
 
         public void Draw()
         {
-            bool changed = false;
-
             GUILayout.BeginVertical("box");
-            changed |= DrawEngineTransitionSelector("DE2 startup", ref shunterStartupSound, ref shunterStartupEnabled, ref shunterFadeInStart, ref shunterFadeInDuration);
-            changed |= DrawSoundSelector("DE2 engine", ref shunterEngineSound, ref shunterEnginePitch);
-            changed |= DrawEngineTransitionSelector("DE2 shutdown", ref shunterShutdownSound, ref shunterShutdownEnabled, ref shunterFadeOutStart, ref shunterFadeOutDuration);
-            changed |= DrawSoundSelector("DE2 horn hit", ref shunterHornHitSound, ref shunterHornHitEnabled);
-            changed |= DrawSoundSelector("DE2 horn loop", ref shunterHornLoopSound, ref shunterHornLoopEnabled, ref shunterHornPitch);
+            DrawEngineTransitionSelector("DE2 startup", ref shunterStartupSound, ref shunterStartupEnabled, ref shunterFadeInStart, ref shunterFadeInDuration);
+            DrawSoundSelector("DE2 engine", ref shunterEngineSound, ref shunterEnginePitch);
+            DrawEngineTransitionSelector("DE2 shutdown", ref shunterShutdownSound, ref shunterShutdownEnabled, ref shunterFadeOutStart, ref shunterFadeOutDuration);
+            DrawSoundSelector("DE2 horn hit", ref shunterHornHitSound, ref shunterHornHitEnabled);
+            DrawSoundSelector("DE2 horn loop", ref shunterHornLoopSound, ref shunterHornLoopEnabled, ref shunterHornPitch);
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("box");
-            changed |= DrawEngineTransitionSelector("DE6 startup", ref dieselStartupSound, ref dieselStartupEnabled, ref dieselFadeInStart, ref dieselFadeInDuration);
-            changed |= DrawSoundSelector("DE6 engine", ref dieselEngineSound, ref dieselEnginePitch);
-            changed |= DrawEngineTransitionSelector("DE6 shutdown", ref dieselShutdownSound, ref dieselShutdownEnabled, ref dieselFadeOutStart, ref dieselFadeOutDuration);
-            changed |= DrawSoundSelector("DE6 bell", ref dieselBellSound, ref dieselBellPitch);
-            changed |= DrawSoundSelector("DE6 horn hit", ref dieselHornHitSound, ref dieselHornHitEnabled);
-            changed |= DrawSoundSelector("DE6 horn loop", ref dieselHornLoopSound, ref dieselHornLoopEnabled, ref dieselHornPitch);
+            DrawEngineTransitionSelector("DE6 startup", ref dieselStartupSound, ref dieselStartupEnabled, ref dieselFadeInStart, ref dieselFadeInDuration);
+            DrawSoundSelector("DE6 engine", ref dieselEngineSound, ref dieselEnginePitch);
+            DrawEngineTransitionSelector("DE6 shutdown", ref dieselShutdownSound, ref dieselShutdownEnabled, ref dieselFadeOutStart, ref dieselFadeOutDuration);
+            DrawSoundSelector("DE6 bell", ref dieselBellSound, ref dieselBellPitch);
+            DrawSoundSelector("DE6 horn hit", ref dieselHornHitSound, ref dieselHornHitEnabled);
+            DrawSoundSelector("DE6 horn loop", ref dieselHornLoopSound, ref dieselHornLoopEnabled, ref dieselHornPitch);
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("box");
-            changed |= DrawSoundSelector("SH282 whistle", ref steamWhistleSound, ref steamWhistlePitch);
+            DrawSoundSelector("SH282 whistle", ref steamWhistleSound, ref steamWhistlePitch);
             GUILayout.EndVertical();
 
-            enableLogging = GUILayout.Toggle(enableLogging, "Enable logging");
+            this.Draw(Main.mod);
         }
 
         public override void Save(UnityModManager.ModEntry entry)
@@ -200,6 +202,7 @@ namespace DvMod.ZSounds
             DieselAudio.ResetAllAudio();
             ShunterAudio.ResetAllAudio();
             SteamAudio.ResetAllAudio();
+            HornQuilling.ResetAllAudio();
         }
 
         public void OnChange()
