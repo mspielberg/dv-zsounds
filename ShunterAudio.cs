@@ -6,6 +6,33 @@ namespace DvMod.ZSounds
 {
     public static class ShunterAudio
     {
+        private static float originalMinPitch;
+        private static float originalMaxPitch;
+        private static AnimationCurve? originalVolumeCurve;
+
+        public static void SetEngineClip(LayeredAudio engineAudio)
+        {
+            AudioUtils.SetClip(
+                "DE2 engine loop",
+                engineAudio,
+                Main.settings.shunterEngineSound,
+                enabled: true,
+                Main.settings.shunterEnginePitch);
+
+            if (Main.settings.shunterEngineSound == null)
+            {
+                engineAudio.minPitch = originalMinPitch;
+                engineAudio.maxPitch = originalMaxPitch;
+                engineAudio.layers[0].volumeCurve = originalVolumeCurve;
+            }
+            else
+            {
+                engineAudio.minPitch = 1f;
+                engineAudio.maxPitch = 2100/1250f;
+                engineAudio.layers[0].volumeCurve = AnimationCurve.EaseInOut(0, 0.1f, 1, 0.4f);
+            }
+        }
+
         private static AudioSource GetHornHitSource(LayeredAudio hornAudio)
         {
             return hornAudio.transform.Find("train_horn_01_hit").GetComponent<AudioSource>();
@@ -25,17 +52,20 @@ namespace DvMod.ZSounds
 
         public static void ResetAudio(LocoAudioShunter __instance)
         {
+            var engineAudio = __instance.engineAudio;
+            if (originalMinPitch == default)
+            {
+                originalMinPitch = engineAudio.minPitch;
+                originalMaxPitch = engineAudio.maxPitch;
+                originalVolumeCurve = engineAudio.layers[0].volumeCurve;
+            }
+
             AudioUtils.SetClip(
                 "DE2 startup",
                 ref __instance.engineOnClip,
                 Main.settings.shunterStartupSound,
                 Main.settings.shunterStartupEnabled);
-            AudioUtils.SetClip(
-                "DE2 engine loop",
-                __instance.engineAudio,
-                Main.settings.shunterEngineSound,
-                enabled: true,
-                startPitch: Main.settings.shunterEnginePitch);
+            SetEngineClip(engineAudio);
             AudioUtils.SetClip(
                 "DE2 shutdown",
                 ref __instance.engineOffClip,
