@@ -30,6 +30,25 @@ namespace DvMod.ZSounds
 
         public static void Register()
         {
+            Register("loadconfig", _ =>
+            {
+                var path = System.IO.Path.Combine(Main.mod.Path, "zsounds-config.json");
+                try
+                {
+                    var config = Config.Config.Parse(path);
+                    config.Validate();
+                    Terminal.Log(config.ToString());
+                    if (PlayerManager.Car != null)
+                    {
+                        var soundSet = config.Apply(PlayerManager.Car);
+                        Main.DebugLog(() => soundSet.ToJson().ToString());
+                    }
+                }
+                catch (Exception e)
+                {
+                    Terminal.Log(e.ToString());
+                }
+            });
         }
     }
 }

@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "rules": {
+        "root": {
+            "type": "AllOf",
+            "rules": [
+                { "type": "If", "property": "CarType", "value": "LocoDiesel",
+                    "rule": { "type": "Ref", "name": "loco_de6" } },
+                { "type": "If", "property": "CarType", "value": "LocoShunter",
+                    "rule": { "type": "Ref", "name": "loco_de2" } },
+                { "type": "If", "property": "CarType", "value": "LocoSteam",
+                    "rule": { "type": "Ref", "name": "loco_sh282" } }
+            ]
+        },
+        "loco_de6": {
+            "type": "AllOf",
+            "rules": [
+                { "type": "OneOf", "rules": [
+                    { "type": "Ref", "name": "horn_RS3L" },
+                    { "type": "Ref", "name": "horn_A200" }
+                ]},
+                { "type": "Sound", "name": "EBell" }
+            ]
+        },
+        "horn_RS3L": {
+            "type": "AllOf",
+            "rules": [
+                { "type": "Sound", "name": "RS3L_hit" },
+                { "type": "Sound", "name": "RS3L_loop" }
+            ]
+        },
+        "horn_A200": {
+            "type": "AllOf",
+            "rules": [
+                { "type": "Sound", "name": "A200_hit" },
+                { "type": "Sound", "name": "A200_loop" }
+            ]
+        }
+    },
+    "sounds": {
+        "EBell": { "type": "Bell", "filename": "Graham_White_E_Bell.ogg" },
+        "A200_hit": { "type": "HornHit", "filename": "Leslie_A200_hit.ogg" },
+        "A200_loop": { "type": "HornLoop", "filename": "Leslie_A200_loop.ogg" },
+        "RS3L_hit": { "type": "HornHit", "filename": "RS3L_hit.ogg" },
+        "RS3L_loop": { "type": "HornLoop", "filename": "RS3L_loop.ogg" }
+    }
+}
