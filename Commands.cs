@@ -35,7 +35,8 @@ namespace DvMod.ZSounds
                 var path = System.IO.Path.Combine(Main.mod.Path, "zsounds-config.json");
                 try
                 {
-                    var config = Config.Config.Parse(path);
+                    var config = new Config.Config();
+                    config.Load(path);
                     config.Validate();
                     Terminal.Log(config.ToString());
                     if (PlayerManager.Car != null)

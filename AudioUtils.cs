@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 
@@ -43,7 +44,7 @@ namespace DvMod.ZSounds
             }
             else
             {
-                audio.layers[0].source.clip = FileAudio.Load(name);
+                audio.layers[0].source.clip = FileAudio.Load(Path.Combine(Main.mod!.Path, name));
                 audio.layers[0].source.mute = false;
                 audio.layers[0].startPitch = startPitch;
                 for (int i = 1; i < audio.layers.Length; i++)
@@ -61,7 +62,7 @@ namespace DvMod.ZSounds
             else if (name == null)
                 clip = Defaults[tag].clip;
             else
-                clip = FileAudio.Load(name);
+                clip = FileAudio.Load(Path.Combine(Main.mod!.Path, name));
         }
     }
 }

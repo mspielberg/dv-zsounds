@@ -1,6 +1,7 @@
 using DV.CabControls;
 using HarmonyLib;
 using System.Collections;
+using System.IO;
 using UnityEngine;
 
 namespace DvMod.ZSounds
@@ -41,7 +42,7 @@ namespace DvMod.ZSounds
             }
             else
             {
-                audioSource.clip = FileAudio.Load(Main.settings.dieselBellSound);
+                audioSource.clip = FileAudio.Load(Path.Combine(Main.mod!.Path, Main.settings.dieselBellSound));
                 audioSource.pitch = Main.settings.dieselBellPitch;
                 audioSource.volume = 1;
             }

@@ -8,18 +8,13 @@ namespace DvMod.ZSounds.Config
 {
     public class SoundSet
     {
-        public readonly Dictionary<SoundType, SoundDefinition> sounds = new Dictionary<SoundType, SoundDefinition>();
+        public readonly Dictionary<SoundType, string> sounds = new Dictionary<SoundType, string>();
 
         public JObject ToJson()
         {
             var obj = new JObject();
-            var serializer = new JsonSerializer();
             foreach (var (type, sound) in sounds)
-            {
-                var tokenWriter = new JTokenWriter();
-                serializer.Serialize(tokenWriter, sound);
-                obj.Add(type.ToString(), tokenWriter.Token);
-            }
+                obj.Add(type.ToString(), sound);
             return obj;
         }
     }
@@ -36,9 +31,11 @@ namespace DvMod.ZSounds.Config
         EngineShutdown,
     }
 
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class SoundDefinition
     {
         public string name;
+        [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public SoundType type;
         public string? filename;
         public string[]? filenames;
@@ -56,24 +53,24 @@ namespace DvMod.ZSounds.Config
 
         public void Apply(SoundSet soundSet)
         {
-            soundSet.sounds[type] = this;
+            soundSet.sounds[type] = name;
         }
 
-        public void Validate(Config config)
+        public void Validate()
         {
-            var dir = Path.GetDirectoryName(config.path);
-            void ValidateFile(string f) => FileAudio.Load(Path.Combine(dir, f));
+            static void ValidateFile(string f) => FileAudio.Load(f);
             if (filename != null)
                 ValidateFile(filename);
             foreach (var f in filenames ?? new string[0])
                 ValidateFile(f);
         }
 
-        public static SoundDefinition Parse(string name, JToken token)
+        public static SoundDefinition Parse(string configFilePath, string name, JToken token)
         {
+            var root = Path.GetDirectoryName(configFilePath);
             return new SoundDefinition(name, (SoundType)Enum.Parse(typeof(SoundType), token["type"].Value<string>()))
             {
-                filename = token["filename"]?.Value<string>(),
+                filename = token["filename"].Map(fn => Path.Combine(root, fn.Value<string>())),
             };
         }
 

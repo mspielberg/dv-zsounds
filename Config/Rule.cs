@@ -29,7 +29,7 @@ namespace DvMod.ZSounds.Config
             switch (token.Type)
             {
                 case JTokenType.String:
-                    return new RefRule(token.Value<string>());
+                    return new RefRule(token.Path, token.Value<string>());
 
                 case JTokenType.Object:
                     RuleType type = (RuleType)Enum.Parse(
@@ -56,18 +56,20 @@ namespace DvMod.ZSounds.Config
 
     public class AllOfRule : IRule
     {
-        public readonly IRule[] rules;
+        public readonly string path;
+        public readonly List<IRule> rules;
 
-        public AllOfRule(IRule[]? rules)
+        public AllOfRule(string path, List<IRule> rules)
         {
-            this.rules = rules ?? new IRule[0];
+            this.path = path;
+            this.rules = rules;
         }
 
         public static AllOfRule Parse(JToken token)
         {
             var rules = token["rules"]?.Select(Rule.Parse) ?? Enumerable.Empty<IRule>();
-            var soundRules = token["sounds"]?.Select(t => new SoundRule(t.Value<string>())) ?? Enumerable.Empty<SoundRule>();
-            return new AllOfRule(rules.Concat(soundRules).ToArray());
+            var soundRules = token["sounds"]?.Select(t => new SoundRule(t.Path, t.Value<string>())) ?? Enumerable.Empty<SoundRule>();
+            return new AllOfRule(token.Path, rules.Concat(soundRules).ToList());
         }
 
         public void Apply(Config config, TrainCar car, SoundSet soundSet)
@@ -84,50 +86,61 @@ namespace DvMod.ZSounds.Config
 
         public override string ToString()
         {
-            return $"AllOf:\n{string.Join<IRule>("\n", rules).Indent(2)}";
+            return $"[{path}] AllOf:\n{string.Join<IRule>("\n", rules).Indent(2)}";
         }
     }
 
     public class OneOfRule : IRule
     {
-        public readonly IRule[] rules;
-        public readonly float[] weights;
+        public readonly string path;
+        public readonly List<IRule> rules;
+        public readonly List<float> weights;
 
-        public readonly float[] thresholds;
+        private float[]? thresholds;
 
-        public OneOfRule(IRule[]? rules, float[]? weights)
+        public OneOfRule(string path, List<IRule> rules, List<float>? weights)
         {
-            if (rules == null || rules.Length == 0)
+            if (rules == null || rules.Count == 0)
                 throw new ArgumentException("OneOf rule requires at least one sub-rule");
             if (weights == null)
-                weights = Enumerable.Repeat(1f, rules.Length).ToArray();
-            if (weights.Length != rules.Length)
-                throw new ArgumentException($"Found {weights.Length} weights for {rules.Length} rules in OneOf rule");
+                weights = Enumerable.Repeat(1f, rules.Count).ToList();
+            if (weights.Count != rules.Count)
+                throw new ArgumentException($"Found {weights.Count} weights for {rules.Count} rules in OneOf rule");
 
+            this.path = path;
             this.rules = rules;
             this.weights = weights;
-            thresholds = new float[rules.Length];
-            if (thresholds.Length == 0)
-                return;
-
-            var totalWeight = weights.Sum();
-
-            thresholds[0] = weights[0] / totalWeight;
-            for (int i = 1; i < rules.Length; i++)
-                thresholds[i] = thresholds[i - 1] + (weights[i] / totalWeight);
         }
 
         public static OneOfRule Parse(JToken token)
         {
             return new OneOfRule(
-                token["rules"]?.Select(Rule.Parse)?.ToArray(),
-                token["weights"]?.Select(t => t.Value<float>())?.ToArray());
+                token.Path,
+                token["rules"].Select(Rule.Parse).ToList(),
+                token["weights"]?.Select(t => t.Value<float>())?.ToList());
+        }
+
+        private float[] Thresholds
+        {
+            get
+            {
+                if (thresholds == null)
+                {
+                    thresholds = new float[rules.Count];
+                    var totalWeight = weights.Sum();
+
+                    thresholds[0] = weights[0] / totalWeight;
+                    for (int i = 1; i < rules.Count; i++)
+                        thresholds[i] = thresholds[i - 1] + (weights[i] / totalWeight);
+                }
+                return thresholds;
+            }
         }
 
         public void Apply(Config config, TrainCar car, SoundSet soundSet)
         {
             var r = UnityEngine.Random.value;
-            var index = Array.FindIndex(thresholds, t => r <= t);
+            var index = Array.FindIndex(Thresholds, t => r <= t);
             // Main.DebugLog(() => $"weights={string.Join(",",weights)},thresholds={string.Join(",",thresholds)},randomValue={r},index={index}");
             if (index >= 0)
                 rules[index].Apply(config, car, soundSet);
@@ -142,7 +155,7 @@ namespace DvMod.ZSounds.Config
         public override string ToString()
         {
             var totalWeight = weights.Sum();
-            return $"OneOf:\n{string.Join("\n", rules.Zip(weights, (r, w) => $"{w}/{totalWeight}: {r}")).Indent(2)}";
+            return $"[{path}] OneOf:\n{string.Join("\n", rules.Zip(weights, (r, w) => $"{w}/{totalWeight}: {r}")).Indent(2)}";
         }
     }
 
@@ -155,23 +168,26 @@ namespace DvMod.ZSounds.Config
             SkinName,
         }
 
-        private readonly IfRuleProperty property;
-        private readonly string value;
-        private readonly IRule rule;
+        public readonly string path;
+        public readonly IfRuleProperty property;
+        public readonly string value;
+        public readonly IRule rule;
 
-        public IfRule(IfRuleProperty property, string value, IRule rule)
+        public IfRule(string path, IfRuleProperty property, string value, IRule rule)
         {
+            this.path = path;
             this.property = property;
             this.value = value;
             this.rule = rule;
         }
 
-        public static IfRule Parse(JToken jValue)
+        public static IfRule Parse(JToken token)
         {
             return new IfRule(
-                (IfRuleProperty)Enum.Parse(typeof(IfRuleProperty), jValue["property"].Value<string>(), ignoreCase: true),
-                jValue["value"].Value<string>(),
-                Rule.Parse(jValue["rule"])
+                token.Path,
+                (IfRuleProperty)Enum.Parse(typeof(IfRuleProperty), token["property"].Value<string>(), ignoreCase: true),
+                token["value"].Value<string>(),
+                Rule.Parse(token["rule"])
             );
         }
 
@@ -235,16 +251,18 @@ namespace DvMod.ZSounds.Config
 
         public override string ToString()
         {
-            return $"If {property} = {value}:\n{rule.ToString().Indent(2)}";
+            return $"[{path}] If {property} = {value}:\n{rule.ToString().Indent(2)}";
         }
     }
 
     public class RefRule : IRule
     {
+        public readonly string path;
         public readonly string name;
 
-        public RefRule(string name)
+        public RefRule(string path, string name)
         {
+            this.path = path;
             this.name = name;
         }
 
@@ -261,21 +279,23 @@ namespace DvMod.ZSounds.Config
 
         public static RefRule Parse(JToken token)
         {
-            return new RefRule(token["name"].Value<string>());
+            return new RefRule(token.Path, token["name"].Value<string>());
         }
 
         public override string ToString()
         {
-            return $"Ref \"{name}\"";
+            return $"[{path}] Ref \"{name}\"";
         }
     }
 
     public class SoundRule : IRule
     {
+        public readonly string path;
         public readonly string name;
 
-        public SoundRule(string name)
+        public SoundRule(string path, string name)
         {
+            this.path = path;
             this.name = name;
         }
 
@@ -292,12 +312,12 @@ namespace DvMod.ZSounds.Config
 
         public static SoundRule Parse(JToken token)
         {
-            return new SoundRule(token["name"].Value<string>());
+            return new SoundRule(token.Path, token["name"].Value<string>());
         }
 
         public override string ToString()
         {
-            return $"Sound \"{name}\"";
+            return $"[{path}] Sound \"{name}\"";
         }
     }
 }

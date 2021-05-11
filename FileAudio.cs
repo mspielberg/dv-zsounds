@@ -10,13 +10,13 @@ namespace DvMod.ZSounds
     {
         private static readonly Dictionary<string, AudioClip> cache = new Dictionary<string, AudioClip>();
 
-        public static AudioClip Load(string name)
+        public static AudioClip Load(string path)
         {
-            if (cache.TryGetValue(name, out var clip))
+            if (cache.TryGetValue(path, out var clip))
             {
                 return clip;
             }
-            var path = Path.Combine(Main.mod?.Path, name);
+            Main.DebugLog(() => $"Loading clip from {path}");
             var audioType = AudioTypes[Path.GetExtension(path)];
             var webRequest = UnityWebRequestMultimedia.GetAudioClip(new Uri(path).AbsoluteUri, audioType);
             var async = webRequest.SendWebRequest();
@@ -24,7 +24,7 @@ namespace DvMod.ZSounds
             {
             }
             clip = DownloadHandlerAudioClip.GetContent(webRequest);
-            cache[name] = clip;
+            cache[path] = clip;
             return clip;
         }
 
