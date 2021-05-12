@@ -13,8 +13,11 @@ namespace DvMod.ZSounds.Config
         public readonly Dictionary<string, SoundDefinition> sounds = new Dictionary<string, SoundDefinition>();
         public readonly List<Hook> hooks = new List<Hook>();
 
+        public static Config? Active { get; private set; }
+
         public void Load(string path)
         {
+            Main.DebugLog(() => $"Loading config {path}");
             var configFile = ConfigFile.Parse(path);
             foreach (var (key, rule) in configFile.rules)
                 rules.Add(key, rule);
@@ -53,6 +56,19 @@ namespace DvMod.ZSounds.Config
                     throw new ArgumentException($"Problem in sound \"{name}\"", e);
                 }
             }
+        }
+
+        public static void LoadAll()
+        {
+            var config = new Config();
+            var modsDir = Path.GetDirectoryName(Main.mod!.Path);
+            var mainConfigPath = Path.Combine(Main.mod!.Path, "zsounds-config.json");
+            config.Load(mainConfigPath);
+            var allConfigs = Directory.GetFiles(modsDir, "zsounds-config.json", SearchOption.AllDirectories);
+            foreach (var configPath in allConfigs.Where(p => p != mainConfigPath))
+                config.Load(configPath);
+            config.Validate();
+            Active = config;
         }
 
         public SoundSet Apply(TrainCar car)

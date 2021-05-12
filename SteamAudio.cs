@@ -1,33 +1,20 @@
-using HarmonyLib;
-using UnityEngine;
+using DvMod.ZSounds.Config;
 
 namespace DvMod.ZSounds
 {
     public static class SteamAudio
     {
-        public static void ResetAudio(LocoAudioSteam __instance)
+        public static void Apply(TrainCar car, SoundSet soundSet)
         {
-            AudioUtils.SetClip(
+            var audio = car.GetComponentInChildren<LocoAudioSteam>();
+            Main.DebugLog(() => $"[{car.ID}] Loading {SoundType.Whistle} {soundSet[SoundType.Whistle]}");
+            AudioUtils.Apply(
+                soundSet[SoundType.Whistle],
                 "SH282 whistle",
-                __instance.whistleAudio,
-                Main.settings.steamWhistleSound,
-                enabled: true,
-                Main.settings.steamWhistlePitch);
+                audio.whistleAudio);
         }
 
         public static void ResetAllAudio()
-        {
-            foreach (var audio in Component.FindObjectsOfType<LocoAudioSteam>())
-                ResetAudio(audio);
-        }
-
-        [HarmonyPatch(typeof(LocoAudioSteam), nameof(LocoAudioSteam.SetupLocoLogic))]
-        public static class SetupForCarPatch
-        {
-            public static void Postfix(LocoAudioSteam __instance)
-            {
-                ResetAudio(__instance);
-            }
-        }
+        {}
     }
 }

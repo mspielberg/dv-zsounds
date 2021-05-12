@@ -40,6 +40,7 @@ namespace DvMod.ZSounds
             modEntry.OnSaveGUI = OnSaveGui;
             modEntry.OnToggle = OnToggle;
 
+            Config.Config.LoadAll();
             Commands.Register();
 
             return true;

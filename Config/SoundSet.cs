@@ -8,14 +8,19 @@ namespace DvMod.ZSounds.Config
 {
     public class SoundSet
     {
-        public readonly Dictionary<SoundType, string> sounds = new Dictionary<SoundType, string>();
+        public readonly Dictionary<SoundType, SoundDefinition> sounds = new Dictionary<SoundType, SoundDefinition>();
 
         public JObject ToJson()
         {
             var obj = new JObject();
             foreach (var (type, sound) in sounds)
-                obj.Add(type.ToString(), sound);
+                obj.Add(type.ToString(), sound.name);
             return obj;
+        }
+
+        public SoundDefinition? this[SoundType type]
+        {
+            get => sounds[type];
         }
     }
 
@@ -53,7 +58,7 @@ namespace DvMod.ZSounds.Config
 
         public void Apply(SoundSet soundSet)
         {
-            soundSet.sounds[type] = name;
+            soundSet.sounds[type] = this;
         }
 
         public void Validate()
