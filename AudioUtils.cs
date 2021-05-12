@@ -14,6 +14,11 @@ namespace DvMod.ZSounds
             public float pitch;
             public float minPitch;
             public float maxPitch;
+
+            public override string ToString()
+            {
+                return $"clip={clip?.length},clips={clips?.Length},pitch={pitch},minPitch={minPitch},maxPitch={maxPitch}";
+            }
         }
 
         private static readonly Dictionary<string, AudioSettings> Defaults = new Dictionary<string, AudioSettings>();
@@ -65,7 +70,7 @@ namespace DvMod.ZSounds
             }
 
             source.clip = soundDefinition.filename.Map(FileAudio.Load) ?? defaults.clip;
-            source.pitch = soundDefinition.pitch ?? defaults.pitch;
+            source.pitch = soundDefinition.pitch;
         }
 
         public static void Apply(Config.SoundDefinition? soundDefinition, string tag, LayeredAudio audio)
@@ -81,6 +86,7 @@ namespace DvMod.ZSounds
                     minPitch = audio.minPitch,
                     maxPitch = audio.maxPitch,
                 };
+                Main.DebugLog(() => $"Saved default settings: {Defaults[tag]}");
             }
 
             var defaults = Defaults[tag];
@@ -95,10 +101,10 @@ namespace DvMod.ZSounds
             }
             else
             {
-                audio.minPitch = soundDefinition.minPitch ?? defaults.minPitch;
-                audio.maxPitch = soundDefinition.maxPitch ?? defaults.maxPitch;
+                audio.minPitch = soundDefinition.minPitch;
+                audio.maxPitch = soundDefinition.maxPitch;
                 mainLayer.source.clip = soundDefinition.filename.Map(FileAudio.Load) ?? defaults.clip;
-                mainLayer.startPitch = soundDefinition.pitch ?? defaults.pitch;
+                mainLayer.startPitch = soundDefinition.pitch;
 
                 for (int i = 1; i < audio.layers.Length; i++)
                     audio.layers[i].source.mute = true;

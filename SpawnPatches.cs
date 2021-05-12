@@ -7,6 +7,7 @@ namespace DvMod.ZSounds
         public static void ApplyAudio(TrainCar car)
         {
             var soundSet = Registry.Get(car);
+            Main.DebugLog(() => $"Applying sounds for {car.ID}");
             switch (car.carType)
             {
                 case TrainCarType.LocoDiesel:
@@ -26,7 +27,8 @@ namespace DvMod.ZSounds
         {
             public static void Postfix(TrainCar __instance)
             {
-                ApplyAudio(__instance);
+                if (CarTypes.IsLocomotive(__instance.carType))
+                    ApplyAudio(__instance);
             }
         }
     }

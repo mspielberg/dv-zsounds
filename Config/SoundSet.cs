@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace DvMod.ZSounds.Config
 {
@@ -44,9 +45,9 @@ namespace DvMod.ZSounds.Config
         public SoundType type;
         public string? filename;
         public string[]? filenames;
-        public float? pitch;
-        public float? minPitch;
-        public float? maxPitch;
+        public float pitch;
+        public float minPitch;
+        public float maxPitch;
         public float? fadeStart;
         public float? fadeDuration;
 
@@ -76,6 +77,12 @@ namespace DvMod.ZSounds.Config
             return new SoundDefinition(name, (SoundType)Enum.Parse(typeof(SoundType), token["type"].Value<string>()))
             {
                 filename = token["filename"].Map(fn => Path.Combine(root, fn.Value<string>())),
+                filenames = token["filenames"].Map(jArray => jArray.Select(fn => Path.Combine(root, fn.Value<string>())).ToArray()),
+                pitch = token["pitch"].MapS(n => n.Value<float>()) ?? 1f,
+                minPitch = token["minPitch"].MapS(n => n.Value<float>()) ?? 1f,
+                maxPitch = token["maxPitch"].MapS(n => n.Value<float>()) ?? 1f,
+                fadeStart = token["fadeStart"].MapS(n => n.Value<float>()),
+                fadeDuration = token["fadeDuration"].MapS(n => n.Value<float>()),
             };
         }
 

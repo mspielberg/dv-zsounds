@@ -69,7 +69,7 @@ namespace DvMod.ZSounds
                     {
                         if (iter.Current.Is(OpCodes.Ldc_R4, value))
                         {
-                            yield return new CodeInstruction(OpCodes.Ldarg_0) { labels = iter.Current.labels };
+                            yield return new CodeInstruction(OpCodes.Ldloc_1) { labels = iter.Current.labels };
                             yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EngineFade), methodName));
                             yield break;
                         }

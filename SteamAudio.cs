@@ -7,7 +7,6 @@ namespace DvMod.ZSounds
         public static void Apply(TrainCar car, SoundSet soundSet)
         {
             var audio = car.GetComponentInChildren<LocoAudioSteam>();
-            Main.DebugLog(() => $"Applying sounds for {car.ID}");
             AudioUtils.Apply(
                 soundSet[SoundType.Whistle],
                 "SH282 whistle",

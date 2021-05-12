@@ -9,6 +9,11 @@ namespace DvMod.ZSounds
             where U : class =>
             (value == null) ? null : f(value);
 
+        public static U? MapS<T, U>(this T? value, Func<T, U> f)
+            where T : class
+            where U : struct =>
+            (value == null) ? (U?)null : f(value);
+
         public static U? FlatMap<T, U>(this T? value, Func<T, U?> f)
             where T : class
             where U : struct =>
