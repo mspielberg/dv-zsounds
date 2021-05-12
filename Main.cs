@@ -48,7 +48,7 @@ namespace DvMod.ZSounds
 
         private static void OnGui(UnityModManager.ModEntry modEntry)
         {
-            settings.Draw();
+            settings.Draw(modEntry);
         }
 
         private static void OnSaveGui(UnityModManager.ModEntry modEntry)

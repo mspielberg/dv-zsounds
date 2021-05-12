@@ -9,6 +9,15 @@ namespace DvMod.ZSounds
         [Draw("Enable logging")]
         public bool enableLogging;
 
+        public Settings()
+        {
+        }
+
+        public Settings(string? version)
+        {
+            this.version = version;
+        }
+
         public void OnChange() {}
     }
 }
