@@ -16,34 +16,35 @@ namespace DvMod.ZSounds
             public float fadeOutDuration = 1f;
         }
 
-        private static readonly Dictionary<TrainCar, Settings> settings = new Dictionary<TrainCar, Settings>();
+        private static readonly Dictionary<LocoTrainAudio, Settings> settings = new Dictionary<LocoTrainAudio, Settings>();
 
-        private static Settings GetDefaultSettings(TrainCar car)
+        private static Settings GetDefaultSettings(LocoTrainAudio audio)
         {
-            if (car.carType == TrainCarType.LocoShunter)
+            if (audio is LocoAudioShunter audioShunter)
             {
-                var audio = car.GetComponent<LocoAudioShunter>();
                 return new Settings
                 {
-                    fadeInStart = audio.engineOnClip.length * 0.15f,
-                    fadeOutStart = audio.engineOffClip.length * 0.10f,
+                    fadeInStart = audioShunter.engineOnClip.length * 0.15f,
+                    fadeOutStart = audioShunter.engineOffClip.length * 0.10f,
+                };
+            }
+            else if (audio is LocoAudioDiesel audioDiesel)
+            {
+                return new Settings
+                {
+                    fadeInStart = audioDiesel.engineOnClip.length * 0.15f,
+                    fadeOutStart = audioDiesel.engineOffClip.length * 0.10f,
                 };
             }
             else
             {
-                var audio = car.GetComponent<LocoAudioDiesel>();
-                return new Settings
-                {
-                    fadeInStart = audio.engineOnClip.length * 0.15f,
-                    fadeOutStart = audio.engineOffClip.length * 0.10f,
-                };
+                throw new System.Exception($"{audio.GetType().Name} received by EngineFade");
             }
         }
 
         private static Settings GetSettings(LocoTrainAudio audio)
         {
-            var car = TrainCar.Resolve(audio.gameObject);
-            return settings.ContainsKey(car) ? settings[car] : GetDefaultSettings(car);
+            return settings.ContainsKey(audio) ? settings[audio] : GetDefaultSettings(audio);
         }
 
         public static float GetFadeInStart(LocoTrainAudio audio) => GetSettings(audio).fadeInStart;
@@ -51,7 +52,10 @@ namespace DvMod.ZSounds
         public static float GetFadeInDuration(LocoTrainAudio audio) => GetSettings(audio).fadeInDuration;
         public static float GetFadeOutDuration(LocoTrainAudio audio) => GetSettings(audio).fadeOutDuration;
 
-        public static void SetFadeSettings(TrainCar car, Settings fadeSettings) => settings[car] = fadeSettings;
+        public static void SetFadeSettings(LocoTrainAudio audio, Settings fadeSettings)
+        {
+            settings[audio] = fadeSettings;
+        }
 
         [HarmonyPatch]
         public static class EngineAudioHandlePatch

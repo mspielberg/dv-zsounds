@@ -8,25 +8,13 @@ namespace DvMod.ZSounds
     {
         private static readonly Dictionary<Horn, float> lastReset = new Dictionary<Horn, float>();
 
-        private static void ResetAudio(Horn horn)
-        {
-            horn.loopLayered.minPitch = 1f - (Main.settings.hornQuillDepth / 100f);
-            foreach (var layer in horn.loopLayered.layers)
-                layer.inertialPitch = false;
-        }
-
-        public static void ResetAllAudio()
-        {
-            foreach (var horn in Component.FindObjectsOfType<Horn>())
-                ResetAudio(horn);
-        }
-
         [HarmonyPatch(typeof(Horn), nameof(Horn.InitializeAudio))]
         public static class HornInitializeAudioPatch
         {
             public static void Postfix(Horn __instance)
             {
-                ResetAudio(__instance);
+                foreach (var layer in __instance.loopLayered.layers)
+                    layer.inertialPitch = false;
             }
         }
 

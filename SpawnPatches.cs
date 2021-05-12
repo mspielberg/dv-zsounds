@@ -9,10 +9,12 @@ namespace DvMod.ZSounds
             var soundSet = Registry.Get(car);
             switch (car.carType)
             {
-                // case TrainCarType.LocoDiesel:
-                //     return DieselAudio.Apply(car, soundSet);
-                // case TrainCarType.LocoShunter:
-                //     return ShunterAudio.Apply(car, soundSet);
+                case TrainCarType.LocoDiesel:
+                    DieselAudio.Apply(car, soundSet);
+                    break;
+                case TrainCarType.LocoShunter:
+                    ShunterAudio.Apply(car, soundSet);
+                    break;
                 case TrainCarType.LocoSteamHeavy:
                     SteamAudio.Apply(car, soundSet);
                     break;

@@ -17,84 +17,36 @@ namespace DvMod.ZSounds
         }
 
         private static readonly Dictionary<string, AudioSettings> Defaults = new Dictionary<string, AudioSettings>();
-        public static void SetClip(string tag, LayeredAudio audio, string? name, bool enabled, float startPitch)
-        {
-            if (!Defaults.ContainsKey(tag))
-            {
-                Defaults[tag] = new AudioSettings()
-                {
-                    clip = audio.layers[0].source.clip,
-                    pitch = audio.layers[0].startPitch,
-                };
-            }
-
-            if (!enabled)
-            {
-                foreach (var layer in audio.layers)
-                    layer.source.mute = true;
-            }
-            else if (name == null)
-            {
-                var defaults = Defaults[tag];
-                audio.layers[0].source.clip = defaults.clip;
-                audio.layers[0].source.mute = false;
-                audio.layers[0].startPitch = defaults.pitch * startPitch;
-                for (int i = 1; i < audio.layers.Length; i++)
-                    audio.layers[i].source.mute = false;
-            }
-            else
-            {
-                audio.layers[0].source.clip = FileAudio.Load(Path.Combine(Main.mod!.Path, name));
-                audio.layers[0].source.mute = false;
-                audio.layers[0].startPitch = startPitch;
-                for (int i = 1; i < audio.layers.Length; i++)
-                    audio.layers[i].source.mute = true;
-            }
-        }
-
-        public static void SetClip(string tag, ref AudioClip clip, string? name, bool enabled)
-        {
-            if (!Defaults.ContainsKey(tag))
-                Defaults[tag] = new AudioSettings() { clip = clip };
-
-            if (!enabled)
-                clip = FileAudio.Silent;
-            else if (name == null)
-                clip = Defaults[tag].clip!;
-            else
-                clip = FileAudio.Load(Path.Combine(Main.mod!.Path, name));
-        }
 
         public static void Apply(Config.SoundDefinition? soundDefinition, string tag, ref AudioClip clip)
         {
+            Main.DebugLog(() => $"Loading {tag}: {soundDefinition}");
             if (!Defaults.ContainsKey(tag))
                 Defaults[tag] = new AudioSettings() { clip = clip };
 
-            if (soundDefinition == null)
-                clip = Defaults[tag].clip!;
-            else if (soundDefinition.filename != null)
+            if (soundDefinition?.filename != null)
                 clip = FileAudio.Load(soundDefinition.filename);
             else
-                clip = FileAudio.Silent;
+                clip = Defaults[tag].clip!;
         }
 
         public static void Apply(Config.SoundDefinition? soundDefinition, string tag, ref AudioClip[] clips)
         {
+            Main.DebugLog(() => $"Loading {tag}: {soundDefinition}");
             if (!Defaults.ContainsKey(tag))
                 Defaults[tag] = new AudioSettings() { clips = clips };
 
-            if (soundDefinition == null)
-                clips = Defaults[tag].clips!;
-            else if ((soundDefinition.filenames?.Length ?? 0) > 0)
+            if (soundDefinition != null && (soundDefinition.filenames?.Length ?? 0) > 0)
                 clips = soundDefinition.filenames.Select(FileAudio.Load).ToArray();
-            else if (soundDefinition.filename != null)
+            else if (soundDefinition?.filename != null)
                 clips = new AudioClip[] { FileAudio.Load(soundDefinition.filename) };
             else
-                clips = new AudioClip[] { FileAudio.Silent };
+                clips = Defaults[tag].clips!;
         }
 
         public static void Apply(Config.SoundDefinition? soundDefinition, string tag, AudioSource source)
         {
+            Main.DebugLog(() => $"Loading {tag}: {soundDefinition}");
             if (!Defaults.ContainsKey(tag))
             {
                 Defaults[tag] = new AudioSettings()
@@ -112,13 +64,13 @@ namespace DvMod.ZSounds
                 return;
             }
 
-            source.clip = soundDefinition.filename.Map(FileAudio.Load) ?? FileAudio.Silent;
+            source.clip = soundDefinition.filename.Map(FileAudio.Load) ?? defaults.clip;
             source.pitch = soundDefinition.pitch ?? defaults.pitch;
         }
 
         public static void Apply(Config.SoundDefinition? soundDefinition, string tag, LayeredAudio audio)
         {
-            Main.DebugLog(() => $"Loading {soundDefinition}");
+            Main.DebugLog(() => $"Loading {tag}: {soundDefinition}");
             var mainLayer = audio.layers[0];
             if (!Defaults.ContainsKey(tag))
             {
