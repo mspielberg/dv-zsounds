@@ -20,8 +20,10 @@ namespace DvMod.ZSounds
             AudioUtils.Apply(shutdown, "DE2 engine shutdown", ref audio.engineOffClip);
             EngineFade.SetFadeSettings(audio, new EngineFade.Settings
             {
-                fadeInStart = 0.15f * audio.engineOnClip.length,
-                fadeOutStart = 0.10f * audio.engineOffClip.length,
+                fadeInStart = startup?.fadeStart ?? 0.15f * audio.engineOnClip.length,
+                fadeOutStart = shutdown?.fadeStart ?? 0.10f * audio.engineOffClip.length,
+                fadeInDuration = startup?.fadeDuration ?? 2f,
+                fadeOutDuration = shutdown?.fadeDuration ?? 1f,
             });
 
             soundSet.sounds.TryGetValue(SoundType.EngineLoop, out var loop);

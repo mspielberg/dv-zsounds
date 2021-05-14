@@ -76,10 +76,10 @@ namespace DvMod.ZSounds
                         yield return iter.Current;
                     }
                 }
-                foreach (var inst in ReplaceNext(0.1f, nameof(EngineFade.GetFadeInStart))) yield return inst;
-                foreach (var inst in ReplaceNext(0.15f, nameof(EngineFade.GetFadeOutStart))) yield return inst;
-                foreach (var inst in ReplaceNext(1f, nameof(EngineFade.GetFadeInDuration))) yield return inst;
-                foreach (var inst in ReplaceNext(2f, nameof(EngineFade.GetFadeOutDuration))) yield return inst;
+                foreach (var inst in ReplaceNext(0.1f, nameof(EngineFade.GetFadeOutStart))) yield return inst;
+                foreach (var inst in ReplaceNext(0.15f, nameof(EngineFade.GetFadeInStart))) yield return inst;
+                foreach (var inst in ReplaceNext(1f, nameof(EngineFade.GetFadeOutDuration))) yield return inst;
+                foreach (var inst in ReplaceNext(2f, nameof(EngineFade.GetFadeInDuration))) yield return inst;
                 while (iter.MoveNext())
                     yield return iter.Current;
             }
