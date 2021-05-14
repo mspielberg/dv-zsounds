@@ -1,0 +1,20 @@
+{
+    "version": 1,
+    "hooks": [
+        {
+            "type": "AddRule",
+            "path": "loco_de6",
+            "rule": { "type": "If", "property": "SkinName", "value": "MyCustomSkin", "rule": { "type": "Ref", "name": "loco_de6_MyCustomSkin" } }
+        }
+    ],
+    "rules": {
+        "loco_de6_MyCustomSkin": {
+            "type": "AllOf",
+            "sounds": [ "MyCustomSkin-horn-hit", "MyCustomSkin-horn-loop" ]
+        }
+    },
+    "sounds": {
+        "MyCustomSkin-horn-hit": { "type": "HornHit", "filename": "MyHornHit.ogg" },
+        "MyCustomSkin-horn-loop": { "type": "HornLoop", "filename": "MyHornLoop.ogg" }
+    }
+}
