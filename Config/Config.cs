@@ -56,17 +56,25 @@ namespace DvMod.ZSounds.Config
                     throw new ArgumentException($"Problem in sound \"{name}\"", e);
                 }
             }
+
+            Main.DebugLog(() => ToString());
         }
 
         public static void LoadAll()
         {
             var config = new Config();
-            var modsDir = Path.GetDirectoryName(Main.mod!.Path);
             var mainConfigPath = Path.Combine(Main.mod!.Path, "zsounds-config.json");
             config.Load(mainConfigPath);
-            var allConfigs = Directory.GetFiles(modsDir, "zsounds-config.json", SearchOption.AllDirectories);
-            foreach (var configPath in allConfigs.Where(p => p != mainConfigPath))
+
+            var modsDir = Path.GetDirectoryName(Path.GetDirectoryName(Main.mod!.Path));
+            var extraConfigs =
+                Directory.GetFiles(modsDir, "zsounds-config.json", SearchOption.AllDirectories)
+                    .Where(p => p != mainConfigPath);
+
+            Main.DebugLog(() => $"Found {extraConfigs.Count()} zsounds-config.json files in {modsDir}");
+            foreach (var configPath in extraConfigs)
                 config.Load(configPath);
+
             config.Validate();
             Active = config;
         }
