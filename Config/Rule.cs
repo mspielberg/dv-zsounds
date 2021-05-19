@@ -86,7 +86,7 @@ namespace DvMod.ZSounds.Config
 
         public override string ToString()
         {
-            return $"[{path}] AllOf:\n{string.Join<IRule>("\n", rules).Indent(2)}";
+            return $"AllOf:\n{string.Join<IRule>("\n", rules).Indent(2)}";
         }
     }
 
@@ -155,7 +155,7 @@ namespace DvMod.ZSounds.Config
         public override string ToString()
         {
             var totalWeight = weights.Sum();
-            return $"[{path}] OneOf:\n{string.Join("\n", rules.Zip(weights, (r, w) => $"{w}/{totalWeight}: {r}")).Indent(2)}";
+            return $"OneOf:\n{string.Join("\n", rules.Zip(weights, (r, w) => $"{w}/{totalWeight}: {r}")).Indent(2)}";
         }
     }
 
@@ -251,7 +251,7 @@ namespace DvMod.ZSounds.Config
 
         public override string ToString()
         {
-            return $"[{path}] If {property} = {value}:\n{rule.ToString().Indent(2)}";
+            return $"If {property} = {value}:\n{rule.ToString().Indent(2)}";
         }
     }
 
@@ -284,7 +284,7 @@ namespace DvMod.ZSounds.Config
 
         public override string ToString()
         {
-            return $"[{path}] Ref \"{name}\"";
+            return $"Ref \"{name}\"";
         }
     }
 
@@ -317,7 +317,7 @@ namespace DvMod.ZSounds.Config
 
         public override string ToString()
         {
-            return $"[{path}] Sound \"{name}\"";
+            return $"Sound \"{name}\"";
         }
     }
 }

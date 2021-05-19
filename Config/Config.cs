@@ -88,7 +88,7 @@ namespace DvMod.ZSounds.Config
 
         public override string ToString()
         {
-            var ruleStrings = rules.Select(kv => $"{kv.Key}: {kv.Value.ToString().Indent(2)}");
+            var ruleStrings = rules.Select(kv => $"{kv.Key}:\n{kv.Value.ToString().Indent(2)}");
             return $"Rules:\n{string.Join("\n", ruleStrings).Indent(2)}\nSounds:\n{string.Join("\n", sounds.Values).Indent(2)}";
         }
     }
