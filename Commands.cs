@@ -19,6 +19,7 @@ namespace DvMod.ZSounds
 
         private static void Register(string name, Action<CommandArg[]> proc)
         {
+            name = Main.mod!.Info.Id + "." + name;
             if (Terminal.Shell == null)
                 return;
             if (Terminal.Shell.Commands.Remove(name.ToUpper()))
@@ -30,25 +31,51 @@ namespace DvMod.ZSounds
 
         public static void Register()
         {
-            Register("loadconfig", _ =>
+            Register("applysound", args =>
             {
-                var path = System.IO.Path.Combine(Main.mod.Path, "zsounds-config.json");
-                try
+                if (args.Length < 1)
                 {
-                    var config = new Config.Config();
-                    config.Load(path);
-                    config.Validate();
-                    Terminal.Log(config.ToString());
-                    if (PlayerManager.Car != null)
-                    {
-                        var soundSet = config.Apply(PlayerManager.Car);
-                        Main.DebugLog(() => soundSet.ToJson().ToString());
-                    }
+                    Terminal.Log("usage: zsounds.applysound <soundname>");
+                    return;
                 }
-                catch (Exception e)
+                var car = PlayerManager.Car;
+                var soundSet = Registry.Get(car);
+                if (car == null || !CarTypes.IsLocomotive(car.carType))
                 {
-                    Terminal.Log(e.ToString());
+                    Terminal.Log("Car must be locomotive");
+                    return;
                 }
+                var sounds = Config.Config.Active!.sounds;
+                if (!sounds.TryGetValue(args[0].String, out var soundDefinition))
+                {
+                    Terminal.Log($"Unknown sound name: {args[0].String}\nKnown sound names: {string.Join(", ", sounds.Keys.OrderBy(x => x))}");
+                    return;
+                }
+                soundDefinition.Apply(soundSet);
+                SpawnPatches.ApplyAudio(car);
+            });
+
+            Register("applydefaultsound", args =>
+            {
+                if (args.Length < 1)
+                {
+                    Terminal.Log("usage: zsounds.applydefaultsound <soundtype>");
+                    return;
+                }
+                var car = PlayerManager.Car;
+                var soundSet = Registry.Get(car);
+                if (car == null || !CarTypes.IsLocomotive(car.carType))
+                {
+                    Terminal.Log("Car must be locomotive");
+                    return;
+                }
+                if (!Enum.TryParse<Config.SoundType>(args[0].String, ignoreCase: true, out var soundType))
+                {
+                    Terminal.Log($"unknown sound type: {args[0].String}");
+                    return;
+                }
+                soundSet.sounds.Remove(soundType);
+                SpawnPatches.ApplyAudio(car);
             });
         }
     }
