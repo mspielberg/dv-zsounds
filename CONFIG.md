@@ -50,9 +50,21 @@ Sounds are listed by a short name, which must be unique across all configuration
     - minPitch: pitch when whistle rope is pulled the minimum amount.
     - maxPitch: pitch when whistle rope is pulled fully.
 
+## Manually assigning sounds
+
+You can force ZSounds to use particular sounds for particular locomotives with the console.
+
+1. Board the locomotive whose sounds you want to change.
+2. Open the console. On US keyboards you can do this with the tilde (`~`) key. Other keyboard layouts may use different keys, e.g. the `ö` key.
+3. Enter the `zsounds.applysound` command followed by the short name of the sound to use on the locomotive. For example, board an SH-282 locomotive and then type `zsounds.applysound Hancock_3Chime` to change its whistle to that sound.
+4. Repeat step 3 to set additional sounds on the same locomotive.
+5. Close the console with the same key as used to open it.
+
+To use a sound effect from vanilla Derail Valley, use the `zsounds.applydefaultsound` command, followed by the SoundType to modify. For example, to force an SH-282 to use the vanilla whistle, type the command `zsounds.applydefaultsound Whistle` in the console.
+
 ## Defining rules
 
-The `rules` section defines how ZSounds assigns sounds to different locomotives. Whenever a locomotive is spawned, the special rule named `root` is executed, causing other rules to be executed. Along the way, sounds are assigned to the locomotive. ZSounds will remember what sounds were assigned and use them as long as the locomotive exists.
+The `rules` section defines how ZSounds automatically assigns sounds to different locomotives. Whenever a locomotive is spawned, the special rule named `root` is executed, causing other rules to be executed. Along the way, sounds are assigned to the locomotive. ZSounds will remember what sounds were assigned and use them as long as the locomotive exists.
 
     "rules": {
         "root": { "type": "AllOf", ... },
