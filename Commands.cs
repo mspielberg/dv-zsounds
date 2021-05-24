@@ -2,7 +2,6 @@ using CommandTerminal;
 using HarmonyLib;
 using System;
 using System.Linq;
-using UnityEngine;
 
 namespace DvMod.ZSounds
 {
@@ -75,6 +74,24 @@ namespace DvMod.ZSounds
                     return;
                 }
                 soundSet.sounds.Remove(soundType);
+                SpawnPatches.ApplyAudio(car);
+            });
+
+            Register("getcarsounds", _ =>
+            {
+                var car = PlayerManager.Car;
+                if (car == null)
+                    return;
+                var soundSet = Registry.Get(car);
+                Terminal.Log(soundSet.ToString());
+            });
+
+            Register("resetcarsounds", _ =>
+            {
+                var car = PlayerManager.Car;
+                if (car == null)
+                    return;
+                Registry.soundSets.Remove(car.CarGUID);
                 SpawnPatches.ApplyAudio(car);
             });
         }

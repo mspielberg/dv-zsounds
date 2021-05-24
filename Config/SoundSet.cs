@@ -23,6 +23,11 @@ namespace DvMod.ZSounds.Config
         {
             get => sounds[type];
         }
+
+        public override string ToString()
+        {
+            return string.Join("\n", sounds.Select(kv => $"{kv.Key}: {kv.Value}"));
+        }
     }
 
     public enum SoundType
@@ -88,7 +93,7 @@ namespace DvMod.ZSounds.Config
 
         public override string ToString()
         {
-            return $"{name}: {filename}";
+            return $"{name} ({filename})";
         }
     }
 }
