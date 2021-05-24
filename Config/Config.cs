@@ -64,6 +64,9 @@ namespace DvMod.ZSounds.Config
         {
             var config = new Config();
             var mainConfigPath = Path.Combine(Main.mod!.Path, "zsounds-config.json");
+
+            if (!File.Exists(mainConfigPath) || Default.IsDefaultConfigFile(mainConfigPath))
+                File.WriteAllText(mainConfigPath, Default.CurrentDefaultConfigFile);
             config.Load(mainConfigPath);
 
             var modsDir = Path.GetDirectoryName(Path.GetDirectoryName(Main.mod!.Path));
@@ -71,7 +74,6 @@ namespace DvMod.ZSounds.Config
                 Directory.GetFiles(modsDir, "zsounds-config.json", SearchOption.AllDirectories)
                     .Where(p => p != mainConfigPath);
 
-            Main.DebugLog(() => $"Found {extraConfigs.Count()} zsounds-config.json files in {modsDir}");
             foreach (var configPath in extraConfigs)
                 config.Load(configPath);
 

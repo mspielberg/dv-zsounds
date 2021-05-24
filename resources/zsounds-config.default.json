@@ -10,46 +10,49 @@
                 { "type": "If", "property": "CarType", "value": "LocoShunter",
                     "rule": { "type": "Ref", "name": "loco_de2" } },
                 { "type": "If", "property": "CarType", "value": "LocoSteamHeavy",
-                    "rule": { "type": "Ref", "name": "loco_sh282" } },
+                    "rule": { "type": "Ref", "name": "loco_sh282" } }
             ]
         },
 
-        // locomotives
         "loco_de2": {
             "type": "AllOf",
-            "rules": [ "random_diesel_horn", "random_de2_engine", ],
+            "rules": [ "random_diesel_horn", "random_de2_engine" ]
         },
         "loco_de6": {
             "type": "AllOf",
-            "rules": [ "random_diesel_horn", "random_de6_engine", ],
-            "sounds": [ "EBell" ],
+            "rules": [ "random_de6_bell", "random_de6_engine", "random_diesel_horn" ]
         },
         "loco_sh282": {
             "type": "AllOf",
-            "rules": [ "random_sh282_whistle", ],
+            "rules": [ "random_sh282_whistle" ]
         },
 
-        // randomized sounds
         "random_diesel_horn": {
             "type": "OneOf",
             "rules": [
                 { "type": "AllOf", "sounds": [ "A200_hit", "A200_loop" ] },
-                { "type": "AllOf", "sounds": [ "RS3L_hit", "RS3L_loop" ] },
+                { "type": "AllOf", "sounds": [ "RS3L_hit", "RS3L_loop" ] }
             ]
         },
         "random_de2_engine": {
             "type": "OneOf",
             "rules": [
-                { "type": "AllOf" }, // default engine sounds
-                { "type": "AllOf", "sounds": [ "OM402LA_startup", "OM402LA_loop", ]},
+                { "type": "AllOf" },
+                { "type": "AllOf", "sounds": [ "OM402LA_startup", "OM402LA_loop" ]}
             ],
-            "weights": [ 1, 3, ]
+            "weights": [ 1, 3 ]
+        },
+        "random_de6_bell": {
+            "type": "OneOf",
+            "rules": [
+                { "type": "Sound", "name": "EBell" }
+            ]
         },
         "random_de6_engine": {
             "type": "OneOf",
             "rules": [
-                { "type": "AllOf" }, // default engine sounds
-                { "type": "AllOf", "sounds": [ "EMD645_startup", "EMD645_loop", "EMD645_shutdown" ]},
+                { "type": "AllOf" },
+                { "type": "AllOf", "sounds": [ "EMD645_startup", "EMD645_loop", "EMD645_shutdown" ]}
             ]
         },
         "random_sh282_whistle": {
@@ -57,7 +60,7 @@
             "rules": [
                 { "type": "Sound", "name": "Hancock_3Chime" },
                 { "type": "Sound", "name": "Manns_Creek_3Chime" },
-                { "type": "Sound", "name": "Southern_3Chime" },
+                { "type": "Sound", "name": "Southern_3Chime" }
             ]
         }
     },
@@ -79,6 +82,6 @@
 
         "Hancock_3Chime": { "type": "Whistle", "filename": "Sounds\\Hancock_3-Chime.ogg" },
         "Manns_Creek_3Chime": { "type": "Whistle", "filename": "Sounds\\Manns_Creek_3_Chime.ogg" },
-        "Southern_3Chime": { "type": "Whistle", "filename": "Sounds\\Southern_3_Chime.ogg" },
+        "Southern_3Chime": { "type": "Whistle", "filename": "Sounds\\Southern_3_Chime.ogg" }
     }
 }
