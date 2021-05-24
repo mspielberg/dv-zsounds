@@ -30,6 +30,12 @@ namespace DvMod.ZSounds
 
         public static void Register()
         {
+            Register("reloadconfig", _ =>
+            {
+                Config.Config.LoadAll();
+                Terminal.Log($"Reloaded configuration:\n{Config.Config.Active}");
+            });
+
             Register("applysound", args =>
             {
                 if (args.Length < 1)
