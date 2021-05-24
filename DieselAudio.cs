@@ -75,7 +75,7 @@ namespace DvMod.ZSounds
 
     public static class DieselBell
     {
-        [HarmonyPatch(typeof(DieselDashboardControls), nameof(DieselDashboardControls.Init))]
+        [HarmonyPatch(typeof(DieselDashboardControls), nameof(DieselDashboardControls.OnEnable))]
         public static class InitPatch
         {
             public static void Postfix(DieselDashboardControls __instance)
@@ -85,9 +85,13 @@ namespace DvMod.ZSounds
 
             private static IEnumerator SetupBellLamp(DieselDashboardControls __instance)
             {
-                yield return null;
-
-                var bellAudioSource = TrainCar.Resolve(__instance.gameObject).transform.Find("AudioDiesel(Clone)/Horn/ZSounds bell").GetComponent<AudioSource>();
+                AudioSource bellAudioSource;
+                do
+                {
+                    yield return null;
+                    bellAudioSource = TrainCar.Resolve(__instance.gameObject).transform.Find("AudioDiesel(Clone)/Horn/ZSounds bell").GetComponent<AudioSource>();
+                }
+                while (bellAudioSource == null);
 
                 var bellButton = __instance.transform.Find("offset/C bell button").GetComponent<ButtonBase>();
                 bellButton.SetValue(bellAudioSource.loop ? 1 : 0);
