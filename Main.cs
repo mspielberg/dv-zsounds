@@ -42,6 +42,7 @@ namespace DvMod.ZSounds
 
             Config.Config.LoadAll();
             Commands.Register();
+            Registry.LoadFromSaveManager();
 
             return true;
         }

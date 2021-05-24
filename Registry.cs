@@ -17,6 +17,28 @@ namespace DvMod.ZSounds
             return soundSet;
         }
 
+        public static void LoadFromSaveManager()
+        {
+            var saved = SaveGameManager.data?.GetJObject(typeof(Registry).FullName);
+            if (saved == null)
+                return;
+
+            foreach (var (guid, soundsObj) in saved)
+            {
+                if (soundsObj is JObject obj)
+                {
+                    var soundSet = new SoundSet();
+                    foreach (var (typeStr, soundName) in obj)
+                    {
+                        if (Config.Config.Active!.sounds.TryGetValue(soundName.Value<string>(), out var soundDefinition))
+                            soundSet.sounds[Config.Util.ParseEnum<SoundType>(typeStr)] = soundDefinition;
+                    }
+                    if (soundSet.sounds.Count > 0)
+                        soundSets[guid] = soundSet;
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(SaveGameManager), nameof(SaveGameManager.Save))]
         public static class SavePatch
         {
@@ -37,24 +59,7 @@ namespace DvMod.ZSounds
         {
             public static void Postfix()
             {
-                var saved = SaveGameManager.data.GetJObject(typeof(Registry).FullName);
-                if (saved == null)
-                    return;
-
-                foreach (var (guid, soundsObj) in saved)
-                {
-                    if (soundsObj is JObject obj)
-                    {
-                        var soundSet = new SoundSet();
-                        foreach (var (typeStr, soundName) in obj)
-                        {
-                            if (Config.Config.Active!.sounds.TryGetValue(soundName.Value<string>(), out var soundDefinition))
-                                soundSet.sounds[Config.Util.ParseEnum<SoundType>(typeStr)] = soundDefinition;
-                        }
-                        if (soundSet.sounds.Count > 0)
-                            soundSets[guid] = soundSet;
-                    }
-                }
+                LoadFromSaveManager();
             }
         }
     }

@@ -238,7 +238,9 @@ namespace DvMod.ZSounds.Config
                 if (!mod.Active)
                     return null;
 
-                var field = mod.Assembly.GetType("SkinManagerMod.Main").GetField("trainCarState", System.Reflection.BindingFlags.Static);
+                var field = mod.Assembly
+                    .GetType("SkinManagerMod.Main")
+                    .GetField("trainCarState", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
                 carSkins = (Dictionary<string, string>)field.GetValue(null);
                 return carSkins;
             }
