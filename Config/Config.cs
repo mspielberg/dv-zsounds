@@ -127,4 +127,11 @@ namespace DvMod.ZSounds.Config
             );
         }
     }
+
+    public class ConfigException : Exception
+    {
+        public ConfigException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
 }

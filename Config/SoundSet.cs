@@ -78,17 +78,23 @@ namespace DvMod.ZSounds.Config
 
         public static SoundDefinition Parse(string configFilePath, string name, JToken token)
         {
-            var root = Path.GetDirectoryName(configFilePath);
-            return new SoundDefinition(name, (SoundType)Enum.Parse(typeof(SoundType), token["type"].Value<string>()))
+            try {
+                var root = Path.GetDirectoryName(configFilePath);
+                return new SoundDefinition(name, (SoundType)Enum.Parse(typeof(SoundType), token["type"].Value<string>()))
+                {
+                    filename = token["filename"].Map(fn => Path.Combine(root, fn.Value<string>())),
+                    filenames = token["filenames"].Map(jArray => jArray.Select(fn => Path.Combine(root, fn.Value<string>())).ToArray()),
+                    pitch = token["pitch"].MapS(n => n.Value<float>()) ?? 1f,
+                    minPitch = token["minPitch"].MapS(n => n.Value<float>()) ?? 1f,
+                    maxPitch = token["maxPitch"].MapS(n => n.Value<float>()) ?? 1f,
+                    fadeStart = token["fadeStart"].MapS(n => n.Value<float>()),
+                    fadeDuration = token["fadeDuration"].MapS(n => n.Value<float>()),
+                };
+            }
+            catch (Exception e)
             {
-                filename = token["filename"].Map(fn => Path.Combine(root, fn.Value<string>())),
-                filenames = token["filenames"].Map(jArray => jArray.Select(fn => Path.Combine(root, fn.Value<string>())).ToArray()),
-                pitch = token["pitch"].MapS(n => n.Value<float>()) ?? 1f,
-                minPitch = token["minPitch"].MapS(n => n.Value<float>()) ?? 1f,
-                maxPitch = token["maxPitch"].MapS(n => n.Value<float>()) ?? 1f,
-                fadeStart = token["fadeStart"].MapS(n => n.Value<float>()),
-                fadeDuration = token["fadeDuration"].MapS(n => n.Value<float>()),
-            };
+                throw new ConfigException($"Could not parse SoundDefinition: {token}", e);
+            }
         }
 
         public override string ToString()
