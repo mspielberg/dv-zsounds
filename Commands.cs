@@ -58,6 +58,7 @@ namespace DvMod.ZSounds
                 }
                 soundDefinition.Apply(soundSet);
                 SpawnPatches.ApplyAudio(car);
+                Terminal.Log(Registry.Get(car).ToString());
             });
 
             Register("applydefaultsound", args =>
@@ -81,6 +82,7 @@ namespace DvMod.ZSounds
                 }
                 soundSet.sounds.Remove(soundType);
                 SpawnPatches.ApplyAudio(car);
+                Terminal.Log(Registry.Get(car).ToString());
             });
 
             Register("getcarsounds", _ =>
@@ -99,6 +101,7 @@ namespace DvMod.ZSounds
                     return;
                 Registry.soundSets.Remove(car.CarGUID);
                 SpawnPatches.ApplyAudio(car);
+                Terminal.Log(Registry.Get(car).ToString());
             });
         }
     }
