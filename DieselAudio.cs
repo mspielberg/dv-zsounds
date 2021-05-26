@@ -30,28 +30,22 @@ namespace DvMod.ZSounds
                 fadeOutDuration = shutdown?.fadeDuration ?? 1f,
             });
 
-            soundSet.sounds.TryGetValue(SoundType.EngineLoop, out var loop);
-            AudioUtils.Apply(loop, "DE6 engine loop", audio.engineAudio);
-            soundSet.sounds.TryGetValue(SoundType.EngineLoadLoop, out var loadLoop);
-            AudioUtils.Apply(loadLoop, "DE6 engine load loop", audio.enginePistonAudio);
-            soundSet.sounds.TryGetValue(SoundType.TractionMotors, out var tractionMotorsLoop);
-            AudioUtils.Apply(tractionMotorsLoop, "DE6 traction motor loop", audio.electricMotorAudio);
+            AudioUtils.Apply(soundSet[SoundType.EngineLoop], "DE6 engine loop", audio.engineAudio);
+            AudioUtils.Apply(soundSet[SoundType.EngineLoadLoop], "DE6 engine load loop", audio.enginePistonAudio);
+            AudioUtils.Apply(soundSet[SoundType.TractionMotors], "DE6 traction motor loop", audio.electricMotorAudio);
         }
 
         private static void SetBell(LocoAudioDiesel audio, SoundSet soundSet)
         {
             var audioSource = audio.transform.Find("Horn/ZSounds bell").GetComponent<AudioSource>();
-            soundSet.sounds.TryGetValue(SoundType.Bell, out var bell);
-            AudioUtils.Apply(bell, "DE6 bell", audioSource);
+            AudioUtils.Apply(soundSet[SoundType.Bell], "DE6 bell", audioSource);
         }
 
         private static void SetHorn(LocoAudioDiesel audio, SoundSet soundSet)
         {
-            soundSet.sounds.TryGetValue(SoundType.HornHit, out var hit);
             var hornHitSource = audio.hornAudio.transform.Find("train_horn_01_hit").GetComponent<AudioSource>();
-            AudioUtils.Apply(hit, "DE6 horn hit", hornHitSource);
-            soundSet.sounds.TryGetValue(SoundType.HornLoop, out var loop);
-            AudioUtils.Apply(loop, "DE6 horn loop", audio.hornAudio);
+            AudioUtils.Apply(soundSet[SoundType.HornHit], "DE6 horn hit", hornHitSource);
+            AudioUtils.Apply(soundSet[SoundType.HornLoop], "DE6 horn loop", audio.hornAudio);
         }
 
         [HarmonyPatch(typeof(LocoAudioDiesel), nameof(LocoAudioDiesel.SetupForCar))]

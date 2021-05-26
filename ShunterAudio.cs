@@ -26,21 +26,16 @@ namespace DvMod.ZSounds
                 fadeOutDuration = shutdown?.fadeDuration ?? 1f,
             });
 
-            soundSet.sounds.TryGetValue(SoundType.EngineLoop, out var loop);
-            AudioUtils.Apply(loop, "DE2 engine loop", audio.engineAudio);
-            soundSet.sounds.TryGetValue(SoundType.EngineLoadLoop, out var loadLoop);
-            AudioUtils.Apply(loadLoop, "DE2 engine load loop", audio.enginePistonAudio);
-            soundSet.sounds.TryGetValue(SoundType.TractionMotors, out var tractionMotorsLoop);
-            AudioUtils.Apply(tractionMotorsLoop, "DE2 traction motor loop", audio.electricMotorAudio);
+            AudioUtils.Apply(soundSet[SoundType.EngineLoop], "DE2 engine loop", audio.engineAudio);
+            AudioUtils.Apply(soundSet[SoundType.EngineLoadLoop], "DE2 engine load loop", audio.enginePistonAudio);
+            AudioUtils.Apply(soundSet[SoundType.TractionMotors], "DE2 traction motor loop", audio.electricMotorAudio);
         }
 
         private static void SetHorn(LocoAudioShunter audio, SoundSet soundSet)
         {
-            soundSet.sounds.TryGetValue(SoundType.HornHit, out var hit);
             var hornHitSource = audio.hornAudio.transform.Find("train_horn_01_hit").GetComponent<AudioSource>();
-            AudioUtils.Apply(hit, "DE2 horn hit", hornHitSource);
-            soundSet.sounds.TryGetValue(SoundType.HornLoop, out var loop);
-            AudioUtils.Apply(loop, "DE2 horn loop", audio.hornAudio);
+            AudioUtils.Apply(soundSet[SoundType.HornHit], "DE2 horn hit", hornHitSource);
+            AudioUtils.Apply(soundSet[SoundType.HornLoop], "DE2 horn loop", audio.hornAudio);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace DvMod.ZSounds.Config
 
         public SoundDefinition? this[SoundType type]
         {
-            get => sounds[type];
+            get => sounds.TryGetValue(type, out var soundDefinition) ? soundDefinition : null;
         }
 
         public override string ToString()
