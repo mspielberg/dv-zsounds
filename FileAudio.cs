@@ -12,11 +12,11 @@ namespace DvMod.ZSounds
 
         public static AudioClip Load(string path)
         {
+            if (path.Length == 0)
+                return Silent;
             if (cache.TryGetValue(path, out var clip))
-            {
                 return clip;
-            }
-            Main.DebugLog(() => $"Loading clip from {path}");
+            Main.DebugLog(() => $"Loading {path}");
             var audioType = AudioTypes[Path.GetExtension(path)];
             var webRequest = UnityWebRequestMultimedia.GetAudioClip(new Uri(path).AbsoluteUri, audioType);
             var async = webRequest.SendWebRequest();
