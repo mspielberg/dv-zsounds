@@ -38,8 +38,10 @@ namespace DvMod.ZSounds.Config
         Whistle,
         Bell,
         EngineLoop,
+        EngineLoadLoop,
         EngineStartup,
         EngineShutdown,
+        TractionMotors,
     }
 
     [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]

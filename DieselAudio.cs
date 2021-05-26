@@ -32,6 +32,10 @@ namespace DvMod.ZSounds
 
             soundSet.sounds.TryGetValue(SoundType.EngineLoop, out var loop);
             AudioUtils.Apply(loop, "DE6 engine loop", audio.engineAudio);
+            soundSet.sounds.TryGetValue(SoundType.EngineLoadLoop, out var loadLoop);
+            AudioUtils.Apply(loadLoop, "DE6 engine load loop", audio.enginePistonAudio);
+            soundSet.sounds.TryGetValue(SoundType.TractionMotors, out var tractionMotorsLoop);
+            AudioUtils.Apply(tractionMotorsLoop, "DE6 traction motor loop", audio.electricMotorAudio);
         }
 
         private static void SetBell(LocoAudioDiesel audio, SoundSet soundSet)
