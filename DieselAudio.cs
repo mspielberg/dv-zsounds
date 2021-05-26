@@ -32,8 +32,6 @@ namespace DvMod.ZSounds
 
             soundSet.sounds.TryGetValue(SoundType.EngineLoop, out var loop);
             AudioUtils.Apply(loop, "DE6 engine loop", audio.engineAudio);
-            audio.engineAudio.minPitch = 1f;
-            audio.engineAudio.maxPitch = 825f / 275f;
         }
 
         private static void SetBell(LocoAudioDiesel audio, SoundSet soundSet)

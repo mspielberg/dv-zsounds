@@ -28,9 +28,6 @@ namespace DvMod.ZSounds
 
             soundSet.sounds.TryGetValue(SoundType.EngineLoop, out var loop);
             AudioUtils.Apply(loop, "DE2 engine loop", audio.engineAudio);
-            audio.engineAudio.minPitch = 1f;
-            audio.engineAudio.maxPitch = 2100f / 1250f;
-            audio.engineAudio.layers[0].volumeCurve = AnimationCurve.EaseInOut(0, 0.1f, 1, 0.4f);
         }
 
         private static void SetHorn(LocoAudioShunter audio, SoundSet soundSet)

@@ -53,6 +53,8 @@ namespace DvMod.ZSounds.Config
         public float pitch;
         public float minPitch;
         public float maxPitch;
+        public float? minVolume;
+        public float? maxVolume;
         public float? fadeStart;
         public float? fadeDuration;
 
@@ -87,6 +89,8 @@ namespace DvMod.ZSounds.Config
                     pitch = token["pitch"].MapS(n => n.Value<float>()) ?? 1f,
                     minPitch = token["minPitch"].MapS(n => n.Value<float>()) ?? 1f,
                     maxPitch = token["maxPitch"].MapS(n => n.Value<float>()) ?? 1f,
+                    minVolume = token["minVolume"].MapS(n => n.Value<float>()),
+                    maxVolume = token["maxVolume"].MapS(n => n.Value<float>()),
                     fadeStart = token["fadeStart"].MapS(n => n.Value<float>()),
                     fadeDuration = token["fadeDuration"].MapS(n => n.Value<float>()),
                 };

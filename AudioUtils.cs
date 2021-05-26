@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEngine;
 
@@ -14,6 +13,7 @@ namespace DvMod.ZSounds
             public float pitch;
             public float minPitch;
             public float maxPitch;
+            public AnimationCurve volumeCurve;
 
             public override string ToString()
             {
@@ -85,6 +85,7 @@ namespace DvMod.ZSounds
                     pitch = mainLayer.startPitch,
                     minPitch = audio.minPitch,
                     maxPitch = audio.maxPitch,
+                    volumeCurve = audio.layers[0].volumeCurve,
                 };
                 Main.DebugLog(() => $"Saved default settings: {Defaults[tag]}");
             }
@@ -96,6 +97,7 @@ namespace DvMod.ZSounds
                 audio.maxPitch = defaults.maxPitch!;
                 mainLayer.source.clip = defaults.clip;
                 mainLayer.startPitch = defaults.pitch;
+                mainLayer.volumeCurve = defaults.volumeCurve;
                 for (int i = 1; i < audio.layers.Length; i++)
                     audio.layers[i].source.mute = false;
             }
@@ -105,6 +107,9 @@ namespace DvMod.ZSounds
                 audio.maxPitch = soundDefinition.maxPitch;
                 mainLayer.source.clip = soundDefinition.filename.Map(FileAudio.Load) ?? defaults.clip;
                 mainLayer.startPitch = soundDefinition.pitch;
+                mainLayer.volumeCurve = AnimationCurve.EaseInOut(
+                    0f, soundDefinition.minVolume ?? defaults.volumeCurve.Evaluate(0),
+                    1f, soundDefinition.maxVolume ?? defaults.volumeCurve.Evaluate(1));
 
                 for (int i = 1; i < audio.layers.Length; i++)
                     audio.layers[i].source.mute = true;
