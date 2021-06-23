@@ -52,9 +52,9 @@ namespace DvMod.ZSounds.Config
         public SoundType type;
         public string? filename;
         public string[]? filenames;
-        public float pitch;
-        public float minPitch;
-        public float maxPitch;
+        public float? pitch;
+        public float? minPitch;
+        public float? maxPitch;
         public float? minVolume;
         public float? maxVolume;
         public float? fadeStart;
@@ -88,9 +88,9 @@ namespace DvMod.ZSounds.Config
                 {
                     filename = token["filename"].Map(fn => Path.Combine(root, fn.Value<string>())),
                     filenames = token["filenames"].Map(jArray => jArray.Select(fn => Path.Combine(root, fn.Value<string>())).ToArray()),
-                    pitch = token["pitch"].MapS(n => n.Value<float>()) ?? 1f,
-                    minPitch = token["minPitch"].MapS(n => n.Value<float>()) ?? 1f,
-                    maxPitch = token["maxPitch"].MapS(n => n.Value<float>()) ?? 1f,
+                    pitch = token["pitch"].MapS(n => n.Value<float>()),
+                    minPitch = token["minPitch"].MapS(n => n.Value<float>()),
+                    maxPitch = token["maxPitch"].MapS(n => n.Value<float>()),
                     minVolume = token["minVolume"].MapS(n => n.Value<float>()),
                     maxVolume = token["maxVolume"].MapS(n => n.Value<float>()),
                     fadeStart = token["fadeStart"].MapS(n => n.Value<float>()),

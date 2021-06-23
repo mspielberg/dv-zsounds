@@ -70,7 +70,7 @@ namespace DvMod.ZSounds
             }
 
             source.clip = soundDefinition.filename.Map(FileAudio.Load) ?? defaults.clip;
-            source.pitch = soundDefinition.pitch;
+            source.pitch = soundDefinition.pitch ?? defaults.pitch;
         }
 
         public static void Apply(Config.SoundDefinition? soundDefinition, string tag, LayeredAudio audio)
@@ -103,10 +103,10 @@ namespace DvMod.ZSounds
             }
             else
             {
-                audio.minPitch = soundDefinition.minPitch;
-                audio.maxPitch = soundDefinition.maxPitch;
+                audio.minPitch = soundDefinition.minPitch ?? defaults.minPitch;
+                audio.maxPitch = soundDefinition.maxPitch ?? defaults.maxPitch;
                 mainLayer.source.clip = soundDefinition.filename.Map(FileAudio.Load) ?? defaults.clip;
-                mainLayer.startPitch = soundDefinition.pitch;
+                mainLayer.startPitch = soundDefinition.pitch ?? defaults.pitch;
                 mainLayer.volumeCurve = AnimationCurve.EaseInOut(
                     0f, soundDefinition.minVolume ?? defaults.volumeCurve.Evaluate(0),
                     1f, soundDefinition.maxVolume ?? defaults.volumeCurve.Evaluate(1));
