@@ -17,6 +17,9 @@ namespace DvMod.ZSounds
             if (cache.TryGetValue(path, out var clip))
                 return clip;
             Main.DebugLog(() => $"Loading {path}");
+            var extension = Path.GetExtension(path);
+            if (!AudioTypes.ContainsKey(extension))
+                throw new Config.ConfigException($"Unsupported file extension for sound file: \"{path}\"");
             var audioType = AudioTypes[Path.GetExtension(path)];
             var webRequest = UnityWebRequestMultimedia.GetAudioClip(new Uri(path).AbsoluteUri, audioType);
             var async = webRequest.SendWebRequest();
@@ -30,9 +33,6 @@ namespace DvMod.ZSounds
 
         private static readonly Dictionary<string, AudioType> AudioTypes = new Dictionary<string, AudioType>()
         {
-            {".aif", AudioType.AIFF},
-            {".aiff", AudioType.AIFF},
-            {".mp3", AudioType.MPEG},
             {".ogg", AudioType.OGGVORBIS},
             {".wav", AudioType.WAV},
         };

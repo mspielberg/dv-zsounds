@@ -27,7 +27,7 @@ namespace DvMod.ZSounds.Config
             {
                 var count = rules.Count();
                 if (position >= count || position < -count)
-                    throw new ArgumentException($"Can not select subrule {position} of rule with {count} subrules: {rule}");
+                    throw new ConfigException($"Can not select subrule {position} of rule with {count} subrules: {rule}");
                 return position >= 0 ? rules.ElementAt(position) : rules.ElementAt(count - position);
             }
             return rule switch
@@ -35,7 +35,7 @@ namespace DvMod.ZSounds.Config
                 AllOfRule allOf => Get(allOf.rules, position),
                 OneOfRule oneOf => Get(oneOf.rules, position),
                 IfRule ifRule => Get(new IRule[] { ifRule.rule }, position),
-                _ => throw new ArgumentException($"Can not select subrule of {rule}"),
+                _ => throw new ConfigException($"Can not select subrule of {rule}"),
             };
         }
 
@@ -66,7 +66,7 @@ namespace DvMod.ZSounds.Config
             var ruleName = pathComponents[0];
             var target = config.rules[ruleName];
             if (target == null)
-                throw new ArgumentException($"Hook refers to nonexistent rule {ruleName}");
+                throw new ConfigException($"Hook refers to nonexistent rule {ruleName}");
             foreach (var position in pathComponents.Skip(1).Select(int.Parse))
                 target = GetSubrule(target, position);
 
@@ -81,7 +81,7 @@ namespace DvMod.ZSounds.Config
             }
             else
             {
-                throw new ArgumentException($"Cannot add to {rule}");
+                throw new ConfigException($"Cannot add to {rule}");
             }
         }
     }

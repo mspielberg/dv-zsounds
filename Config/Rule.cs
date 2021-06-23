@@ -49,7 +49,7 @@ namespace DvMod.ZSounds.Config
                     };
 
                 default:
-                    throw new ArgumentException($"Found {token.Type} where a rule was expected");
+                    throw new ConfigException($"Found {token.Type} where a rule was expected");
             }
         }
     }
@@ -101,11 +101,11 @@ namespace DvMod.ZSounds.Config
         public OneOfRule(string path, List<IRule> rules, List<float>? weights)
         {
             if (rules == null || rules.Count == 0)
-                throw new ArgumentException("OneOf rule requires at least one sub-rule");
+                throw new ConfigException("OneOf rule requires at least one sub-rule");
             if (weights == null)
                 weights = Enumerable.Repeat(1f, rules.Count).ToList();
             if (weights.Count != rules.Count)
-                throw new ArgumentException($"Found {weights.Count} weights for {rules.Count} rules in OneOf rule");
+                throw new ConfigException($"Found {weights.Count} weights for {rules.Count} rules in OneOf rule");
 
             this.path = path;
             this.rules = rules;
@@ -206,7 +206,7 @@ namespace DvMod.ZSounds.Config
             {
                 case IfRuleProperty.CarType:
                     if (!knownTrainCarTypes.Contains(value.ToLowerInvariant()))
-                        throw new ArgumentException($"Unknown value for CarType: {value}");
+                        throw new ConfigException($"Unknown value for CarType: {value}");
                     break;
                 case IfRuleProperty.SkinName:
                     break;
@@ -276,7 +276,7 @@ namespace DvMod.ZSounds.Config
         public void Validate(Config config)
         {
             if (!config.rules.ContainsKey(name))
-                throw new ArgumentException($"Reference to unknown rule \"{name}\"");
+                throw new ConfigException($"Reference to unknown rule \"{name}\"");
         }
 
         public static RefRule Parse(JToken token)
@@ -309,7 +309,7 @@ namespace DvMod.ZSounds.Config
         public void Validate(Config config)
         {
             if (!config.sounds.ContainsKey(name))
-                throw new ArgumentException($"Reference to unknown sound \"{name}\"");
+                throw new ConfigException($"Reference to unknown sound \"{name}\"");
         }
 
         public static SoundRule Parse(JToken token)

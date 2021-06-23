@@ -41,7 +41,7 @@ namespace DvMod.ZSounds.Config
                 }
                 catch (Exception e)
                 {
-                    throw new ArgumentException($"Problem in rule \"{name}\"", e);
+                    throw new ConfigException($"Problem in rule \"{name}\"", e);
                 }
             }
 
@@ -53,7 +53,7 @@ namespace DvMod.ZSounds.Config
                 }
                 catch (Exception e)
                 {
-                    throw new ArgumentException($"Problem in sound \"{name}\"", e);
+                    throw new ConfigException($"Problem in sound \"{name}\"", e);
                 }
             }
 
@@ -130,6 +130,14 @@ namespace DvMod.ZSounds.Config
 
     public class ConfigException : Exception
     {
+        public ConfigException() : base()
+        {
+        }
+
+        public ConfigException(string message) : base(message)
+        {
+        }
+
         public ConfigException(string message, Exception innerException) : base(message, innerException)
         {
         }
