@@ -184,7 +184,7 @@ namespace DvMod.ZSounds.Config
 }
             ",
 
-            // v1.0.2
+            // v1.1.0
             @"{
     ""version"": 1,
 
@@ -203,7 +203,7 @@ namespace DvMod.ZSounds.Config
 
         ""loco_de2"": {
             ""type"": ""AllOf"",
-            ""rules"": [ ""random_diesel_horn"", ""random_de2_engine"" ]
+            ""rules"": [ ""random_de6_bell"", ""random_diesel_horn"", ""random_de2_engine"" ]
         },
         ""loco_de6"": {
             ""type"": ""AllOf"",
