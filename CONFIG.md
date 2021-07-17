@@ -26,29 +26,51 @@ The `sounds` section lists all the possible sounds that ZSounds can use for your
         ...
     }
 
-Sounds are listed by a short name, which must be unique across all configuration files. Each sound must have a `type`, which must come from the following list. The `filename` is interpreted relative to where the configuration file is located. Not all sound types are supported by all locomotives. Some sound types can take options as well. All `pitch` options use `1.0` to indicate the sound should be played unmodified; `2.0` plays it back at double speed (one octave higher), etc.
+Sounds are listed by a short name, which must be unique across all configuration files. Each sound must have a `type`, which must come from the following list.
+
+The `filename` is interpreted relative to where the configuration file is located. Providing an empty filename (`""`) will silence the sound identified by `type`.
+
+Not all sound types are supported by all locomotives. Some sound types can take options as well.
 
 ### Sound types
 
-* Bell (DE6 only)
+* Bell (DE2, DE6)
     - pitch
 * HornHit (DE2, DE6)
     - pitch
 * HornLoop (DE2, DE6)
     - minPitch: pitch when horn lever is moved the minimum amount.
     - maxPitch: pitch when horn lever is moved fully.
+    - minVolume: volume when horn lever is moved the minimum amount.
+    - maxVolume: volume when horn lever is moved the minimum amount.
+* EngineLoadLoop (DE2, DE6)
+    - minPitch: pitch at idle throttle.
+    - maxPitch: pitch at maximum throttle.
+    - minVolume: volume at idle throttle. (Actual volume is affected by change in RPM.)
+    - maxVolume: volume at maximum throttle.
 * EngineLoop (DE2, DE6)
     - minPitch: pitch at idle throttle.
     - maxPitch: pitch at maximum throttle.
+    - minVolume: volume at idle throttle.
+    - maxVolume: volume at maximum throttle.
 * EngineShutdown (DE2, DE6)
     - fadeStart: delay in seconds until the EngineLoop begins to fade out.
     - fadeDuration: number of seconds until the EngineLoop reaches 0% volume after the fade out begins.
 * EngineStartup (DE2, DE6)
     - fadeStart: delay in seconds until the EngineLoop begins to fade in.
     - fadeDuration: number of seconds until the EngineLoop reaches 100% volume after the fade in begins.
+* TractionMotors (DE2, DE6)
+    - minPitch: pitch when stopped
+    - maxPitch: pitch at maximum speed (DE2: 100 km/h, DE6: 120 km/h)
+    - minVolume: volume when stopped
+    - maxVolume: volume at maximum speed (DE2: 100 km/h, DE6: 120 km/h)
 * Whistle (SH282)
     - minPitch: pitch when whistle rope is pulled the minimum amount.
     - maxPitch: pitch when whistle rope is pulled fully.
+    - minVolume: volume when whistle rope is pulled the minimum amount.
+    - maxVolume: volume when whistle rope is pulled fully.
+
+ All `pitch` options use `1.0` to indicate the sound should be played unmodified; `2.0` plays it back at double speed (one octave higher), etc. The `volume` options use `1.0` to indicate playing the sound file back at full volume. This is the maximum possible.
 
 ## Manually assigning sounds
 
