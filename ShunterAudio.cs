@@ -63,14 +63,15 @@ namespace DvMod.ZSounds
             private static IEnumerator SetupBellLamp(ShunterDashboardControls __instance)
             {
                 AudioSource bellAudioSource;
+                ToggleSwitchBase bellSwitch;
                 do
                 {
                     yield return null;
                     bellAudioSource = TrainCar.Resolve(__instance.gameObject).transform.Find("AudioShunter(Clone)/Horn/ZSounds bell").GetComponent<AudioSource>();
+                    bellSwitch = __instance.transform.Find("C dashboard buttons controller/C bell switch").GetComponent<ToggleSwitchBase>();
                 }
-                while (bellAudioSource == null);
+                while (bellAudioSource == null || bellSwitch == null);
 
-                var bellSwitch = __instance.transform.Find("C dashboard buttons controller/C bell switch").GetComponent<ToggleSwitchBase>();
                 bellSwitch.SetValue(bellAudioSource.loop ? 1 : 0);
 
                 var bellLampControl = __instance.transform.Find("C dashboard buttons controller/I bell lamp").GetComponent<LampControl>();
@@ -112,6 +113,11 @@ namespace DvMod.ZSounds
             {
                 if (__instance.carType != TrainCarType.LocoShunter)
                     return;
+                __instance.StartCoroutine(CreateBellControlCoro(__instance));
+            }
+
+            private static IEnumerator CreateBellControlCoro(TrainCar __instance)
+            {
                 var buttonsController = __instance.loadedInterior.transform.Find("C dashboard buttons controller");
 
                 // clone interaction area
@@ -141,6 +147,7 @@ namespace DvMod.ZSounds
                 if (bellSwitch == null)
                 {
                     var fanSwitch = buttonsController.Find("C fan switch").gameObject;
+                    // ensure the Spec doesn't try to create duplicate components when cloned
                     fanSwitch.SetActive(false);
                     bellSwitch = GameObject.Instantiate(fanSwitch.gameObject, fanSwitch.transform.parent);
                     fanSwitch.SetActive(true);
@@ -160,10 +167,13 @@ namespace DvMod.ZSounds
                         case ControlSpec _:
                             break;
                         default:
-                            Component.DestroyImmediate(comp);
+                            // these will be recreated when the GameObject is set active next frame
+                            Component.Destroy(comp);
                             break;
                         }
                     }
+
+                    yield return null;
 
                     bellSwitch.SetActive(true);
                 }
