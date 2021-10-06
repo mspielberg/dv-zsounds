@@ -91,7 +91,7 @@ namespace DvMod.ZSounds
             }
             else
             {
-                Debug.LogError("CommsRadioSoundSwitcher: couldn't get properties from siblings");
+                Main.DebugLog(() => "CommsRadioSoundSwitcher: couldn't get properties from siblings");
             }
         }
 
@@ -99,28 +99,28 @@ namespace DvMod.ZSounds
         {
             if (!signalOrigin)
             {
-                Debug.LogError("CommsRadioNumberSwitcher: signalOrigin on isn't set, using this.transform!", this);
+                Main.DebugLog(() => "CommsRadioNumberSwitcher: signalOrigin on isn't set, using this.transform!");
                 signalOrigin = transform;
             }
 
             if (display == null)
             {
-                Debug.LogError("CommsRadioNumberSwitcher: display not set, can't function properly!", this);
+                Main.DebugLog(() => "CommsRadioNumberSwitcher: display not set, can't function properly!");
             }
 
             if ((selectionMaterial == null) || (skinningMaterial == null))
             {
-                Debug.LogError("CommsRadioNumberSwitcher: Selection material(s) not set. Visuals won't be correct.", this);
+                Main.DebugLog(() => "CommsRadioNumberSwitcher: Selection material(s) not set. Visuals won't be correct.");
             }
 
             if (trainHighlighter == null)
             {
-                Debug.LogError("CommsRadioNumberSwitcher: trainHighlighter not set, can't function properly!!", this);
+                Main.DebugLog(() => "CommsRadioNumberSwitcher: trainHighlighter not set, can't function properly!!");
             }
 
             if ((HoverCarSound == null) || (SelectedCarSound == null) || (ConfirmSound == null) || (CancelSound == null))
             {
-                Debug.LogError("Not all audio clips set, some sounds won't be played!", this);
+                Main.DebugLog(() => "Not all audio clips set, some sounds won't be played!");
             }
 
             TrainCarMask = LayerMask.GetMask(new string[]
@@ -154,7 +154,7 @@ namespace DvMod.ZSounds
         {
             if (car == null)
             {
-                Debug.LogError("Highlight car is null. Ignoring request.");
+                Main.DebugLog(() => "Highlight car is null. Ignoring request.");
                 return;
             }
 
@@ -260,7 +260,7 @@ namespace DvMod.ZSounds
                 case State.SelectCar:
                     if (!(SelectedCar == null))
                     {
-                        Debug.LogError("Invalid setup for current state, reseting flags!", this);
+                        Main.DebugLog(() => "Invalid setup for current state, reseting flags!");
                         ResetState();
                         return;
                     }
@@ -396,7 +396,7 @@ namespace DvMod.ZSounds
                     break;
 
                 default:
-                    Debug.LogError(string.Format("Unexpected state {0}!", CurrentState), this);
+                    Main.DebugLog(() => string.Format("Unexpected state {0}!", CurrentState));
                     return false;
             }
 
@@ -426,7 +426,7 @@ namespace DvMod.ZSounds
                     break;
 
                 default:
-                    Debug.LogError(string.Format("Unexpected state {0}!", CurrentState), this);
+                    Main.DebugLog(() => string.Format("Unexpected state {0}!", CurrentState));
                     return false;
             }
 
@@ -442,14 +442,14 @@ namespace DvMod.ZSounds
         {
             if ((SelectedCar == null) || !CarTypes.IsLocomotive(SelectedCar.carType))
             {
-                Debug.LogWarning("Tried to apply sound to null car");
+                Main.DebugLog(() => "Tried to apply sound to null car");
                 ResetState();
                 return;
             }
 
             if (SelectedSound == null)
             {
-                Debug.LogWarning("Tried to apply null sound definition");
+                Main.DebugLog(() => "Tried to apply null sound definition");
                 ResetState();
                 return;
             }
