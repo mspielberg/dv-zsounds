@@ -35,21 +35,20 @@ namespace DvMod.ZSounds
         private TrainCar? PointedCar = null;
         private MeshRenderer? HighlighterRender;
 
-        private SoundType selectedSoundType = SoundType.HornHit;
+        private SoundType selectedSoundType;
         private static readonly SoundType minSoundType;
         private static readonly SoundType maxSoundType;
 
-        private IList<SoundDefinition>? availableSounds = null;
+        private List<SoundDefinition>? availableSounds = null;
         private int soundIndex = 0;
 
         private void RefreshAvailableSounds()
         {
-            bool found = Config.Config.Active!.soundTypes.TryGetValue(selectedSoundType, out var soundList);
-            availableSounds = found ? soundList : null;
+            Config.Config.Active!.soundTypes.TryGetValue(selectedSoundType, out availableSounds);
             soundIndex = 0;
         }
 
-        private SoundDefinition? selectedSound => availableSounds?[soundIndex];
+        private SoundDefinition? SelectedSound => availableSounds?[soundIndex];
 
         private const float SIGNAL_RANGE = 100f;
         private static readonly Vector3 HIGHLIGHT_BOUNDS_EXTENSION = new Vector3(0.25f, 0.8f, 0f);
@@ -58,7 +57,7 @@ namespace DvMod.ZSounds
         {
             return LASER_COLOR;
         }
-        public void OverrideSignalOrigin( Transform signalOrigin ) => this.signalOrigin = signalOrigin;
+        public void OverrideSignalOrigin(Transform signalOrigin) => this.signalOrigin = signalOrigin;
 
         #region Initialization
 
@@ -76,7 +75,7 @@ namespace DvMod.ZSounds
         public void Awake()
         {
             // steal components from other radio modes
-            if( Controller?.deleteControl is CommsRadioCarDeleter deleter )
+            if (Controller?.deleteControl is CommsRadioCarDeleter deleter)
             {
                 signalOrigin = deleter.signalOrigin;
                 display = deleter.display;
@@ -98,28 +97,28 @@ namespace DvMod.ZSounds
 
         public void Start()
         {
-            if( !signalOrigin )
+            if (!signalOrigin)
             {
                 Debug.LogError("CommsRadioNumberSwitcher: signalOrigin on isn't set, using this.transform!", this);
                 signalOrigin = transform;
             }
 
-            if( display == null )
+            if (display == null)
             {
                 Debug.LogError("CommsRadioNumberSwitcher: display not set, can't function properly!", this);
             }
 
-            if( (selectionMaterial == null) || (skinningMaterial == null) )
+            if ((selectionMaterial == null) || (skinningMaterial == null))
             {
                 Debug.LogError("CommsRadioNumberSwitcher: Selection material(s) not set. Visuals won't be correct.", this);
             }
 
-            if( trainHighlighter == null )
+            if (trainHighlighter == null)
             {
                 Debug.LogError("CommsRadioNumberSwitcher: trainHighlighter not set, can't function properly!!", this);
             }
 
-            if( (HoverCarSound == null) || (SelectedCarSound == null) || (ConfirmSound == null) || (CancelSound == null) )
+            if ((HoverCarSound == null) || (SelectedCarSound == null) || (ConfirmSound == null) || (CancelSound == null))
             {
                 Debug.LogError("Not all audio clips set, some sounds won't be played!", this);
             }
@@ -151,15 +150,15 @@ namespace DvMod.ZSounds
 
         #region Car Highlighting
 
-        private void HighlightCar( TrainCar car, Material highlightMaterial )
+        private void HighlightCar(TrainCar car, Material highlightMaterial)
         {
-            if( car == null )
+            if (car == null)
             {
                 Debug.LogError("Highlight car is null. Ignoring request.");
                 return;
             }
 
-            if( (HighlighterRender != null) && (trainHighlighter != null) )
+            if ((HighlighterRender != null) && (trainHighlighter != null))
             {
                 HighlighterRender.material = highlightMaterial;
 
@@ -176,18 +175,18 @@ namespace DvMod.ZSounds
 
         private void ClearHighlightedCar()
         {
-            if( trainHighlighter ?? false )
+            if (trainHighlighter ?? false)
             {
                 trainHighlighter.SetActive(false);
                 trainHighlighter.transform.SetParent(null);
             }
         }
 
-        private void PointToCar( TrainCar? car )
+        private void PointToCar(TrainCar? car)
         {
-            if( PointedCar != car )
+            if (PointedCar != car)
             {
-                if( (car != null) && CarTypes.IsLocomotive(car.carType) )
+                if ((car != null) && CarTypes.IsLocomotive(car.carType))
                 {
                     PointedCar = car;
                     HighlightCar(PointedCar, selectionMaterial!);
@@ -207,22 +206,22 @@ namespace DvMod.ZSounds
 
         private void UpdateSelectionText()
         {
-            if( CurrentState == State.SelectSoundType )
+            if (CurrentState == State.SelectSoundType)
             {
                 display!.SetContent($"Sound Type:\n{selectedSoundType}");
             }
-            else if( CurrentState == State.SelectSound )
+            else if (CurrentState == State.SelectSound)
             {
-                display!.SetContent($"Sound:\n{selectedSound?.name ?? string.Empty}");
+                display!.SetContent($"Sound:\n{SelectedSound?.name ?? string.Empty}");
             }
         }
 
-        private void SetState( State newState )
+        private void SetState(State newState)
         {
-            if( newState == CurrentState ) return;
+            if (newState == CurrentState) return;
 
             CurrentState = newState;
-            switch( CurrentState )
+            switch (CurrentState)
             {
                 case State.SelectCar:
                     SetStartingDisplay();
@@ -256,10 +255,10 @@ namespace DvMod.ZSounds
         {
             TrainCar trainCar;
 
-            switch( CurrentState )
+            switch (CurrentState)
             {
                 case State.SelectCar:
-                    if( !(SelectedCar == null) )
+                    if (!(SelectedCar == null))
                     {
                         Debug.LogError("Invalid setup for current state, reseting flags!", this);
                         ResetState();
@@ -267,7 +266,7 @@ namespace DvMod.ZSounds
                     }
 
                     // Check if not pointing at anything
-                    if( !Physics.Raycast(signalOrigin!.position, signalOrigin.forward, out Hit, SIGNAL_RANGE, TrainCarMask) )
+                    if (!Physics.Raycast(signalOrigin!.position, signalOrigin.forward, out Hit, SIGNAL_RANGE, TrainCarMask))
                     {
                         PointToCar(null);
                     }
@@ -281,7 +280,7 @@ namespace DvMod.ZSounds
                     break;
 
                 case State.SelectSoundType:
-                    if( !Physics.Raycast(signalOrigin!.position, signalOrigin.forward, out Hit, SIGNAL_RANGE, TrainCarMask) )
+                    if (!Physics.Raycast(signalOrigin!.position, signalOrigin.forward, out Hit, SIGNAL_RANGE, TrainCarMask))
                     {
                         PointToCar(null);
                         display!.SetAction("cancel");
@@ -296,7 +295,7 @@ namespace DvMod.ZSounds
                     break;
 
                 case State.SelectSound:
-                    if( !Physics.Raycast(signalOrigin!.position, signalOrigin.forward, out Hit, SIGNAL_RANGE, TrainCarMask) )
+                    if (!Physics.Raycast(signalOrigin!.position, signalOrigin.forward, out Hit, SIGNAL_RANGE, TrainCarMask))
                     {
                         PointToCar(null);
                         display!.SetAction("cancel");
@@ -318,10 +317,10 @@ namespace DvMod.ZSounds
 
         public void OnUse()
         {
-            switch( CurrentState )
+            switch (CurrentState)
             {
                 case State.SelectCar:
-                    if( PointedCar != null )
+                    if (PointedCar != null)
                     {
                         SelectedCar = PointedCar;
                         PointedCar = null;
@@ -333,7 +332,7 @@ namespace DvMod.ZSounds
                     break;
 
                 case State.SelectSoundType:
-                    if( (PointedCar != null) && (PointedCar == SelectedCar) )
+                    if ((PointedCar != null) && (PointedCar == SelectedCar))
                     {
                         // clicked on the selected car again, this means move to selecting sound
                         CommsRadioController.PlayAudioFromRadio(ConfirmSound, transform);
@@ -351,7 +350,7 @@ namespace DvMod.ZSounds
                     break;
 
                 case State.SelectSound:
-                    if( (PointedCar != null) && (PointedCar == SelectedCar) )
+                    if ((PointedCar != null) && (PointedCar == SelectedCar))
                     {
                         // clicked on the selected car again, this means confirm
                         ApplySelectedSound();
@@ -371,21 +370,21 @@ namespace DvMod.ZSounds
         // scroll up
         public bool ButtonACustomAction()
         {
-            switch( CurrentState )
+            switch (CurrentState)
             {
                 case State.SelectSoundType:
                     selectedSoundType += 1;
-                    if( selectedSoundType > maxSoundType )
+                    if (selectedSoundType > maxSoundType)
                     {
                         selectedSoundType = minSoundType;
                     }
                     break;
 
                 case State.SelectSound:
-                    if( availableSounds != null )
+                    if (availableSounds != null)
                     {
                         soundIndex += 1;
-                        if( soundIndex >= availableSounds.Count )
+                        if (soundIndex >= availableSounds.Count)
                         {
                             soundIndex = 0;
                         }
@@ -408,11 +407,11 @@ namespace DvMod.ZSounds
         // scroll down
         public bool ButtonBCustomAction()
         {
-            switch( CurrentState )
+            switch (CurrentState)
             {
                 case State.SelectSoundType:
                     selectedSoundType -= 1;
-                    if( selectedSoundType < minSoundType )
+                    if (selectedSoundType < minSoundType)
                     {
                         selectedSoundType = maxSoundType;
                     }
@@ -420,7 +419,7 @@ namespace DvMod.ZSounds
 
                 case State.SelectSound:
                     soundIndex -= 1;
-                    if( soundIndex < 0 )
+                    if (soundIndex < 0)
                     {
                         soundIndex = (availableSounds != null) ? availableSounds.Count - 1 : 0;
                     }
@@ -441,14 +440,14 @@ namespace DvMod.ZSounds
 
         private void ApplySelectedSound()
         {
-            if( (SelectedCar == null) || !CarTypes.IsLocomotive(SelectedCar.carType) )
+            if ((SelectedCar == null) || !CarTypes.IsLocomotive(SelectedCar.carType))
             {
                 Debug.LogWarning("Tried to apply sound to null car");
                 ResetState();
                 return;
             }
 
-            if( selectedSound == null )
+            if (SelectedSound == null)
             {
                 Debug.LogWarning("Tried to apply null sound definition");
                 ResetState();
@@ -456,10 +455,10 @@ namespace DvMod.ZSounds
             }
 
             var soundSet = Registry.Get(SelectedCar);
-            selectedSound.Apply(soundSet);
+            SelectedSound.Apply(soundSet);
             SpawnPatches.ApplyAudio(SelectedCar);
 
-            Debug.Log($"Applied sound {selectedSound.name} to car {SelectedCar.ID}");
+            Main.DebugLog(() => $"Applied sound {SelectedSound.name} to car {SelectedCar.ID}");
             ResetState();
         }
 
@@ -474,16 +473,17 @@ namespace DvMod.ZSounds
         }
     }
 
-    [HarmonyPatch(typeof(CommsRadioController), "Awake")]
+    [HarmonyPatch(typeof(CommsRadioController), nameof(CommsRadioController.Awake))]
     static class CommsRadio_Awake_Patch
     {
-        public static CommsRadioSoundSwitcher? numSwitcher = null;
-
-        static void Postfix( CommsRadioController __instance, List<ICommsRadioMode> ___allModes )
+        static void Postfix(CommsRadioController __instance, List<ICommsRadioMode> ___allModes)
         {
             CommsRadioSoundSwitcher.Controller = __instance;
-            numSwitcher = __instance.gameObject.AddComponent<CommsRadioSoundSwitcher>();
-            ___allModes.Add(numSwitcher);
+            var soundSwitcher = __instance.gameObject.AddComponent<CommsRadioSoundSwitcher>();
+            if (soundSwitcher != null)
+            {
+                ___allModes.Add(soundSwitcher);
+            }
         }
     }
 }

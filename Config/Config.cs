@@ -25,7 +25,7 @@ namespace DvMod.ZSounds.Config
             foreach (var (key, rule) in configFile.rules)
                 rules.Add(key, rule);
             
-            foreach( var (key, sound) in configFile.sounds )
+            foreach (var (key, sound) in configFile.sounds)
             {
                 sounds.Add(key, sound);
                 AddSoundToTypeMap(sound);
