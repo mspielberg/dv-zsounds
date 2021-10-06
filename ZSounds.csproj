@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <RootNamespace>DvMod.ZSounds</RootNamespace>
     <InformationalVersion>1.1.0</InformationalVersion>
     <LangVersion>8.0</LangVersion>
@@ -26,6 +26,7 @@
     <Reference Include="UnityEngine.IMGUIModule" />
     <Reference Include="UnityEngine.UnityWebRequestModule" />
     <Reference Include="UnityEngine.UnityWebRequestAudioModule" />
+    <Reference Include="UnityEngine.PhysicsModule" />
     <Reference Include="UnityModManager" />
   </ItemGroup>
 </Project>

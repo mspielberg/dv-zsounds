@@ -13,6 +13,9 @@ namespace DvMod.ZSounds.Config
         public readonly Dictionary<string, SoundDefinition> sounds = new Dictionary<string, SoundDefinition>();
         public readonly List<Hook> hooks = new List<Hook>();
 
+        public readonly Dictionary<SoundType, List<SoundDefinition>> soundTypes =
+            new Dictionary<SoundType, List<SoundDefinition>>();
+
         public static Config? Active { get; private set; }
 
         public void Load(string path)
@@ -21,10 +24,30 @@ namespace DvMod.ZSounds.Config
             var configFile = ConfigFile.Parse(path);
             foreach (var (key, rule) in configFile.rules)
                 rules.Add(key, rule);
+            
             foreach (var (key, sound) in configFile.sounds)
+            {
                 sounds.Add(key, sound);
+                AddSoundToTypeMap(sound);
+            }
+
             foreach (var hook in configFile.hooks)
                 hooks.Add(hook);
+        }
+
+        private void AddSoundToTypeMap(SoundDefinition sound)
+        {
+            if( soundTypes.TryGetValue(sound.type, out var list) )
+            {
+                list.Add(sound);
+                return;
+            }
+
+            var newList = new List<SoundDefinition>
+            {
+                sound
+            };
+            soundTypes.Add(sound.type, newList);
         }
 
         public void Validate()
