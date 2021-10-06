@@ -474,7 +474,7 @@ namespace DvMod.ZSounds
     }
 
     [HarmonyPatch(typeof(CommsRadioController), nameof(CommsRadioController.Awake))]
-    static class CommsRadio_Awake_Patch
+    static class CommsRadioControllerAwakePatch
     {
         static void Postfix(CommsRadioController __instance, List<ICommsRadioMode> ___allModes)
         {
