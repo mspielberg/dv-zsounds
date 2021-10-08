@@ -13,6 +13,7 @@ namespace DvMod.ZSounds
             public float pitch;
             public float minPitch;
             public float maxPitch;
+            public AnimationCurve pitchCurve;
             public AnimationCurve volumeCurve;
 
             public override string ToString()
@@ -85,7 +86,8 @@ namespace DvMod.ZSounds
                     pitch = mainLayer.startPitch,
                     minPitch = audio.minPitch,
                     maxPitch = audio.maxPitch,
-                    volumeCurve = audio.layers[0].volumeCurve,
+                    pitchCurve = mainLayer.pitchCurve,
+                    volumeCurve = mainLayer.volumeCurve,
                 };
                 Main.DebugLog(() => $"Saved default settings: {Defaults[tag]}");
             }
@@ -97,6 +99,7 @@ namespace DvMod.ZSounds
                 audio.maxPitch = defaults.maxPitch!;
                 mainLayer.source.clip = defaults.clip;
                 mainLayer.startPitch = defaults.pitch;
+                mainLayer.pitchCurve = defaults.pitchCurve;
                 mainLayer.volumeCurve = defaults.volumeCurve;
                 for (int i = 1; i < audio.layers.Length; i++)
                     audio.layers[i].source.mute = false;
@@ -107,6 +110,9 @@ namespace DvMod.ZSounds
                 audio.maxPitch = soundDefinition.maxPitch ?? defaults.maxPitch * defaults.pitch;
                 mainLayer.source.clip = soundDefinition.filename.Map(FileAudio.Load) ?? defaults.clip;
                 mainLayer.startPitch = 1f;
+                mainLayer.pitchCurve = AnimationCurve.EaseInOut(
+                    0f, soundDefinition.minPitch ?? defaults.pitchCurve.Evaluate(0),
+                    1f, soundDefinition.maxPitch ?? defaults.pitchCurve.Evaluate(1));
                 mainLayer.volumeCurve = AnimationCurve.EaseInOut(
                     0f, soundDefinition.minVolume ?? defaults.volumeCurve.Evaluate(0),
                     1f, soundDefinition.maxVolume ?? defaults.volumeCurve.Evaluate(1));
