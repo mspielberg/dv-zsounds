@@ -86,7 +86,7 @@ namespace DvMod.ZSounds.Config
                 var root = Path.GetDirectoryName(configFilePath);
                 return new SoundDefinition(name, (SoundType)Enum.Parse(typeof(SoundType), token["type"].Value<string>()))
                 {
-                    filename = token["filename"].Map(fn => Path.Combine(root, fn.Value<string>())),
+                    filename = token["filename"].Map(fn => fn.Value<string>().Length == 0 ? "" : Path.Combine(root, fn.Value<string>())),
                     filenames = token["filenames"].Map(jArray => jArray.Select(fn => Path.Combine(root, fn.Value<string>())).ToArray()),
                     pitch = token["pitch"].MapS(n => n.Value<float>()),
                     minPitch = token["minPitch"].MapS(n => n.Value<float>()),
