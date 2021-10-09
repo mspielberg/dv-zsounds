@@ -197,8 +197,8 @@ namespace DvMod.ZSounds.Config
                 rule.Apply(config, car, soundSet);
         }
 
-        private static readonly HashSet<string> knownTrainCarTypes =
-            Enum.GetNames(typeof(TrainCarType)).Select(name => name.ToLowerInvariant()).ToHashSet();
+        private static readonly List<string> knownTrainCarTypes =
+            Enum.GetNames(typeof(TrainCarType)).Select(name => name.ToLowerInvariant()).ToList();
 
         public void Validate(Config config)
         {
