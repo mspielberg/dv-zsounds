@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using DvMod.ZSounds.Config;
 using UnityEngine;
 
 namespace DvMod.ZSounds
@@ -22,47 +23,62 @@ namespace DvMod.ZSounds
             }
         }
 
-        private static readonly Dictionary<string, AudioSettings> Defaults = new Dictionary<string, AudioSettings>();
-
-        public static void Apply(Config.SoundDefinition? soundDefinition, string tag, ref AudioClip clip)
+        private struct DefaultKey
         {
-            Main.DebugLog(() => $"Loading {tag}: {soundDefinition}");
-            if (!Defaults.ContainsKey(tag))
-                Defaults[tag] = new AudioSettings() { clip = clip };
+            public readonly TrainCarType cartype;
+            public readonly SoundType soundType;
+
+            public DefaultKey(TrainCarType cartype, SoundType soundType)
+            {
+                this.cartype = cartype;
+                this.soundType = soundType;
+            }
+        }
+
+        private static readonly Dictionary<DefaultKey, AudioSettings> Defaults = new Dictionary<DefaultKey, AudioSettings>();
+
+        public static void Apply(TrainCarType carType, SoundType soundType, Config.SoundDefinition? soundDefinition, ref AudioClip clip)
+        {
+            var key = new DefaultKey(carType, soundType);
+            Main.DebugLog(() => $"Loading {key}: {soundDefinition}");
+            if (!Defaults.ContainsKey(key))
+                Defaults[key] = new AudioSettings() { clip = clip };
 
             if (soundDefinition?.filename != null)
                 clip = FileAudio.Load(soundDefinition.filename);
             else
-                clip = Defaults[tag].clip!;
+                clip = Defaults[key].clip!;
         }
 
-        public static void Apply(Config.SoundDefinition? soundDefinition, string tag, ref AudioClip[] clips)
+        public static void Apply(TrainCarType carType, SoundType soundType, Config.SoundDefinition? soundDefinition, ref AudioClip[] clips)
         {
-            Main.DebugLog(() => $"Loading {tag}: {soundDefinition}");
-            if (!Defaults.ContainsKey(tag))
-                Defaults[tag] = new AudioSettings() { clips = clips };
+            var key = new DefaultKey(carType, soundType);
+            Main.DebugLog(() => $"Loading {key}: {soundDefinition}");
+            if (!Defaults.ContainsKey(key))
+                Defaults[key] = new AudioSettings() { clips = clips };
 
             if (soundDefinition != null && (soundDefinition.filenames?.Length ?? 0) > 0)
                 clips = soundDefinition.filenames.Select(FileAudio.Load).ToArray();
             else if (soundDefinition?.filename != null)
                 clips = new AudioClip[] { FileAudio.Load(soundDefinition.filename) };
             else
-                clips = Defaults[tag].clips!;
+                clips = Defaults[key].clips!;
         }
 
-        public static void Apply(Config.SoundDefinition? soundDefinition, string tag, AudioSource source)
+        public static void Apply(TrainCarType carType, SoundType soundType, Config.SoundDefinition? soundDefinition, AudioSource source)
         {
-            Main.DebugLog(() => $"Loading {tag}: {soundDefinition}");
-            if (!Defaults.ContainsKey(tag))
+            var key = new DefaultKey(carType, soundType);
+            Main.DebugLog(() => $"Loading {key}: {soundDefinition}");
+            if (!Defaults.ContainsKey(key))
             {
-                Defaults[tag] = new AudioSettings()
+                Defaults[key] = new AudioSettings()
                 {
                     clip = source.clip,
                     pitch = source.pitch,
                 };
             }
 
-            var defaults = Defaults[tag];
+            var defaults = Defaults[key];
             if (soundDefinition == null)
             {
                 source.clip = defaults.clip;
@@ -74,13 +90,14 @@ namespace DvMod.ZSounds
             source.pitch = soundDefinition.pitch ?? defaults.pitch;
         }
 
-        public static void Apply(Config.SoundDefinition? soundDefinition, string tag, LayeredAudio audio)
+        public static void Apply(TrainCarType carType, SoundType soundType, Config.SoundDefinition? soundDefinition, LayeredAudio audio)
         {
-            Main.DebugLog(() => $"Loading {tag}: {soundDefinition}");
+            var key = new DefaultKey(carType, soundType);
+            Main.DebugLog(() => $"Loading {key}: {soundDefinition}");
             var mainLayer = audio.layers[0];
-            if (!Defaults.ContainsKey(tag))
+            if (!Defaults.ContainsKey(key))
             {
-                Defaults[tag] = new AudioSettings()
+                Defaults[key] = new AudioSettings()
                 {
                     clip = mainLayer.source.clip,
                     pitch = mainLayer.startPitch,
@@ -89,10 +106,10 @@ namespace DvMod.ZSounds
                     pitchCurve = mainLayer.pitchCurve,
                     volumeCurve = mainLayer.volumeCurve,
                 };
-                Main.DebugLog(() => $"Saved default settings: {Defaults[tag]}");
+                Main.DebugLog(() => $"Saved default settings for {key}: {Defaults[key]}");
             }
 
-            var defaults = Defaults[tag];
+            var defaults = Defaults[key];
             if (soundDefinition == null)
             {
                 audio.minPitch = defaults.minPitch!;

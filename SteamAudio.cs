@@ -8,12 +8,10 @@ namespace DvMod.ZSounds
         {
             var audio = car.GetComponentInChildren<LocoAudioSteam>();
             AudioUtils.Apply(
+                TrainCarType.LocoSteamHeavy,
+                SoundType.Whistle,
                 soundSet[SoundType.Whistle],
-                "SH282 whistle",
                 audio.whistleAudio);
         }
-
-        public static void ResetAllAudio()
-        {}
     }
 }
