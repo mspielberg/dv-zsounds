@@ -1,9 +1,11 @@
+using DVCustomCarLoader.LocoComponents.DieselElectric;
 using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
+using UnityModManagerNet;
 
 namespace DvMod.ZSounds
 {
@@ -37,6 +39,14 @@ namespace DvMod.ZSounds
                     fadeOutStart = audioDiesel.engineOffClip.length * 0.10f,
                 };
             }
+            else if ((UnityModManager.FindMod("DVCustomCarLoader")?.Loaded ?? false) && audio is CustomLocoAudioDiesel audioCustom)
+            {
+                return new Settings
+                {
+                    fadeInStart = audioCustom.engineOnClip.length * 0.15f,
+                    fadeOutStart = audioCustom.engineOffClip.length * 0.10f,
+                };
+            }
             else
             {
                 throw new System.Exception($"{audio.GetType().Name} received by EngineFade");
@@ -63,6 +73,7 @@ namespace DvMod.ZSounds
         {
             public static IEnumerable<CodeInstruction> GenerateNewMethod(MethodBase original, List<CodeInstruction> instructions)
             {
+                Main.DebugLog(() => $"EngineFade patching {original.DeclaringType.FullName}.{original.Name}");
                 var index = instructions.FindIndex(ci => ci.Is(OpCodes.Ldfld, AccessTools.Field(original.DeclaringType, "engineTurnedOn")));
                 index = instructions.FindIndex(index + 1, ci => ci.Is(OpCodes.Ldfld, AccessTools.Field(original.DeclaringType, "engineTurnedOn")));
 
@@ -93,7 +104,6 @@ namespace DvMod.ZSounds
             {
                 var before = new List<CodeInstruction>(instructions);
                 var after = GenerateNewMethod(original, before).ToList();
-                // Main.DebugLog(() => $"\nBefore:\n{string.Join("\n", before)}\n\nAfter:\n{string.Join("\n", after)}");
                 return after;
             }
 
@@ -102,6 +112,77 @@ namespace DvMod.ZSounds
                 return typeof(LocoAudioDiesel).Assembly.GetTypes()
                     .Where(t => t.FullName.Contains("+<EngineAudioHandle>"))
                     .Select(t => t.GetMethod("MoveNext", BindingFlags.Instance | BindingFlags.NonPublic));
+            }
+        }
+
+        [HarmonyPatch]
+        public static class CCLEngineStartupShutdownPatch
+        {
+            public static IEnumerable<CodeInstruction> GenerateNewMethod(MethodBase original, List<CodeInstruction> instructions)
+            {
+                Main.DebugLog(() => $"EngineFade patching {original.DeclaringType.FullName}.{original.Name}");
+                var thisField = System.Array.Find(original.DeclaringType.GetFields(), m => m.Name.EndsWith("this"));
+
+                var index = instructions.FindIndex(ci => ci.Is(OpCodes.Ldfld, AccessTools.Field(original.DeclaringType, "engineTurnedOn")));
+                index = instructions.FindIndex(index + 1, ci => ci.Is(OpCodes.Ldfld, AccessTools.Field(original.DeclaringType, "engineTurnedOn")));
+
+                index += 4;
+                instructions.RemoveRange(index, 4);
+                instructions.Insert(index, CodeInstruction.Call(typeof(EngineFade), nameof(EngineFade.GetFadeOutStart)));
+
+                index += 4;
+                instructions.RemoveRange(index, 4);
+                instructions.Insert(index, CodeInstruction.Call(typeof(EngineFade), nameof(EngineFade.GetFadeInStart)));
+
+                index = instructions.FindIndex(index, ci => ci.Is(OpCodes.Ldfld, AccessTools.Field(original.DeclaringType, "engineTurnedOn")));
+
+                index += 2;
+                var toInsert = new CodeInstruction[] {
+                    new CodeInstruction(OpCodes.Ldarg_0).MoveLabelsFrom(instructions[index]), // this (+<EngineStartupShutdown>)
+                    new CodeInstruction(OpCodes.Ldfld, thisField), // this (CustomLocoAudioDiesel)
+                    CodeInstruction.Call(typeof(EngineFade), nameof(EngineFade.GetFadeOutDuration)),
+                };
+                instructions.InsertRange(index, toInsert);
+                index += toInsert.Length;
+                instructions.RemoveAt(index);
+
+                index++;
+                toInsert = new CodeInstruction[] {
+                    new CodeInstruction(OpCodes.Ldarg_0).MoveLabelsFrom(instructions[index]), // this (+<EngineStartupShutdown>)
+                    new CodeInstruction(OpCodes.Ldfld, thisField), // this (CustomLocoAudioDiesel)
+                    CodeInstruction.Call(typeof(EngineFade), nameof(EngineFade.GetFadeInDuration)),
+                };
+                instructions.InsertRange(index, toInsert);
+                index += toInsert.Length;
+                instructions.RemoveAt(index);
+
+                return instructions;
+            }
+
+            public static IEnumerable<CodeInstruction> Transpiler(MethodBase original, IEnumerable<CodeInstruction> instructions)
+            {
+                var before = new List<CodeInstruction>(instructions);
+                // Main.DebugLog(() => $"\nBefore:\n{string.Join("\n", before)}");
+                var after = GenerateNewMethod(original, before).ToList();
+                // Main.DebugLog(() => $"\nAfter:\n{string.Join("\n", after)}");
+                return after;
+            }
+
+            public static bool Prepare()
+            {
+                return UnityModManager.FindMod("DVCustomCarLoader")?.Loaded ?? false;
+            }
+
+            public static MethodBase TargetMethod()
+            {
+                var cclModAssembly = UnityModManager.FindMod("DVCustomCarLoader")?.Assembly;
+                if (cclModAssembly != null)
+                {
+                    var coroClass = System.Array.Find(cclModAssembly.GetTypes(), t => t.FullName.Contains("+<EngineStartupShutdown>"));
+                    if (coroClass != null)
+                        return coroClass.GetMethod("MoveNext", BindingFlags.Instance | BindingFlags.NonPublic);
+                }
+                return AccessTools.Method(typeof(object), nameof(object.ToString));
             }
         }
     }

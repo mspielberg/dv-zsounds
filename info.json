@@ -4,6 +4,7 @@
   "Author": "Zeibach",
   "Version": "1.2.0",
   "ManagerVersion": "0.22.14.0",
+  "LoadAfter": ["DVCustomCarLoader"],
   "AssemblyName": "ZSounds.dll",
   "EntryMethod": "DvMod.ZSounds.Main.Load",
   "HomePage": "https://www.nexusmods.com/derailvalley/mods/249",

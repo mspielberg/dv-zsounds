@@ -1,3 +1,4 @@
+using DVCustomCarLoader;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -181,6 +182,25 @@ namespace DvMod.ZSounds.Config
             this.rule = rule;
         }
 
+        private static readonly Dictionary<string, TrainCarType> trainCarTypes = new Dictionary<string, TrainCarType>();
+
+        private static void AddCustomCars()
+        {
+            foreach (var customCar in CustomCarManager.CustomCarTypes)
+                trainCarTypes[customCar.identifier] = customCar.CarType;
+        }
+
+        static IfRule()
+        {
+            foreach (TrainCarType trainCarType in Enum.GetValues(typeof(TrainCarType)))
+                trainCarTypes[Enum.GetName(typeof(TrainCarType), trainCarType)] = trainCarType;
+
+            if (UnityModManager.FindMod("DVCustomCarLoader")?.Loaded ?? false)
+                AddCustomCars();
+
+            Main.DebugLog(() => $"trainCarTypes:\n{string.Join("\n", trainCarTypes.Keys.Select(k => $"{k} -> {trainCarTypes[k]}"))}");
+        }
+
         public static IfRule Parse(JToken token)
         {
             return new IfRule(
@@ -197,16 +217,13 @@ namespace DvMod.ZSounds.Config
                 rule.Apply(config, car, soundSet);
         }
 
-        private static readonly List<string> knownTrainCarTypes =
-            Enum.GetNames(typeof(TrainCarType)).Select(name => name.ToLowerInvariant()).ToList();
-
         public void Validate(Config config)
         {
             switch (property)
             {
                 case IfRuleProperty.CarType:
-                    if (!knownTrainCarTypes.Contains(value.ToLowerInvariant()))
-                        throw new ConfigException($"Unknown value for CarType: {value}");
+                    if (!trainCarTypes.ContainsKey(value))
+                        Main.mod!.Logger.Log($"Unknown value '{value}' for CarType in rule {path}");
                     break;
                 case IfRuleProperty.SkinName:
                     break;
@@ -218,7 +235,7 @@ namespace DvMod.ZSounds.Config
         {
             return property switch
             {
-                IfRuleProperty.CarType => string.Equals(car.carType.ToString(), value, StringComparison.OrdinalIgnoreCase),
+                IfRuleProperty.CarType => trainCarTypes.TryGetValue(value, out var ruleCarType) && ruleCarType == car.carType,
                 IfRuleProperty.SkinName => string.Equals(GetSkinName(car), value, StringComparison.OrdinalIgnoreCase),
                 _ => false,
             };

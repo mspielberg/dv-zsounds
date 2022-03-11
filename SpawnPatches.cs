@@ -1,4 +1,5 @@
 using HarmonyLib;
+using UnityModManagerNet;
 
 namespace DvMod.ZSounds
 {
@@ -18,6 +19,10 @@ namespace DvMod.ZSounds
                     break;
                 case TrainCarType.LocoSteamHeavy:
                     SteamAudio.Apply(car, soundSet);
+                    break;
+                default:
+                    if (UnityModManager.FindMod("DVCustomCarLoader").Loaded)
+                        CCLAudio.Apply(car, soundSet);
                     break;
             }
         }
