@@ -36,30 +36,30 @@ Not all sound types are supported by all locomotives. Some sound types can take 
 
 * Bell (DE2, DE6)
     - pitch
-* HornHit (DE2, DE6)
+* HornHit (DE2, DE6, CCL DieselElectric)
     - pitch
-* HornLoop (DE2, DE6)
+* HornLoop (DE2, DE6, CCL DieselElectric)
     - minPitch: pitch when horn lever is moved the minimum amount.
     - maxPitch: pitch when horn lever is moved fully.
     - minVolume: volume when horn lever is moved the minimum amount.
     - maxVolume: volume when horn lever is moved the minimum amount.
-* EngineLoadLoop (DE2, DE6)
+* EngineLoadLoop (DE2, DE6, CCL DieselElectric)
     - minPitch: pitch at idle throttle.
     - maxPitch: pitch at maximum throttle.
     - minVolume: volume at idle throttle. (Actual volume is affected by change in RPM.)
     - maxVolume: volume at maximum throttle.
-* EngineLoop (DE2, DE6)
+* EngineLoop (DE2, DE6, CCL DieselElectric)
     - minPitch: pitch at idle throttle.
     - maxPitch: pitch at maximum throttle.
     - minVolume: volume at idle throttle.
     - maxVolume: volume at maximum throttle.
-* EngineShutdown (DE2, DE6)
+* EngineShutdown (DE2, DE6, CCL DieselElectric)
     - fadeStart: delay in seconds until the EngineLoop begins to fade out.
     - fadeDuration: number of seconds until the EngineLoop reaches 0% volume after the fade out begins.
-* EngineStartup (DE2, DE6)
+* EngineStartup (DE2, DE6, CCL DieselElectric)
     - fadeStart: delay in seconds until the EngineLoop begins to fade in.
     - fadeDuration: number of seconds until the EngineLoop reaches 100% volume after the fade in begins.
-* TractionMotors (DE2, DE6)
+* TractionMotors (DE2, DE6, CCL DieselElectric)
     - minPitch: pitch when stopped
     - maxPitch: pitch at maximum speed (DE2: 100 km/h, DE6: 120 km/h)
     - minVolume: volume when stopped
@@ -106,7 +106,13 @@ As with sounds, rules here have a short name that must be unique across all conf
     - weights (optional): A weight for each rule, affecting how likely ZSounds is to execute that rule. The first weight applies to the first rule in `rules`, and so on. If this field is present it must have the same number of weights as there are rules in `rules`. If this field is missing, all rules are assumed to have equal weight of `1.0`.
 * If: Executes its subrule only when a condition is met.
     - property: One of `CarType` or `SkinName`.
-    - value: If property is `CarType`, then one of: `LocoShunter`, `LocoSteamHeavy`, or `LocoDiesel`. If property is `SkinName`, then the name of a skin.
+    - value:
+      - If property is `CarType`, then one of:
+        - `LocoShunter`
+        - `LocoSteamHeavy`
+        - `LocoDiesel`
+        - The `identifier` as found in the `car.json` file of a CustomCarLoader locomotive.
+      - If property is `SkinName`, then the name of a skin.
     - rule: The subrule to execute if the locomotive's type / applied skin matches `value`.
 * Sound: Assigns a sound to the locomotive.
     - name: The short name of a sound.
