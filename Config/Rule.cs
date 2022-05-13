@@ -265,7 +265,32 @@ namespace DvMod.ZSounds.Config
 
         private static string? GetSkinName(TrainCar car)
         {
-            return CarSkins?[car.CarGUID];
+            var skinManagerMod = UnityModManager.FindMod("SkinManagerMod");
+            if (!(skinManagerMod?.Active ?? false))
+                return null;
+
+            if (skinManagerMod.Version >= new Version(2,5))
+            {
+                if (!skinManagerMod.Invoke(
+                    "SkinManagerMod.SkinManager.GetCurrentCarSkin",
+                    out var result,
+                    new object[1]{ car },
+                    new Type[1]{ typeof(TrainCar) }))
+                {
+                    Main.DebugLog(() => "Could not find GetCurrentCarSkin method");
+                    return null;
+                }
+                Main.DebugLog(() => $"Result from GetCurrentCarSkin: {result}");
+                var property = result.GetType().GetField("Name");
+                var skinName = (string)property.GetValue(result);
+                Main.DebugLog(() => $"skin name = {skinName}");
+                return skinName;
+            }
+
+            if (skinManagerMod.Version < new Version(2, 5))
+                return CarSkins?[car.CarGUID];
+
+            return null;
         }
 
         public override string ToString()
