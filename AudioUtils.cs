@@ -37,9 +37,10 @@ namespace DvMod.ZSounds
 
         private static readonly Dictionary<DefaultKey, AudioSettings> Defaults = new Dictionary<DefaultKey, AudioSettings>();
 
-        public static void Apply(TrainCarType carType, SoundType soundType, Config.SoundDefinition? soundDefinition, ref AudioClip clip)
+        public static void Apply(TrainCarType carType, SoundType soundType, SoundSet soundSet, ref AudioClip clip)
         {
             var key = new DefaultKey(carType, soundType);
+            var soundDefinition = soundSet[soundType];
             Main.DebugLog(() => $"Loading {key}: {soundDefinition}");
             if (!Defaults.ContainsKey(key))
                 Defaults[key] = new AudioSettings() { clip = clip };
@@ -50,9 +51,10 @@ namespace DvMod.ZSounds
                 clip = Defaults[key].clip!;
         }
 
-        public static void Apply(TrainCarType carType, SoundType soundType, Config.SoundDefinition? soundDefinition, ref AudioClip[] clips)
+        public static void Apply(TrainCarType carType, SoundType soundType, SoundSet soundSet, ref AudioClip[] clips)
         {
             var key = new DefaultKey(carType, soundType);
+            var soundDefinition = soundSet[soundType];
             Main.DebugLog(() => $"Loading {key}: {soundDefinition}");
             if (!Defaults.ContainsKey(key))
                 Defaults[key] = new AudioSettings() { clips = clips };
@@ -65,9 +67,10 @@ namespace DvMod.ZSounds
                 clips = Defaults[key].clips!;
         }
 
-        public static void Apply(TrainCarType carType, SoundType soundType, Config.SoundDefinition? soundDefinition, AudioSource source)
+        public static void Apply(TrainCarType carType, SoundType soundType, SoundSet soundSet, AudioSource source)
         {
             var key = new DefaultKey(carType, soundType);
+            var soundDefinition = soundSet[soundType];
             Main.DebugLog(() => $"Loading {key}: {soundDefinition}");
             if (!Defaults.ContainsKey(key))
             {
@@ -90,9 +93,21 @@ namespace DvMod.ZSounds
             source.pitch = soundDefinition.pitch ?? defaults.pitch;
         }
 
-        public static void Apply(TrainCarType carType, SoundType soundType, Config.SoundDefinition? soundDefinition, LayeredAudio audio)
+        private static AnimationCurve MakeCurve(AnimationCurve defaultCurve, float? newMin, float? newMax)
+        {
+            if (!newMin.HasValue && !newMax.HasValue)
+                return defaultCurve;
+            var firstKey = defaultCurve.keys[0];
+            var lastKey = defaultCurve.keys[defaultCurve.keys.Length - 1];
+            return AnimationCurve.EaseInOut(
+                firstKey.time, newMin ?? firstKey.value,
+                lastKey.time, newMax ?? lastKey.value);
+        }
+
+        public static void Apply(TrainCarType carType, SoundType soundType, SoundSet soundSet, LayeredAudio audio)
         {
             var key = new DefaultKey(carType, soundType);
+            var soundDefinition = soundSet[soundType];
             Main.DebugLog(() => $"Loading {key}: {soundDefinition}");
             var mainLayer = audio.layers[0];
             if (!Defaults.ContainsKey(key))
@@ -127,12 +142,8 @@ namespace DvMod.ZSounds
                 audio.maxPitch = soundDefinition.maxPitch ?? defaults.maxPitch * defaults.pitch;
                 mainLayer.source.clip = soundDefinition.filename.Map(FileAudio.Load) ?? defaults.clip;
                 mainLayer.startPitch = 1f;
-                mainLayer.pitchCurve = AnimationCurve.EaseInOut(
-                    0f, soundDefinition.minPitch ?? defaults.pitchCurve.Evaluate(0),
-                    1f, soundDefinition.maxPitch ?? defaults.pitchCurve.Evaluate(1));
-                mainLayer.volumeCurve = AnimationCurve.EaseInOut(
-                    0f, soundDefinition.minVolume ?? defaults.volumeCurve.Evaluate(0),
-                    1f, soundDefinition.maxVolume ?? defaults.volumeCurve.Evaluate(1));
+                mainLayer.pitchCurve = MakeCurve(defaults.pitchCurve, soundDefinition.minPitch, soundDefinition.maxPitch);
+                mainLayer.volumeCurve = MakeCurve(defaults.volumeCurve, soundDefinition.minVolume, soundDefinition.maxVolume);
 
                 for (int i = 1; i < audio.layers.Length; i++)
                     audio.layers[i].source.mute = true;

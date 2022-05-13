@@ -7,31 +7,11 @@ namespace DvMod.ZSounds
         public static void Apply(TrainCar car, SoundSet soundSet)
         {
             var audio = car.GetComponentInChildren<LocoAudioSteam>();
-            AudioUtils.Apply(
-                TrainCarType.LocoSteamHeavy,
-                SoundType.SteamCylinderChuffs,
-                soundSet[SoundType.SteamCylinderChuffs],
-                ref audio.cylClipsSlow);
-            AudioUtils.Apply(
-                TrainCarType.LocoSteamHeavy,
-                SoundType.SteamStackChuffs,
-                soundSet[SoundType.SteamStackChuffs],
-                ref audio.chimneyClipsSlow);
-            AudioUtils.Apply(
-                TrainCarType.LocoSteamHeavy,
-                SoundType.SteamValveGear,
-                soundSet[SoundType.SteamValveGear],
-                audio.valveGearLayered);
-            AudioUtils.Apply(
-                TrainCarType.LocoSteamHeavy,
-                SoundType.SteamChuffLoop,
-                soundSet[SoundType.SteamChuffLoop],
-                audio.steamChuffsLayered);
-            AudioUtils.Apply(
-                TrainCarType.LocoSteamHeavy,
-                SoundType.Whistle,
-                soundSet[SoundType.Whistle],
-                audio.whistleAudio);
+            AudioUtils.Apply(TrainCarType.LocoSteamHeavy, SoundType.SteamCylinderChuffs, soundSet, ref audio.cylClipsSlow);
+            AudioUtils.Apply(TrainCarType.LocoSteamHeavy, SoundType.SteamStackChuffs, soundSet, ref audio.chimneyClipsSlow);
+            AudioUtils.Apply(TrainCarType.LocoSteamHeavy, SoundType.SteamValveGear, soundSet, audio.valveGearLayered);
+            AudioUtils.Apply(TrainCarType.LocoSteamHeavy, SoundType.SteamChuffLoop, soundSet, audio.steamChuffsLayered);
+            AudioUtils.Apply(TrainCarType.LocoSteamHeavy, SoundType.Whistle, soundSet, audio.whistleAudio);
         }
     }
 }

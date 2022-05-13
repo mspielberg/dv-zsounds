@@ -1,4 +1,5 @@
 using DVCustomCarLoader.LocoComponents.DieselElectric;
+using DvMod.ZSounds.Config;
 using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;

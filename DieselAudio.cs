@@ -18,10 +18,11 @@ namespace DvMod.ZSounds
 
         public static void SetEngine(LocoAudioDiesel audio, SoundSet soundSet)
         {
+            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.EngineStartup, soundSet, ref audio.engineOnClip);
+            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.EngineShutdown, soundSet, ref audio.engineOffClip);
+
             soundSet.sounds.TryGetValue(SoundType.EngineStartup, out var startup);
-            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.EngineStartup, startup, ref audio.engineOnClip);
             soundSet.sounds.TryGetValue(SoundType.EngineShutdown, out var shutdown);
-            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.EngineShutdown, shutdown, ref audio.engineOffClip);
             EngineFade.SetFadeSettings(audio, new EngineFade.Settings
             {
                 fadeInStart = startup?.fadeStart ?? 0.15f * audio.engineOnClip.length,
@@ -30,22 +31,22 @@ namespace DvMod.ZSounds
                 fadeOutDuration = shutdown?.fadeDuration ?? 1f,
             });
 
-            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.EngineLoop, soundSet[SoundType.EngineLoop], audio.engineAudio);
-            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.EngineLoadLoop, soundSet[SoundType.EngineLoadLoop], audio.enginePistonAudio);
-            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.TractionMotors, soundSet[SoundType.TractionMotors], audio.electricMotorAudio);
+            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.EngineLoop, soundSet, audio.engineAudio);
+            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.EngineLoadLoop, soundSet, audio.enginePistonAudio);
+            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.TractionMotors, soundSet, audio.electricMotorAudio);
         }
 
         private static void SetBell(LocoAudioDiesel audio, SoundSet soundSet)
         {
             var audioSource = audio.transform.Find("Horn/ZSounds bell").GetComponent<AudioSource>();
-            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.Bell, soundSet[SoundType.Bell], audioSource);
+            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.Bell, soundSet, audioSource);
         }
 
         private static void SetHorn(LocoAudioDiesel audio, SoundSet soundSet)
         {
             var hornHitSource = audio.hornAudio.transform.Find("train_horn_01_hit").GetComponent<AudioSource>();
-            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.HornHit, soundSet[SoundType.HornHit], hornHitSource);
-            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.HornLoop, soundSet[SoundType.HornLoop], audio.hornAudio);
+            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.HornHit, soundSet, hornHitSource);
+            AudioUtils.Apply(TrainCarType.LocoDiesel, SoundType.HornLoop, soundSet, audio.hornAudio);
         }
 
         [HarmonyPatch(typeof(LocoAudioDiesel), nameof(LocoAudioDiesel.SetupForCar))]
