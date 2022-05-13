@@ -59,12 +59,18 @@ Not all sound types are supported by all locomotives. Some sound types can take 
 * EngineStartup (DE2, DE6, CCL DieselElectric)
     - fadeStart: delay in seconds until the EngineLoop begins to fade in.
     - fadeDuration: number of seconds until the EngineLoop reaches 100% volume after the fade in begins.
+* SteamChuffLoop (SH282, CCL Steam)
+* SteamCylinderChuffs (SH282, CCL Steam)
+    - filenames: a list of filenames, where one is randomly chosen for each chuff.
+* SteamStackChuffs (SH282, CCL Steam)
+    - filenames: a list of filenames, where one is randomly chosen for each chuff.
+* SteamValveGear (SH282, CCL Steam)
 * TractionMotors (DE2, DE6, CCL DieselElectric)
     - minPitch: pitch when stopped
     - maxPitch: pitch at maximum speed (DE2: 100 km/h, DE6: 120 km/h)
     - minVolume: volume when stopped
     - maxVolume: volume at maximum speed (DE2: 100 km/h, DE6: 120 km/h)
-* Whistle (SH282)
+* Whistle (SH282, CCL Steam)
     - minPitch: pitch when whistle rope is pulled the minimum amount.
     - maxPitch: pitch when whistle rope is pulled fully.
     - minVolume: volume when whistle rope is pulled the minimum amount.

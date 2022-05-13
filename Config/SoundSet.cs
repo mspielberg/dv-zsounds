@@ -42,6 +42,10 @@ namespace DvMod.ZSounds.Config
         EngineStartup,
         EngineShutdown,
         TractionMotors,
+        SteamCylinderChuffs,
+        SteamStackChuffs,
+        SteamValveGear,
+        SteamChuffLoop,
     }
 
     [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]

@@ -6,23 +6,24 @@ using UnityEngine;
 
 namespace DvMod.ZSounds
 {
-    public class CCLAudio
+    public static class CCLAudio
     {
         public static void Apply(TrainCar car, SoundSet soundSet)
         {
             Main.DebugLog(() => $"Applying to {car.ID}:\n{soundSet}");
-            var audio = car.GetComponentInChildren<CustomLocoAudio>();
-            if (audio == null)
-                return;
-                Main.DebugLog(() => $"Found CustomLocoAudio {audio.GetPath()}");
-            if (audio is CustomLocoAudioDiesel diesel)
-                CCLDieselAudio.Apply(car, diesel, soundSet);
-            if (audio is CustomLocoAudioSteam steam)
-                CCLSteamAudio.Apply(car, steam, soundSet);
+            switch (car.GetComponentInChildren<CustomLocoAudio>())
+            {
+                case CustomLocoAudioDiesel diesel:
+                    CCLDieselAudio.Apply(car, diesel, soundSet);
+                    break;
+                case CustomLocoAudioSteam steam:
+                    CCLSteamAudio.Apply(car, steam, soundSet);
+                    break;
+            }
         }
     }
 
-    public class CCLDieselAudio
+    public static class CCLDieselAudio
     {
         public static void Apply(TrainCar car, CustomLocoAudioDiesel audio, SoundSet soundSet)
         {
@@ -58,10 +59,30 @@ namespace DvMod.ZSounds
         }
     }
 
-    public class CCLSteamAudio
+    public static class CCLSteamAudio
     {
         public static void Apply(TrainCar car, CustomLocoAudioSteam audio, SoundSet soundSet)
         {
+            AudioUtils.Apply(
+                car.carType,
+                SoundType.SteamCylinderChuffs,
+                soundSet[SoundType.SteamCylinderChuffs],
+                ref audio.cylClipsSlow);
+            AudioUtils.Apply(
+                car.carType,
+                SoundType.SteamStackChuffs,
+                soundSet[SoundType.SteamStackChuffs],
+                ref audio.chimneyClipsSlow);
+            AudioUtils.Apply(
+                car.carType,
+                SoundType.SteamValveGear,
+                soundSet[SoundType.SteamValveGear],
+                audio.valveGearLayered);
+            AudioUtils.Apply(
+                car.carType,
+                SoundType.SteamChuffLoop,
+                soundSet[SoundType.SteamChuffLoop],
+                audio.steamChuffsLayered);
             AudioUtils.Apply(
                 car.carType,
                 SoundType.Whistle,
