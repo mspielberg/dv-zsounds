@@ -25,13 +25,18 @@ namespace DvMod.ZSounds
 
         private struct DefaultKey
         {
-            public readonly TrainCarType cartype;
+            public readonly TrainCarType carType;
             public readonly SoundType soundType;
 
-            public DefaultKey(TrainCarType cartype, SoundType soundType)
+            public DefaultKey(TrainCarType carType, SoundType soundType)
             {
-                this.cartype = cartype;
+                this.carType = carType;
                 this.soundType = soundType;
+            }
+
+            public override string ToString()
+            {
+                return $"({carType}, {soundType})";
             }
         }
 
@@ -95,13 +100,18 @@ namespace DvMod.ZSounds
 
         private static AnimationCurve MakeCurve(AnimationCurve defaultCurve, float? newMin, float? newMax)
         {
+            // Main.DebugLog(() => "Entering MakeCurve");
+            // Main.DebugLog(() => $"newMin={newMin}, newMax={newMax}");
+            // Main.DebugLog(() => $"defaultCurve={defaultCurve}");
+            // Main.DebugLog(() => $"keys={string.Join(",", defaultCurve.keys)}");
             if (!newMin.HasValue && !newMax.HasValue)
                 return defaultCurve;
-            var firstKey = defaultCurve.keys[0];
-            var lastKey = defaultCurve.keys[defaultCurve.keys.Length - 1];
+            var (start, end) = defaultCurve.length > 0
+                ? (defaultCurve[0].time, defaultCurve.keys[defaultCurve.keys.Length - 1].time)
+                : (0f, 1f);
             return AnimationCurve.EaseInOut(
-                firstKey.time, newMin ?? firstKey.value,
-                lastKey.time, newMax ?? lastKey.value);
+                start, newMin ?? defaultCurve.Evaluate(start),
+                end, newMax ?? defaultCurve.Evaluate(end));
         }
 
         public static void Apply(TrainCarType carType, SoundType soundType, SoundSet soundSet, LayeredAudio audio)
