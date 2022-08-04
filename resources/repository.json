@@ -1,6 +1,7 @@
 {
   "Releases":
   [
+      {"Id": "ZSounds", "Version": "1.4.2", "DownloadUrl": "https://github.com/mspielberg/dv-zsounds/releases/download/v1.4.2/ZSounds_1.4.2.zip"},
       {"Id": "ZSounds", "Version": "1.4.1", "DownloadUrl": "https://github.com/mspielberg/dv-zsounds/releases/download/v1.4.1/ZSounds_1.4.1.zip"},
       {"Id": "ZSounds", "Version": "1.4.0", "DownloadUrl": "https://github.com/mspielberg/dv-zsounds/releases/download/v1.4.0/ZSounds_1.4.0.zip"},
       {"Id": "ZSounds", "Version": "1.3.0", "DownloadUrl": "https://github.com/mspielberg/dv-zsounds/releases/download/v1.3.0/ZSounds_1.3.0.zip"},
