@@ -97,7 +97,8 @@ namespace DvMod.ZSounds
                 bellLampControl.lampInd = __instance.transform.Find("offset/I Indicator lamps/I bell_lamp/lamp emmision indicator").GetComponent<IndicatorEmission>();
                 bellLampControl.SetLampState(bellAudioSource.loop ? LampControl.LampState.On : LampControl.LampState.Off);
 
-                bellButton.ValueChanged += (ValueChangedEventArgs e) => {
+                bellButton.ValueChanged += (ValueChangedEventArgs e) =>
+                {
                     bellLampControl.SetLampState(e.newValue >= 0.5f ? LampControl.LampState.On : LampControl.LampState.Off);
                     bellAudioSource.loop = e.newValue >= 0.5f;
                     if (bellAudioSource.loop && !bellAudioSource.isPlaying)

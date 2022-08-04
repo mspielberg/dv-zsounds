@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace DvMod.ZSounds.Config
         }
 
         public readonly string originPath;
-        public readonly int originIndex;
+        public readonly int originLine;
 
         public readonly HookType type;
         public readonly string rulePath;
@@ -39,21 +40,22 @@ namespace DvMod.ZSounds.Config
             };
         }
 
-        public Hook(string originPath, int originIndex, HookType type, string rulePath, IRule rule, float weight)
+        public Hook(string originPath, int originLine, HookType type, string rulePath, IRule rule, float weight)
         {
             this.originPath = originPath;
-            this.originIndex = originIndex;
+            this.originLine = originLine;
             this.type = type;
             this.rulePath = rulePath;
             this.rule = rule;
             this.weight = weight;
         }
 
-        public static Hook Parse(string originPath, int originIndex, JToken token)
+        public static Hook Parse(string originPath, JToken token)
         {
+            IJsonLineInfo lineInfo = token;
             return new Hook(
                 originPath,
-                originIndex,
+                lineInfo.LineNumber,
                 Util.ParseEnum<HookType>(token["type"]),
                 token["path"].Value<string>(),
                 Rule.Parse(token["rule"]),
@@ -62,10 +64,10 @@ namespace DvMod.ZSounds.Config
 
         public void Apply(Config config)
         {
-            var pathComponents = rulePath.Split(new char[]{ '[', ']' }, StringSplitOptions.RemoveEmptyEntries);
+            var pathComponents = rulePath.Split(new char[] { '[', ']' }, StringSplitOptions.RemoveEmptyEntries);
             var ruleName = pathComponents[0];
-            var target = config.rules[ruleName];
-            if (target == null)
+            var foundRule = config.rules.TryGetValue(ruleName, out var target);
+            if (!foundRule)
                 throw new ConfigException($"Hook refers to nonexistent rule {ruleName}");
             foreach (var position in pathComponents.Skip(1).Select(int.Parse))
                 target = GetSubrule(target, position);

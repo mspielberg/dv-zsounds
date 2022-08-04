@@ -86,7 +86,8 @@ namespace DvMod.ZSounds.Config
 
         public static SoundDefinition Parse(string configFilePath, string name, JToken token)
         {
-            try {
+            try
+            {
                 var root = Path.GetDirectoryName(configFilePath);
                 return new SoundDefinition(name, (SoundType)Enum.Parse(typeof(SoundType), token["type"].Value<string>()))
                 {

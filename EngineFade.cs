@@ -91,7 +91,7 @@ namespace DvMod.ZSounds
                 index += 2;
                 instructions[index].opcode = OpCodes.Ldloc_1;
                 instructions[index].operand = null;
-                instructions.Insert(index + 1,  CodeInstruction.Call(typeof(EngineFade), nameof(EngineFade.GetFadeOutDuration)));
+                instructions.Insert(index + 1, CodeInstruction.Call(typeof(EngineFade), nameof(EngineFade.GetFadeOutDuration)));
 
                 index += 3;
                 instructions[index].opcode = OpCodes.Ldloc_1;

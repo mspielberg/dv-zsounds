@@ -20,24 +20,31 @@ namespace DvMod.ZSounds.Config
 
         public void Load(string path)
         {
-            Main.DebugLog(() => $"Loading config {path}");
-            var configFile = ConfigFile.Parse(path);
-            foreach (var (key, rule) in configFile.rules)
-                rules.Add(key, rule);
-
-            foreach (var (key, sound) in configFile.sounds)
+            Main.mod.Logger.Log($"Loading config {path}");
+            try
             {
-                sounds.Add(key, sound);
-                AddSoundToTypeMap(sound);
-            }
+                var configFile = ConfigFile.Parse(path);
+                foreach (var (key, rule) in configFile.rules)
+                    rules.Add(key, rule);
 
-            foreach (var hook in configFile.hooks)
-                hooks.Add(hook);
+                foreach (var (key, sound) in configFile.sounds)
+                {
+                    sounds.Add(key, sound);
+                    AddSoundToTypeMap(sound);
+                }
+
+                foreach (var hook in configFile.hooks)
+                    hooks.Add(hook);
+            }
+            catch (Exception e)
+            {
+                throw new ConfigException($"Problem parsing config file {path}", e);
+            }
         }
 
         private void AddSoundToTypeMap(SoundDefinition sound)
         {
-            if( soundTypes.TryGetValue(sound.type, out var list) )
+            if (soundTypes.TryGetValue(sound.type, out var list))
             {
                 list.Add(sound);
                 return;
@@ -52,9 +59,19 @@ namespace DvMod.ZSounds.Config
 
         public void Validate()
         {
+            Main.DebugLog(() => $"Config before hooks:\n{ToString()}");
             Main.DebugLog(() => "Running hooks");
             foreach (var hook in hooks)
-                hook.Apply(this);
+            {
+                try
+                {
+                    hook.Apply(this);
+                }
+                catch (Exception e)
+                {
+                    throw new ConfigException($"Problem executing hook {hook.originPath}:{hook.originLine}", e);
+                }
+            }
 
             foreach (var (name, rule) in rules)
             {
@@ -97,10 +114,27 @@ namespace DvMod.ZSounds.Config
                 Directory.GetFiles(modsDir, "zsounds-config.json", SearchOption.AllDirectories)
                     .Where(p => p != mainConfigPath);
 
-            foreach (var configPath in extraConfigs)
-                config.Load(configPath);
+            try
+            {
+                foreach (var configPath in extraConfigs)
+                    config.Load(configPath);
+            }
+            catch (ConfigException e)
+            {
+                Main.mod.Logger.LogException("Problem loading config files", e);
+                throw e;
+            }
 
-            config.Validate();
+            try
+            {
+                config.Validate();
+            }
+            catch (ConfigException e)
+            {
+                Main.mod.Logger.LogException("Problem validating config", e);
+                throw e;
+            }
+
             Active = config;
         }
 
@@ -146,7 +180,7 @@ namespace DvMod.ZSounds.Config
                     .ToDictionary(prop => prop.Name, prop => Rule.Parse(prop.Value)),
                 (token["sounds"] ?? Enumerable.Empty<JToken>()).OfType<JProperty>()
                     .ToDictionary(prop => prop.Name, prop => SoundDefinition.Parse(path, prop.Name, prop.Value)),
-                (token["hooks"] ?? Enumerable.Empty<JToken>()).Select((token, index) => Hook.Parse(path, index, token)).ToList()
+                (token["hooks"] ?? Enumerable.Empty<JToken>()).Select(token => Hook.Parse(path, token)).ToList()
             );
         }
     }

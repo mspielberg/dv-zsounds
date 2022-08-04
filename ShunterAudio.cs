@@ -79,7 +79,8 @@ namespace DvMod.ZSounds
                 bellLampControl.lampInd = __instance.transform.Find("C dashboard buttons controller/I bell lamp/lamp emmision indicator").GetComponent<IndicatorEmission>();
                 bellLampControl.SetLampState(bellAudioSource.loop ? LampControl.LampState.On : LampControl.LampState.Off);
 
-                bellSwitch.ValueChanged += (ValueChangedEventArgs e) => {
+                bellSwitch.ValueChanged += (ValueChangedEventArgs e) =>
+                {
                     bellLampControl.SetLampState(e.newValue >= 0.5f ? LampControl.LampState.On : LampControl.LampState.Off);
                     bellAudioSource.loop = e.newValue >= 0.5f;
                     if (bellAudioSource.loop && !bellAudioSource.isPlaying)
@@ -164,13 +165,13 @@ namespace DvMod.ZSounds
                     {
                         switch (comp)
                         {
-                        case Transform _:
-                        case ControlSpec _:
-                            break;
-                        default:
-                            // these will be recreated when the GameObject is set active next frame
-                            Component.Destroy(comp);
-                            break;
+                            case Transform _:
+                            case ControlSpec _:
+                                break;
+                            default:
+                                // these will be recreated when the GameObject is set active next frame
+                                Component.Destroy(comp);
+                                break;
                         }
                     }
 

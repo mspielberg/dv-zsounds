@@ -269,13 +269,13 @@ namespace DvMod.ZSounds.Config
             if (!(skinManagerMod?.Active ?? false))
                 return null;
 
-            if (skinManagerMod.Version >= new Version(2,5))
+            if (skinManagerMod.Version >= new Version(2, 5))
             {
                 if (!skinManagerMod.Invoke(
                     "SkinManagerMod.SkinManager.GetCurrentCarSkin",
                     out var result,
-                    new object[1]{ car },
-                    new Type[1]{ typeof(TrainCar) }))
+                    new object[1] { car },
+                    new Type[1] { typeof(TrainCar) }))
                 {
                     Main.DebugLog(() => "Could not find GetCurrentCarSkin method");
                     return null;

@@ -27,7 +27,7 @@ namespace DvMod.ZSounds
                 System.Diagnostics.Process.Start(Path.Combine(Main.mod!.Path, "zsounds-config.json"));
         }
 
-        public void OnChange() {}
+        public void OnChange() { }
 
         public override void Save(UnityModManager.ModEntry modEntry)
         {
