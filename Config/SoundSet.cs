@@ -46,6 +46,23 @@ namespace DvMod.ZSounds.Config
         SteamStackChuffs,
         SteamValveGear,
         SteamChuffLoop,
+
+        // generic sounds
+
+        Collision,
+        JunctionJoint,
+        RollingAudioDetailed,
+        RollingAudioSimple,
+        SquealAudioDetailed,
+        SquealAudioSimple,
+        AirflowAudio,
+        Coupling,
+        Uncoupling,
+        Wind,
+        DerailHit,
+        Switch,
+        SwitchForced,
+        CargoLoadUnload,
     }
 
     [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
@@ -83,6 +100,8 @@ namespace DvMod.ZSounds.Config
             foreach (var f in filenames ?? new string[0])
                 ValidateFile(f);
         }
+
+        public bool IsGeneric => type >= SoundType.Collision;
 
         public static SoundDefinition Parse(string configFilePath, string name, JToken token)
         {

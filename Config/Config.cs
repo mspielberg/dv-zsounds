@@ -145,6 +145,17 @@ namespace DvMod.ZSounds.Config
             return soundSet;
         }
 
+        public SoundSet GenericSoundSet()
+        {
+            var soundSet = new SoundSet();
+            foreach (var sound in sounds.Values)
+            {
+                if (sound.IsGeneric)
+                    sound.Apply(soundSet);
+            }
+            return soundSet;
+        }
+
         public override string ToString()
         {
             var ruleStrings = rules.Select(kv => $"{kv.Key}:\n{kv.Value.ToString().Indent(2)}");
