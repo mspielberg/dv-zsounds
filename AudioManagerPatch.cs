@@ -4,7 +4,7 @@ using HarmonyLib;
 
 namespace DvMod.ZSounds
 {
-    [HarmonyPatch(typeof(AudioManager), nameof(AudioManager.Awake))]
+    [HarmonyPatch(typeof(AudioManager), nameof(AudioManager.Start))]
     public static class AudioManagerPatch
     {
         public static void Postfix()
