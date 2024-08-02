@@ -1,4 +1,4 @@
-using DVCustomCarLoader;
+// using DVCustomCarLoader;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -184,19 +184,19 @@ namespace DvMod.ZSounds.Config
 
         private static readonly Dictionary<string, TrainCarType> trainCarTypes = new Dictionary<string, TrainCarType>();
 
-        private static void AddCustomCars()
-        {
-            foreach (var customCar in CustomCarManager.CustomCarTypes)
-                trainCarTypes[customCar.identifier] = customCar.CarType;
-        }
+        // private static void AddCustomCars()
+        // {
+        //     foreach (var customCar in CustomCarManager.CustomCarTypes)
+        //         trainCarTypes[customCar.identifier] = customCar.CarType;
+        // }
 
         static IfRule()
         {
             foreach (TrainCarType trainCarType in Enum.GetValues(typeof(TrainCarType)))
                 trainCarTypes[Enum.GetName(typeof(TrainCarType), trainCarType)] = trainCarType;
 
-            if (UnityModManager.FindMod("DVCustomCarLoader")?.Loaded ?? false)
-                AddCustomCars();
+            // if (UnityModManager.FindMod("DVCustomCarLoader")?.Loaded ?? false)
+            //     AddCustomCars();
 
             Main.DebugLog(() => $"trainCarTypes:\n{string.Join("\n", trainCarTypes.Keys.Select(k => $"{k} -> {trainCarTypes[k]}"))}");
         }

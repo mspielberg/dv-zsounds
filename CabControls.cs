@@ -18,23 +18,23 @@ namespace DvMod.ZSounds
             }
         }
 
-        [HarmonyPatch(typeof(DieselDashboardControls), nameof(DieselDashboardControls.Init))]
-        public static class DieselDashboardControlsInitPatch
-        {
-            public static void Postfix(DieselDashboardControls __instance)
-            {
-                __instance.StartCoroutine(ResetHornCallback(__instance));
-            }
+        // [HarmonyPatch(typeof(DieselDashboardControls), nameof(DieselDashboardControls.Init))]
+        // public static class DieselDashboardControlsInitPatch
+        // {
+        //     public static void Postfix(DieselDashboardControls __instance)
+        //     {
+        //         __instance.StartCoroutine(ResetHornCallback(__instance));
+        //     }
 
-            private static IEnumerator ResetHornCallback(DieselDashboardControls __instance)
-            {
-                while ((__instance.hornControl?.ValueChanged?.GetInvocationList()?.Length ?? 0) == 0)
-                    yield return null;
+        //     private static IEnumerator ResetHornCallback(DieselDashboardControls __instance)
+        //     {
+        //         while ((__instance.hornControl?.ValueChanged?.GetInvocationList()?.Length ?? 0) == 0)
+        //             yield return null;
 
-                var hornControl = __instance.hornControl!;
-                hornControl.ValueChanged = null;
-                hornControl.ValueChanged += e => __instance.horn.SetInput(e.newValue);
-            }
-        }
+        //         var hornControl = __instance.hornControl!;
+        //         hornControl.ValueChanged = null;
+        //         hornControl.ValueChanged += e => __instance.horn.SetInput(e.newValue);
+        //     }
+        // }
     }
 }
