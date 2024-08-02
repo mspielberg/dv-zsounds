@@ -17,7 +17,7 @@ namespace DvMod.ZSounds
         {
             public static void Postfix(TrainAudio __instance)
             {
-                ApplyAudio(__instance);
+                __instance.car.LogicCarInitialized += () => ApplyAudio(__instance);
             }
         }
     }
