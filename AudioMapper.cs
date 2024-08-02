@@ -33,7 +33,10 @@ namespace DvMod.ZSounds
                 return null;
 
             var portReaders = simAudio.layeredAudioSimReadersController.entries.OfType<LayeredAudioPortReader>();
-            return portReaders.FirstOrDefault(entry => entry.name == path)?.layeredAudio;
+            var match = portReaders.FirstOrDefault(entry => entry.name == path)?.layeredAudio;
+            if (match == null)
+                Main.DebugLog(() => $"Could not find LayeredAudio: carType={trainAudio.car.carType}, soundType={soundType}, path={path}");
+            return match;
         }
 
         public AudioClipPortReader? GetAudioClipPortReader(SoundType soundType, TrainAudio trainAudio)
@@ -50,7 +53,10 @@ namespace DvMod.ZSounds
                 return null;
 
             var portReaders = simAudio.layeredAudioSimReadersController.entries.OfType<AudioClipPortReader>();
-            return portReaders.FirstOrDefault(portReader => portReader.clips.Any(clip => clip.name == path));
+            var match = portReaders.FirstOrDefault(portReader => portReader.clips.Any(clip => clip.name == path));
+            if (match == null)
+                Main.DebugLog(() => $"Could not find AudioClipPortReader: carType={trainAudio.car.carType}, soundType={soundType}, path={path}");
+            return match;
         }
 
         public static readonly IDictionary<TrainCarType, AudioMapper> mappings =
