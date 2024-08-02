@@ -1,3 +1,4 @@
+using DV.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -63,6 +64,24 @@ namespace DvMod.ZSounds.Config
         Switch,
         SwitchForced,
         CargoLoadUnload,
+    }
+
+    public static class SoundTypes
+    {
+        public static readonly SoundType[] layeredAudioSoundTypes =
+        [
+            SoundType.HornLoop,
+            SoundType.Whistle,
+            SoundType.Bell,
+            SoundType.EngineLoop,
+            SoundType.EngineLoadLoop,
+            SoundType.TractionMotors,
+        ];
+
+        public static readonly SoundType[] audioClipsSoundTypes =
+        [
+            SoundType.HornHit,
+        ];
     }
 
     [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]

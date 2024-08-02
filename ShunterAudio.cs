@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace DvMod.ZSounds
 {
+/*
     public static class ShunterAudio
     {
         public static void Apply(TrainCar car, SoundSet soundSet)
@@ -50,6 +51,7 @@ namespace DvMod.ZSounds
             AudioUtils.Apply(TrainCarType.LocoShunter, SoundType.HornLoop, soundSet, audio.hornAudio);
         }
     }
+*/
 
 /*
     public static class ShunterBell

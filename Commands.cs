@@ -1,5 +1,6 @@
 using CommandTerminal;
 using DV.ThingTypes;
+using DvMod.ZSounds.Config;
 using HarmonyLib;
 using System;
 using System.Linq;
@@ -59,7 +60,7 @@ namespace DvMod.ZSounds
                     return;
                 }
                 soundDefinition.Apply(soundSet);
-                SpawnPatches.ApplyAudio(car);
+                AudioUtils.Apply(car, soundSet);
                 Terminal.Log(Registry.Get(car).ToString());
             });
 
@@ -83,7 +84,7 @@ namespace DvMod.ZSounds
                     return;
                 }
                 soundSet.sounds.Remove(soundType);
-                SpawnPatches.ApplyAudio(car);
+                AudioUtils.Apply(car, soundSet);
                 Terminal.Log(Registry.Get(car).ToString());
             });
 
@@ -102,7 +103,7 @@ namespace DvMod.ZSounds
                 if (car == null)
                     return;
                 Registry.soundSets.Remove(car.CarGUID);
-                SpawnPatches.ApplyAudio(car);
+                AudioUtils.Apply(car, new SoundSet());
                 Terminal.Log(Registry.Get(car).ToString());
             });
         }

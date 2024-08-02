@@ -457,7 +457,7 @@ namespace DvMod.ZSounds
 
             var soundSet = Registry.Get(SelectedCar);
             SelectedSound.Apply(soundSet);
-            SpawnPatches.ApplyAudio(SelectedCar);
+            AudioUtils.Apply(SelectedCar, soundSet);
 
             Main.DebugLog(() => $"Applied sound {SelectedSound.name} to car {SelectedCar.ID}");
             ResetState();

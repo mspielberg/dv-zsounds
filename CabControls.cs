@@ -1,5 +1,6 @@
 using DV.CabControls;
 using DV.CabControls.Spec;
+using DV.ThingTypes;
 using HarmonyLib;
 using System.Collections;
 using UnityEngine;

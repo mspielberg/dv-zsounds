@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using DvMod.ZSounds.Config;
 using UnityEngine;
+using DV.Simulation.Ports;
+using System;
 
 namespace DvMod.ZSounds
 {
@@ -158,6 +160,37 @@ namespace DvMod.ZSounds
 
                 for (int i = 1; i < audio.layers.Length; i++)
                     audio.layers[i].source.mute = true;
+            }
+        }
+
+        public static TrainAudio GetTrainAudio(TrainCar car)
+        {
+            return car.interior.GetComponentInChildren<TrainAudio>();
+        }
+
+        public static void Apply(TrainCar car, SoundSet soundSet)
+        {
+            Apply(GetTrainAudio(car), soundSet);
+        }
+
+        public static void Apply(TrainAudio trainAudio, SoundSet soundSet)
+        {
+            var carType = trainAudio.car.carType;
+            if (!AudioMapper.mappings.TryGetValue(carType, out var audioMapper))
+                return;
+
+            foreach (var soundType in SoundTypes.audioClipsSoundTypes)
+            {
+                AudioClipPortReader? portReader = audioMapper.GetAudioClipPortReader(soundType, trainAudio);
+                if (portReader != null)
+                    Apply(carType, soundType, soundSet, ref portReader.clips);
+            }
+
+            foreach (var soundType in SoundTypes.layeredAudioSoundTypes)
+            {
+                LayeredAudio? layeredAudio = audioMapper.GetLayeredAudio(soundType, trainAudio);
+                if (layeredAudio != null)
+                    Apply(carType, soundType, soundSet, layeredAudio);
             }
         }
     }
