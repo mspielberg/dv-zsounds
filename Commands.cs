@@ -1,4 +1,5 @@
 using CommandTerminal;
+using DV.ThingTypes;
 using HarmonyLib;
 using System;
 using System.Linq;
@@ -7,7 +8,7 @@ namespace DvMod.ZSounds
 {
     public static class Commands
     {
-        [HarmonyPatch(typeof(Terminal), nameof(Terminal.Start))]
+        [HarmonyPatch(typeof(CommandShell), nameof(CommandShell.RegisterCommands))]
         public static class RegisterCommandsPatch
         {
             public static void Postfix()
@@ -23,9 +24,10 @@ namespace DvMod.ZSounds
                 return;
             if (Terminal.Shell.Commands.Remove(name.ToUpper()))
                 Main.DebugLog(() => $"replacing existing command {name}");
-            else
-                Terminal.Autocomplete.Register(name);
-            Terminal.Shell.AddCommand(name, proc);
+            CommandInfo commandInfo = Terminal.Shell.AddCommand(name, proc);
+            if (Terminal.Autocomplete.known_words.ContainsKey(commandInfo.name.ToLower()))
+                Terminal.Autocomplete.known_words.Remove(commandInfo.name.ToLower());
+            Terminal.Autocomplete.Register(commandInfo);
         }
 
         public static void Register()
@@ -45,7 +47,7 @@ namespace DvMod.ZSounds
                 }
                 var car = PlayerManager.Car;
                 var soundSet = Registry.Get(car);
-                if (car == null || !CarTypes.IsLocomotive(car.carType))
+                if (car == null || !CarTypes.IsLocomotive(car.carLivery))
                 {
                     Terminal.Log("Car must be locomotive");
                     return;
@@ -70,7 +72,7 @@ namespace DvMod.ZSounds
                 }
                 var car = PlayerManager.Car;
                 var soundSet = Registry.Get(car);
-                if (car == null || !CarTypes.IsLocomotive(car.carType))
+                if (car == null || !CarTypes.IsLocomotive(car.carLivery))
                 {
                     Terminal.Log("Car must be locomotive");
                     return;

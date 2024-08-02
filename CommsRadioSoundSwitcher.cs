@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DV;
+using DV.ThingTypes;
 using DvMod.ZSounds.Config;
 using HarmonyLib;
 using UnityEngine;
@@ -186,7 +187,7 @@ namespace DvMod.ZSounds
         {
             if (PointedCar != car)
             {
-                if ((car != null) && CarTypes.IsLocomotive(car.carType))
+                if ((car != null) && CarTypes.IsLocomotive(car.carLivery))
                 {
                     PointedCar = car;
                     HighlightCar(PointedCar, selectionMaterial!);
@@ -440,7 +441,7 @@ namespace DvMod.ZSounds
 
         private void ApplySelectedSound()
         {
-            if ((SelectedCar == null) || !CarTypes.IsLocomotive(SelectedCar.carType))
+            if ((SelectedCar == null) || !CarTypes.IsLocomotive(SelectedCar.carLivery))
             {
                 Main.DebugLog(() => "Tried to apply sound to null car");
                 ResetState();

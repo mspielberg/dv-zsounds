@@ -51,6 +51,7 @@ namespace DvMod.ZSounds
         }
     }
 
+/*
     public static class ShunterBell
     {
         [HarmonyPatch(typeof(ShunterDashboardControls), nameof(ShunterDashboardControls.OnEnable))]
@@ -88,6 +89,7 @@ namespace DvMod.ZSounds
                 };
             }
         }
+
         [HarmonyPatch(typeof(LocoAudioShunter), nameof(LocoAudioDiesel.SetupForCar))]
         public static class SetupForCarPatch
         {
@@ -182,4 +184,5 @@ namespace DvMod.ZSounds
             }
         }
     }
+    */
 }

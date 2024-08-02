@@ -12,14 +12,21 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RedworkDE.Publicizer" Version="0.2.2" />
-    <PublicizeAssembly Include="Assembly-CSharp" Private="True" Readonly="True" />
+    <PackageReference Include="Krafs.Publicizer" Version="2.2.1" />
+    <Publicize Include="Assembly-CSharp" IncludeCompilerGeneratedMembers="false" />
+    <Publicize Include="CommandTerminal" IncludeCompilerGeneratedMembers="false" />
+    <Publicize Include="DV.Utils" IncludeCompilerGeneratedMembers="false" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Assembly-CSharp" />
     <Reference Include="CommandTerminal" />
     <Reference Include="DV.Interaction" />
+    <Reference Include="DV.ThingTypes" />
     <Reference Include="DV.Utils" />
     <Reference Include="0Harmony" />
     <Reference Include="Newtonsoft.Json" />
+    <Reference Include="Unity.TextMeshPro" />
     <Reference Include="UnityEngine" />
     <Reference Include="UnityEngine.AudioModule" />
     <Reference Include="UnityEngine.CoreModule" />

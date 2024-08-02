@@ -19,7 +19,7 @@ namespace DvMod.ZSounds
 
         public static void LoadFromSaveManager()
         {
-            var saved = SaveGameManager.data?.GetJObject(typeof(Registry).FullName);
+            var saved = SaveGameManager.Instance.data?.GetJObject(typeof(Registry).FullName);
             if (saved == null)
                 return;
 
@@ -50,11 +50,11 @@ namespace DvMod.ZSounds
                     if (soundSet.sounds.Count > 0)
                         obj[guid] = soundSet.ToJson();
                 }
-                SaveGameManager.data.SetJObject(typeof(Registry).FullName, obj);
+                SaveGameManager.Instance.data.SetJObject(typeof(Registry).FullName, obj);
             }
         }
 
-        [HarmonyPatch(typeof(SaveGameManager), nameof(SaveGameManager.Load))]
+        [HarmonyPatch(typeof(SaveGameManager), nameof(SaveGameManager.FindStartGameData))]
         public static class LoadPatch
         {
             public static void Postfix()
