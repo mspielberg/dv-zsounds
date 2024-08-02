@@ -9,7 +9,7 @@ namespace DvMod.ZSounds
 {
     public static class Commands
     {
-        [HarmonyPatch(typeof(CommandShell), nameof(CommandShell.RegisterCommands))]
+        [HarmonyPatch(typeof(Terminal), nameof(Terminal.Start))]
         public static class RegisterCommandsPatch
         {
             public static void Postfix()
