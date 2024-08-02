@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace DvMod.ZSounds
 {
+    /*
     public static class HornQuilling
     {
         private static readonly Dictionary<Horn, float> lastReset = new Dictionary<Horn, float>();
@@ -35,4 +36,5 @@ namespace DvMod.ZSounds
             }
         }
     }
+    */
 }
