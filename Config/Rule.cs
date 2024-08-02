@@ -241,28 +241,6 @@ namespace DvMod.ZSounds.Config
             };
         }
 
-        private static Dictionary<string, string>? carSkins;
-        private static Dictionary<string, string>? CarSkins
-        {
-            get
-            {
-                if (carSkins != null)
-                    return carSkins;
-
-                var mod = UnityModManager.FindMod("SkinManagerMod");
-                if (mod == null)
-                    return null;
-                if (!mod.Active)
-                    return null;
-
-                var field = mod.Assembly
-                    .GetType("SkinManagerMod.Main")
-                    .GetField("trainCarState", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                carSkins = (Dictionary<string, string>)field.GetValue(null);
-                return carSkins;
-            }
-        }
-
         private static string? GetSkinName(TrainCar car)
         {
             var skinManagerMod = UnityModManager.FindMod("SkinManagerMod");
@@ -286,9 +264,6 @@ namespace DvMod.ZSounds.Config
                 Main.DebugLog(() => $"skin name = {skinName}");
                 return skinName;
             }
-
-            if (skinManagerMod.Version < new Version(2, 5))
-                return CarSkins?[car.CarGUID];
 
             return null;
         }
