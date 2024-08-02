@@ -84,6 +84,18 @@ namespace DvMod.ZSounds
                         { SoundType.HornLoop, "LocoDiesel_Horn_Layered" },
                     })
                 },
+                {
+                    TrainCarType.LocoS060, new AudioMapper(new()
+                    {
+                        {SoundType.Whistle, "Whistle_Layered" },
+                    })
+                },
+                {
+                    TrainCarType.LocoSteamHeavy, new AudioMapper(new()
+                    {
+                        {SoundType.Whistle, "Whistle_Layered" },
+                    })
+                },
             });
     }
 }
