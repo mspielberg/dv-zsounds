@@ -80,7 +80,7 @@ namespace DvMod.ZSounds
                         { SoundType.EngineLoadLoop, "Engine_Throttling" },
                         { SoundType.TractionMotors, "ElectricMotor_Layered" },
 
-                        { SoundType.HornHit, "Horn_LocoDE6_01_Pulse "},
+                        { SoundType.HornHit, "Horn_LocoDE6_01_Pulse" },
                         { SoundType.HornLoop, "LocoDiesel_Horn_Layered" },
                     })
                 },
