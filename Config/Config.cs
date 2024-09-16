@@ -20,7 +20,7 @@ namespace DvMod.ZSounds.Config
 
         public void Load(string path)
         {
-            Main.mod.Logger.Log($"Loading config {path}");
+            Main.mod?.Logger.Log($"Loading config {path}");
             try
             {
                 var configFile = ConfigFile.Parse(path);
@@ -69,7 +69,7 @@ namespace DvMod.ZSounds.Config
                 }
                 catch (Exception e)
                 {
-                    throw new ConfigException($"Problem executing hook {hook.originPath}:{hook.originLine}", e);
+                    throw new ConfigException($"Problem executing hook {hook.originPath}:{hook.token.Path}", e);
                 }
             }
 
@@ -183,16 +183,18 @@ namespace DvMod.ZSounds.Config
         public static ConfigFile Parse(string path)
         {
             using var reader = new JsonTextReader(new StreamReader(path));
-            JToken token = JToken.ReadFrom(reader);
-            return new ConfigFile(
-                Path.GetFullPath(path),
-                token["version"].Value<int>(),
-                (token["rules"] ?? Enumerable.Empty<JToken>()).OfType<JProperty>()
-                    .ToDictionary(prop => prop.Name, prop => Rule.Parse(prop.Value)),
-                (token["sounds"] ?? Enumerable.Empty<JToken>()).OfType<JProperty>()
-                    .ToDictionary(prop => prop.Name, prop => SoundDefinition.Parse(path, prop.Name, prop.Value)),
-                (token["hooks"] ?? Enumerable.Empty<JToken>()).Select(token => Hook.Parse(path, token)).ToList()
-            );
+            JObject rootObject = JToken.ReadFrom(reader).EnsureJObject();
+
+            var fullPath = Path.GetFullPath(path);
+            var version = rootObject.ExtractChild<int>("version");
+            var rules = rootObject.ExtractChildOrEmpty<JObject>("rules").Properties()
+                .ToDictionary(prop => prop.Name, prop => Rule.Parse(prop.Value));
+            var sounds = rootObject.ExtractChildOrEmpty<JObject>("sounds").Properties()
+                .ToDictionary(prop => prop.Name, prop => SoundDefinition.Parse(path, prop.Name, prop.Value));
+            var hooks = rootObject.ExtractChildOrEmpty<JArray>("hooks")
+                .Select(token => Hook.Parse(path, token.EnsureJObject())).ToList();
+
+            return new ConfigFile(fullPath, version, rules, sounds, hooks);
         }
     }
 

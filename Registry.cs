@@ -25,18 +25,33 @@ namespace DvMod.ZSounds
 
             foreach (var (guid, soundsObj) in saved)
             {
-                if (soundsObj is JObject obj)
+                if (soundsObj != null)
                 {
-                    var soundSet = new SoundSet();
-                    foreach (var (typeStr, soundName) in obj)
-                    {
-                        if (Config.Config.Active!.sounds.TryGetValue(soundName.Value<string>(), out var soundDefinition))
-                            soundSet.sounds[Config.Util.ParseEnum<SoundType>(typeStr)] = soundDefinition;
-                    }
-                    if (soundSet.sounds.Count > 0)
+                    var soundSet = LoadSoundSet(guid, (JObject) soundsObj);
+                    if (soundSet != null)
                         soundSets[guid] = soundSet;
                 }
             }
+        }
+
+        private static SoundSet? LoadSoundSet(string carGuid, JObject soundsObj)
+        {
+            var soundSet = new SoundSet();
+            foreach (var (key, value) in soundsObj)
+            {
+                var soundType = Util.ParseEnum<SoundType>(key);
+
+                if (value == null || value.Type != JTokenType.String)
+                {
+                    Main.DebugLog(() => $"Unable to load saved sound state for car GUID {carGuid}");
+                    return null;
+                }
+                var soundName = value.StrictValue<string>();
+
+                if (Config.Config.Active!.sounds.TryGetValue(soundName, out var soundDefinition))
+                    soundSet.sounds[soundType] = soundDefinition;
+            }
+            return soundSet;
         }
 
         [HarmonyPatch(typeof(SaveGameManager), nameof(SaveGameManager.Save))]

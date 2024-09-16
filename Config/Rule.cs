@@ -27,31 +27,33 @@ namespace DvMod.ZSounds.Config
     {
         public static IRule Parse(JToken token)
         {
-            switch (token.Type)
+            switch(token.Type)
             {
                 case JTokenType.String:
-                    return new RefRule(token.Path, token.Value<string>());
+                    return new RefRule(token.Path, token.StrictValue<string>());
 
                 case JTokenType.Object:
-                    RuleType type = (RuleType)Enum.Parse(
-                        typeof(RuleType),
-                        token["type"].Value<string>(),
-                        ignoreCase: true);
-
-                    return type switch
-                    {
-                        RuleType.AllOf => AllOfRule.Parse(token),
-                        RuleType.OneOf => OneOfRule.Parse(token),
-                        RuleType.If => IfRule.Parse(token),
-                        RuleType.Sound => SoundRule.Parse(token),
-                        RuleType.Ref => RefRule.Parse(token),
-
-                        _ => throw new Exception($"Unknown rule type {type}"),
-                    };
+                    return Parse((JObject) token);
 
                 default:
                     throw new ConfigException($"Found {token.Type} where a rule was expected");
             }
+        }
+
+        private static IRule Parse(JObject jObject)
+        {
+            var ruleType = jObject.ExtractChild<RuleType>("type");
+
+            return ruleType switch
+            {
+                RuleType.AllOf => AllOfRule.Parse(jObject),
+                RuleType.OneOf => OneOfRule.Parse(jObject),
+                RuleType.If => IfRule.Parse(jObject),
+                RuleType.Sound => SoundRule.Parse(jObject),
+                RuleType.Ref => RefRule.Parse(jObject),
+
+                var unknown => throw new Exception($"Unknown rule type {unknown}"),
+            };
         }
     }
 
@@ -66,11 +68,11 @@ namespace DvMod.ZSounds.Config
             this.rules = rules;
         }
 
-        public static AllOfRule Parse(JToken token)
+        public static AllOfRule Parse(JObject jObject)
         {
-            var rules = token["rules"]?.Select(Rule.Parse) ?? Enumerable.Empty<IRule>();
-            var soundRules = token["sounds"]?.Select(t => new SoundRule(t.Path, t.Value<string>())) ?? Enumerable.Empty<SoundRule>();
-            return new AllOfRule(token.Path, rules.Concat(soundRules).ToList());
+            var rules = jObject["rules"]?.Select(Rule.Parse) ?? Enumerable.Empty<IRule>();
+            var soundRules = jObject["sounds"]?.Select(t => new SoundRule(t.Path, t.StrictValue<string>())) ?? Enumerable.Empty<SoundRule>();
+            return new AllOfRule(jObject.Path, rules.Concat(soundRules).ToList());
         }
 
         public void Apply(Config config, TrainCar car, SoundSet soundSet)
@@ -113,12 +115,12 @@ namespace DvMod.ZSounds.Config
             this.weights = weights;
         }
 
-        public static OneOfRule Parse(JToken token)
+        public static OneOfRule Parse(JObject jObject)
         {
             return new OneOfRule(
-                token.Path,
-                token["rules"].Select(Rule.Parse).ToList(),
-                token["weights"]?.Select(t => t.Value<float>())?.ToList());
+                jObject.Path,
+                jObject["rules"].Select(Rule.Parse).ToList(),
+                jObject["weights"]?.Select(t => t.Value<float>())?.ToList());
         }
 
         private float[] Thresholds
@@ -201,13 +203,13 @@ namespace DvMod.ZSounds.Config
             Main.DebugLog(() => $"trainCarTypes:\n{string.Join("\n", trainCarTypes.Keys.Select(k => $"{k} -> {trainCarTypes[k]}"))}");
         }
 
-        public static IfRule Parse(JToken token)
+        public static IfRule Parse(JObject jObject)
         {
             return new IfRule(
-                token.Path,
-                (IfRuleProperty)Enum.Parse(typeof(IfRuleProperty), token["property"].Value<string>(), ignoreCase: true),
-                token["value"].Value<string>(),
-                Rule.Parse(token["rule"])
+                jObject.Path,
+                (IfRuleProperty)Enum.Parse(typeof(IfRuleProperty), jObject.ExtractChild<string>("property"), ignoreCase: true),
+                jObject.ExtractChild<string>("value"),
+                Rule.Parse(jObject.ExtractChild<JToken>("rule"))
             );
         }
 
@@ -296,9 +298,9 @@ namespace DvMod.ZSounds.Config
                 throw new ConfigException($"Reference to unknown rule \"{name}\"");
         }
 
-        public static RefRule Parse(JToken token)
+        public static RefRule Parse(JObject jObject)
         {
-            return new RefRule(token.Path, token["name"].Value<string>());
+            return new RefRule(jObject.Path, jObject.ExtractChild<string>("name"));
         }
 
         public override string ToString()
@@ -329,9 +331,9 @@ namespace DvMod.ZSounds.Config
                 throw new ConfigException($"Reference to unknown sound \"{name}\"");
         }
 
-        public static SoundRule Parse(JToken token)
+        public static SoundRule Parse(JObject jObject)
         {
-            return new SoundRule(token.Path, token["name"].Value<string>());
+            return new SoundRule(jObject.Path, jObject.ExtractChild<string>("name"));
         }
 
         public override string ToString()

@@ -15,7 +15,7 @@ namespace DvMod.ZSounds.Config
         }
 
         public readonly string originPath;
-        public readonly int originLine;
+        public readonly JToken token;
 
         public readonly HookType type;
         public readonly string rulePath;
@@ -35,31 +35,36 @@ namespace DvMod.ZSounds.Config
             {
                 AllOfRule allOf => Get(allOf.rules, position),
                 OneOfRule oneOf => Get(oneOf.rules, position),
-                IfRule ifRule => Get(new IRule[] { ifRule.rule }, position),
+                IfRule ifRule => Get([ ifRule.rule ], position),
                 _ => throw new ConfigException($"Can not select subrule of {rule}"),
             };
         }
 
-        public Hook(string originPath, int originLine, HookType type, string rulePath, IRule rule, float weight)
+        public Hook(string originPath, JToken token, HookType type, string rulePath, IRule rule, float weight)
         {
             this.originPath = originPath;
-            this.originLine = originLine;
+            this.token = token;
             this.type = type;
             this.rulePath = rulePath;
             this.rule = rule;
             this.weight = weight;
         }
 
-        public static Hook Parse(string originPath, JToken token)
+        public static Hook Parse(string originPath, JObject jObject)
         {
-            IJsonLineInfo lineInfo = token;
+            IJsonLineInfo lineInfo = jObject;
+            var hookType = jObject.ExtractChild<HookType>("type");
+            var rule = jObject["rule"].Map(Rule.Parse);
+            if (rule == null)
+                throw new ConfigException($"Hook in {originPath} {jObject.Path} does not define a rule");
+
             return new Hook(
                 originPath,
-                lineInfo.LineNumber,
-                Util.ParseEnum<HookType>(token["type"]),
-                token["path"].Value<string>(),
-                Rule.Parse(token["rule"]),
-                token["weight"]?.Value<float>() ?? 1);
+                jObject,
+                hookType,
+                jObject.ExtractChild<string>("path"),
+                rule,
+                jObject["weight"]?.StrictValue<float>() ?? 1);
         }
 
         public void Apply(Config config)

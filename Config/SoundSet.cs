@@ -122,27 +122,39 @@ namespace DvMod.ZSounds.Config
 
         public bool IsGeneric => type >= SoundType.Collision;
 
-        public static SoundDefinition Parse(string configFilePath, string name, JToken token)
+        public static SoundDefinition Parse(string confilePath, string name, JToken token)
+        {
+            switch (token.Type)
+            {
+                case JTokenType.Object:
+                    return Parse(confilePath, name, (JObject) token);
+
+                default:
+                    throw new ConfigException($"Found {token.Type} where a sound definition object was expected");
+            }
+        }
+
+        public static SoundDefinition Parse(string configFilePath, string name, JObject jObject)
         {
             try
             {
                 var root = Path.GetDirectoryName(configFilePath);
-                return new SoundDefinition(name, (SoundType)Enum.Parse(typeof(SoundType), token["type"].Value<string>()))
+                return new SoundDefinition(name, (SoundType)Enum.Parse(typeof(SoundType), jObject.ExtractChild<string>("type")))
                 {
-                    filename = token["filename"].Map(fn => fn.Value<string>().Length == 0 ? "" : Path.Combine(root, fn.Value<string>())),
-                    filenames = token["filenames"].Map(jArray => jArray.Select(fn => Path.Combine(root, fn.Value<string>())).ToArray()),
-                    pitch = token["pitch"].MapS(n => n.Value<float>()),
-                    minPitch = token["minPitch"].MapS(n => n.Value<float>()),
-                    maxPitch = token["maxPitch"].MapS(n => n.Value<float>()),
-                    minVolume = token["minVolume"].MapS(n => n.Value<float>()),
-                    maxVolume = token["maxVolume"].MapS(n => n.Value<float>()),
-                    fadeStart = token["fadeStart"].MapS(n => n.Value<float>()),
-                    fadeDuration = token["fadeDuration"].MapS(n => n.Value<float>()),
+                    filename = jObject["filename"].Map(fn => fn.StrictValue<string>().Length == 0 ? "" : Path.Combine(root, fn.Value<string>())),
+                    filenames = jObject["filenames"].Map(jArray => jArray.Select(fn => Path.Combine(root, fn.Value<string>())).ToArray()),
+                    pitch = jObject["pitch"].MapS(n => n.Value<float>()),
+                    minPitch = jObject["minPitch"].MapS(n => n.Value<float>()),
+                    maxPitch = jObject["maxPitch"].MapS(n => n.Value<float>()),
+                    minVolume = jObject["minVolume"].MapS(n => n.Value<float>()),
+                    maxVolume = jObject["maxVolume"].MapS(n => n.Value<float>()),
+                    fadeStart = jObject["fadeStart"].MapS(n => n.Value<float>()),
+                    fadeDuration = jObject["fadeDuration"].MapS(n => n.Value<float>()),
                 };
             }
             catch (Exception e)
             {
-                throw new ConfigException($"Could not parse SoundDefinition: {token}", e);
+                throw new ConfigException($"Could not parse SoundDefinition: {jObject}", e);
             }
         }
 
