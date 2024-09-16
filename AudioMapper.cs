@@ -63,7 +63,7 @@ namespace DvMod.ZSounds
             new ReadOnlyDictionary<TrainCarType, AudioMapper>(new Dictionary<TrainCarType, AudioMapper>()
             {
                 {
-                    TrainCarType.LocoShunter, new AudioMapper(new Dictionary<SoundType, string>()
+                    TrainCarType.LocoShunter, new(new()
                     {
                         { SoundType.EngineLoop, "Engine_Layered" },
                         { SoundType.EngineLoadLoop, "EnginePiston_Layered" },
@@ -74,8 +74,10 @@ namespace DvMod.ZSounds
                     })
                 },
                 {
-                    TrainCarType.LocoDiesel, new AudioMapper(new Dictionary<SoundType, string>()
+                    TrainCarType.LocoDiesel, new(new()
                     {
+                        { SoundType.Bell, "Bell_Layered" },
+
                         { SoundType.EngineLoop, "Engine_Idle" },
                         { SoundType.EngineLoadLoop, "Engine_Throttling" },
                         { SoundType.TractionMotors, "ElectricMotor_Layered" },
@@ -85,15 +87,49 @@ namespace DvMod.ZSounds
                     })
                 },
                 {
-                    TrainCarType.LocoS060, new AudioMapper(new()
+                    TrainCarType.LocoDH4, new(new()
                     {
-                        {SoundType.Whistle, "Whistle_Layered" },
+
+                        { SoundType.Bell, "Bell_Layered" },
+
+                        { SoundType.EngineLoop, "Engine_Layered" },
+                        { SoundType.EngineLoadLoop, "EnginePiston_Layered" },
+
+                        { SoundType.HornHit, "Horn_LocoDE2_01_Pulse" },
+                        { SoundType.HornLoop, "Horn_Layered" },
                     })
                 },
                 {
-                    TrainCarType.LocoSteamHeavy, new AudioMapper(new()
+                    TrainCarType.LocoDM3, new(new()
                     {
-                        {SoundType.Whistle, "Whistle_Layered" },
+                        { SoundType.EngineLoop, "Engine_Layered" },
+                        { SoundType.EngineLoadLoop, "EnginePiston_Layered" },
+
+                        { SoundType.HornLoop, "Horn_Layered" },
+                    })
+                },
+                {
+                    TrainCarType.LocoMicroshunter, new AudioMapper(new()
+                    {
+                        { SoundType.TractionMotors, "ElectricMotor_Layered" },
+
+                        { SoundType.HornLoop, "Horn_Layered" },
+                    })
+                },
+                {
+                    TrainCarType.LocoS060, new(new()
+                    {
+                        { SoundType.Bell, "Bell_Layered" },
+
+                        { SoundType.Whistle, "Whistle_Layered" },
+                    })
+                },
+                {
+                    TrainCarType.LocoSteamHeavy, new(new()
+                    {
+                        { SoundType.Bell, "Bell_Layered" },
+
+                        { SoundType.Whistle, "Whistle_Layered" },
                     })
                 },
             });
