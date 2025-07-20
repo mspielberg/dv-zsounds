@@ -3,3 +3,5 @@ bin/
 obj/
 /dv
 /*.dll
+Directory.Build.targets
+.github/
