@@ -1,39 +1,33 @@
 using HarmonyLib;
-using UnityModManagerNet;
 
 namespace DvMod.ZSounds
 {
     public static class SpawnPatches
     {
-        public static void ApplyAudio(TrainCar car)
+        public static void ApplyAudio(TrainAudio trainAudio)
         {
+            var car = trainAudio.car;
+            
+            // Apply custom sounds
             var soundSet = Registry.Get(car);
             Main.DebugLog(() => $"Applying sounds for {car.ID}");
-            switch (car.carType)
-            {
-                case TrainCarType.LocoDiesel:
-                    DieselAudio.Apply(car, soundSet);
-                    break;
-                case TrainCarType.LocoShunter:
-                    ShunterAudio.Apply(car, soundSet);
-                    break;
-                case TrainCarType.LocoSteamHeavy:
-                    SteamAudio.Apply(car, soundSet);
-                    break;
-                default:
-                    if (UnityModManager.FindMod("DVCustomCarLoader").Loaded)
-                        CCLAudio.Apply(car, soundSet);
-                    break;
-            }
+            AudioUtils.Apply(trainAudio, soundSet);
         }
 
-        [HarmonyPatch(typeof(TrainCar), nameof(TrainCar.InitAudio))]
-        public static class InitAudioPatch
+        public static void ApplyAudio(TrainCar car)
         {
-            public static void Postfix(TrainCar __instance)
+            // Apply custom sounds
+            var soundSet = Registry.Get(car);
+            Main.DebugLog(() => $"Applying sounds for {car.ID}");
+            AudioUtils.Apply(car, soundSet);
+        }
+
+        [HarmonyPatch(typeof(TrainAudio), nameof(TrainAudio.SetupForCar))]
+        public static class SetupForCarPatch
+        {
+            public static void Postfix(TrainAudio __instance)
             {
-                if (CarTypes.IsLocomotive(__instance.carType))
-                    ApplyAudio(__instance);
+                __instance.car.LogicCarInitialized += () => ApplyAudio(__instance);
             }
         }
     }

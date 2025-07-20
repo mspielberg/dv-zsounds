@@ -1,11 +1,9 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 
-namespace DvMod.ZSounds.Config
+namespace DvMod.ZSounds
 {
     public class SoundSet
     {
@@ -22,6 +20,11 @@ namespace DvMod.ZSounds.Config
         public SoundDefinition? this[SoundType type]
         {
             get => sounds.TryGetValue(type, out var soundDefinition) ? soundDefinition : null;
+        }
+
+        public void Remove(SoundType type)
+        {
+            sounds.Remove(type);
         }
 
         public override string ToString()
@@ -46,13 +49,52 @@ namespace DvMod.ZSounds.Config
         SteamStackChuffs,
         SteamValveGear,
         SteamChuffLoop,
+
+        // generic sounds
+
+        Collision,
+        JunctionJoint,
+        RollingAudioDetailed,
+        RollingAudioSimple,
+        SquealAudioDetailed,
+        SquealAudioSimple,
+        AirflowAudio,
+        Coupling,
+        Uncoupling,
+        Wind,
+        DerailHit,
+        Switch,
+        SwitchForced,
+        CargoLoadUnload,
     }
 
-    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
+    public static class SoundTypes
+    {
+        public static readonly SoundType[] layeredAudioSoundTypes =
+        [
+            SoundType.HornLoop,
+            SoundType.Whistle,
+            SoundType.Bell,
+            SoundType.EngineLoop,
+            SoundType.EngineLoadLoop,
+            SoundType.TractionMotors,
+            SoundType.SteamCylinderChuffs,
+            SoundType.SteamStackChuffs,
+            SoundType.SteamValveGear,
+            SoundType.SteamChuffLoop,
+        ];
+
+        public static readonly SoundType[] audioClipsSoundTypes =
+        [
+            SoundType.HornHit,
+            SoundType.EngineStartup,
+            SoundType.EngineShutdown,
+        ];
+    }
+
     public class SoundDefinition
     {
         public string name;
-        [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public SoundType type;
         public string? filename;
         public string[]? filenames;
@@ -84,29 +126,7 @@ namespace DvMod.ZSounds.Config
                 ValidateFile(f);
         }
 
-        public static SoundDefinition Parse(string configFilePath, string name, JToken token)
-        {
-            try
-            {
-                var root = Path.GetDirectoryName(configFilePath);
-                return new SoundDefinition(name, (SoundType)Enum.Parse(typeof(SoundType), token["type"].Value<string>()))
-                {
-                    filename = token["filename"].Map(fn => fn.Value<string>().Length == 0 ? "" : Path.Combine(root, fn.Value<string>())),
-                    filenames = token["filenames"].Map(jArray => jArray.Select(fn => Path.Combine(root, fn.Value<string>())).ToArray()),
-                    pitch = token["pitch"].MapS(n => n.Value<float>()),
-                    minPitch = token["minPitch"].MapS(n => n.Value<float>()),
-                    maxPitch = token["maxPitch"].MapS(n => n.Value<float>()),
-                    minVolume = token["minVolume"].MapS(n => n.Value<float>()),
-                    maxVolume = token["maxVolume"].MapS(n => n.Value<float>()),
-                    fadeStart = token["fadeStart"].MapS(n => n.Value<float>()),
-                    fadeDuration = token["fadeDuration"].MapS(n => n.Value<float>()),
-                };
-            }
-            catch (Exception e)
-            {
-                throw new ConfigException($"Could not parse SoundDefinition: {token}", e);
-            }
-        }
+        public bool IsGeneric => type >= SoundType.Collision;
 
         public override string ToString()
         {
