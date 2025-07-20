@@ -1,5 +1,4 @@
 using DV.ThingTypes;
-using DvMod.ZSounds.Config;
 using HarmonyLib;
 
 namespace DvMod.ZSounds
@@ -9,7 +8,17 @@ namespace DvMod.ZSounds
     {
         public static void Postfix()
         {
-            var soundSet = Config.Config.Active!.GenericSoundSet();
+            SoundSet soundSet;
+            
+            if (Main.soundLoader != null)
+            {
+                soundSet = Main.soundLoader.CreateGenericSoundSet();
+            }
+            else
+            {
+                soundSet = new SoundSet();
+            }
+            
             var audioManager = AudioManager.Instance;
             AudioUtils.Apply(TrainCarType.NotSet, SoundType.Collision, soundSet, ref audioManager.collisionClips);
             AudioUtils.Apply(TrainCarType.NotSet, SoundType.JunctionJoint, soundSet, ref audioManager.junctionJointClips);

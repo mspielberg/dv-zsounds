@@ -10,20 +10,30 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
   </ItemGroup>
+  <!-- Exclude decompiled game source to avoid conflicting builds -->
+  <ItemGroup>
+    <Compile Remove="Assembly-CSharp\**\*.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Krafs.Publicizer" Version="2.2.1" />
     <Publicize Include="Assembly-CSharp" IncludeCompilerGeneratedMembers="false" />
     <Publicize Include="CommandTerminal" IncludeCompilerGeneratedMembers="false" />
     <Publicize Include="DV.Utils" IncludeCompilerGeneratedMembers="false" />
+    <Publicize Include="DV.CabControls.Spec" IncludeCompilerGeneratedMembers="false" />
+    <Publicize Include="DV.LayeredAudio" IncludeCompilerGeneratedMembers="false" />
+    <Publicize Include="DV.Simulation" IncludeCompilerGeneratedMembers="false" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Assembly-CSharp" />
     <Reference Include="CommandTerminal" />
-    <Reference Include="DV.Interaction" />
+    <Reference Include="CommsRadioAPI" />
     <Reference Include="DV.ThingTypes" />
     <Reference Include="DV.Utils" />
+    <Reference Include="DV.CabControls.Spec" />
+    <Reference Include="DV.LayeredAudio" />
+    <Reference Include="DV.Simulation" />
     <Reference Include="0Harmony" />
     <Reference Include="Newtonsoft.Json" />
     <Reference Include="Unity.TextMeshPro" />

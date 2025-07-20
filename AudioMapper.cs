@@ -2,7 +2,6 @@ using DV.ModularAudioCar;
 using DV.Simulation.Controllers;
 using DV.Simulation.Ports;
 using DV.ThingTypes;
-using DvMod.ZSounds.Config;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -52,7 +51,15 @@ namespace DvMod.ZSounds
             if (simAudio == null)
                 return null;
 
-            var portReaders = simAudio.layeredAudioSimReadersController.entries.OfType<AudioClipPortReader>();
+            // Check if the SimAudioModule is fully initialized
+            if (simAudio.audioClipSimReadersController?.entries == null)
+            {
+                Main.DebugLog(() => $"SimAudioModule not fully initialized for {trainAudio.car.carType}, skipping HornHit validation");
+                return null;
+            }
+
+            var portReaders = simAudio.audioClipSimReadersController.entries.OfType<AudioClipPortReader>();
+            
             var match = portReaders.FirstOrDefault(portReader => portReader.clips.Any(clip => clip.name == path));
             if (match == null)
                 Main.DebugLog(() => $"Could not find AudioClipPortReader: carType={trainAudio.car.carType}, soundType={soundType}, path={path}");
@@ -95,7 +102,6 @@ namespace DvMod.ZSounds
                         { SoundType.EngineLoop, "Engine_Layered" },
                         { SoundType.EngineLoadLoop, "EnginePiston_Layered" },
 
-                        { SoundType.HornHit, "Horn_LocoDE2_01_Pulse" },
                         { SoundType.HornLoop, "Horn_Layered" },
                     })
                 },
