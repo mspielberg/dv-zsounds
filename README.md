@@ -1,6 +1,6 @@
 # ZSounds (Zeibach's Sounds) for Derail Valley
 
-# CURRENTY UNDER DEVELOPMENT
+# CURRENTLY UNDER DEVELOPMENT
 ## Some Soundtypes are a one-shot and can not be restored until game restart!
 ## All Sounds DO RESET ingame after a restart. THIS IS NOT A BUG
 
