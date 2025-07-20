@@ -75,7 +75,7 @@ Sound type folder names must match the SoundType enum values:
 - `HornHit` - Horn hit sounds (Currently bugged. Can only be applied once)
 - `HornLoop` - Horn loop sounds  
 - `Whistle` - Steam whistle sounds
-- `Bell` - Bell sounds (Currenty bugged. Won't reset until game restart)
+- `Bell` - Bell sounds (Currently bugged. Won't reset until game restart)
 - `EngineStartup` - Engine startup sounds
 - `EngineLoop` - Engine idle/loop sounds
 - `EngineLoadLoop` - Engine under load sounds
