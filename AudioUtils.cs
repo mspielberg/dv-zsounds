@@ -129,8 +129,9 @@ namespace DvMod.ZSounds
                 ),
                 volumeCurve = new AnimationCurve(
                     new Keyframe(0.000f, -0.498f),
-                    new Keyframe(0.400f, 0.042f),
-                    new Keyframe(1.000f, 0.110f)
+                    new Keyframe(0.397f, 0.000f),
+                    new Keyframe(0.700f, 0.647f),
+                    new Keyframe(1.000f, 0.810f)
                 )
             };
             
