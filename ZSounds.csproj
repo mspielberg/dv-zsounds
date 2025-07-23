@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>DvMod.ZSounds</RootNamespace>
-    <InformationalVersion>1.4.3</InformationalVersion>
+    <InformationalVersion>0.1.1</InformationalVersion>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
