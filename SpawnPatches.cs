@@ -1,3 +1,4 @@
+using System;
 using HarmonyLib;
 
 namespace DvMod.ZSounds
@@ -27,7 +28,14 @@ namespace DvMod.ZSounds
         {
             public static void Postfix(TrainAudio __instance)
             {
-                __instance.car.LogicCarInitialized += () => ApplyAudio(__instance);
+                try 
+                {
+                    ApplyAudio(__instance);
+                }
+                catch (Exception ex)
+                {
+                    Main.mod?.Logger.Error($"Failed to apply audio to car {__instance.car?.ID}: {ex.Message}");
+                }
             }
         }
     }
