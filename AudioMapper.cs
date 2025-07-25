@@ -75,8 +75,9 @@ namespace DvMod.ZSounds
                         { SoundType.EngineLoop, "Engine_Layered" },
                         { SoundType.EngineLoadLoop, "EnginePiston_Layered" },
                         { SoundType.TractionMotors, "ElectricMotor_Layered" },
+                        { SoundType.Dynamo, "Dynamo_Layered" },
+                        { SoundType.AirCompressor, "AirCompressor_Layered" },
 
-                        { SoundType.HornHit, "Horn_LocoDE2_01_Pulse" },
                         { SoundType.HornLoop, "Horn_Layered" },
                     })
                 },
@@ -88,19 +89,22 @@ namespace DvMod.ZSounds
                         { SoundType.EngineLoop, "Engine_Idle" },
                         { SoundType.EngineLoadLoop, "Engine_Throttling" },
                         { SoundType.TractionMotors, "ElectricMotor_Layered" },
+                        { SoundType.Dynamo, "Dynamo_Layered" },
+                        { SoundType.AirCompressor, "AirCompressor_Layered" },
 
-                        { SoundType.HornHit, "Horn_LocoDE6_01_Pulse" },
                         { SoundType.HornLoop, "LocoDiesel_Horn_Layered" },
                     })
                 },
                 {
                     TrainCarType.LocoDH4, new(new()
                     {
-
                         { SoundType.Bell, "Bell_Layered" },
 
                         { SoundType.EngineLoop, "Engine_Layered" },
                         { SoundType.EngineLoadLoop, "EnginePiston_Layered" },
+                        { SoundType.TractionMotors, "ElectricMotor_Layered" },
+                        { SoundType.Dynamo, "Dynamo_Layered" },
+                        { SoundType.AirCompressor, "AirCompressor_Layered" },
 
                         { SoundType.HornLoop, "Horn_Layered" },
                     })
@@ -110,6 +114,9 @@ namespace DvMod.ZSounds
                     {
                         { SoundType.EngineLoop, "Engine_Layered" },
                         { SoundType.EngineLoadLoop, "EnginePiston_Layered" },
+                        { SoundType.TractionMotors, "ElectricMotor_Layered" },
+                        { SoundType.Dynamo, "Dynamo_Layered" },
+                        { SoundType.AirCompressor, "AirCompressor_Layered" },
 
                         { SoundType.HornLoop, "Horn_Layered" },
                     })
@@ -118,6 +125,8 @@ namespace DvMod.ZSounds
                     TrainCarType.LocoMicroshunter, new AudioMapper(new()
                     {
                         { SoundType.TractionMotors, "ElectricMotor_Layered" },
+                        { SoundType.Dynamo, "Dynamo_Layered" },
+                        { SoundType.AirCompressor, "AirCompressor_Layered" },
 
                         { SoundType.HornLoop, "Horn_Layered" },
                     })
@@ -126,6 +135,10 @@ namespace DvMod.ZSounds
                     TrainCarType.LocoS060, new(new()
                     {
                         { SoundType.Bell, "Bell_Layered" },
+                        { SoundType.SteamCylinderChuffs, "ChuffClips_Layered" },
+                        { SoundType.SteamValveGear, "ValveGear_Layered" },
+                        { SoundType.Dynamo, "Dynamo_Layered" },
+                        { SoundType.AirCompressor, "AirCompressor_Layered" },
 
                         { SoundType.Whistle, "Whistle_Layered" },
                     })
@@ -134,6 +147,10 @@ namespace DvMod.ZSounds
                     TrainCarType.LocoSteamHeavy, new(new()
                     {
                         { SoundType.Bell, "Bell_Layered" },
+                        { SoundType.SteamCylinderChuffs, "ChuffClips_Layered" },
+                        { SoundType.SteamValveGear, "ValveGear_Layered" },
+                        { SoundType.Dynamo, "Dynamo_Layered" },
+                        { SoundType.AirCompressor, "AirCompressor_Layered" },
 
                         { SoundType.Whistle, "Whistle_Layered" },
                     })

@@ -412,6 +412,154 @@ namespace DvMod.ZSounds
                 )
             };
             
+            // Dynamo defaults for diesel/electric locomotives
+            defaults[new DefaultKey(TrainCarType.LocoShunter, SoundType.Dynamo)] = new AudioSettings()
+            {
+                clip = Resources.Load<AudioClip>("Dynamo_DE2_01") ?? Resources.Load<AudioClip>("TM_DE2_02"), // Fallback to traction motor sound
+                minPitch = 0.800f,
+                maxPitch = 2.000f,
+                pitch = 1.000f,
+                pitchCurve = new AnimationCurve(),
+                volumeCurve = new AnimationCurve(
+                    new Keyframe(0.000f, 0.200f),
+                    new Keyframe(0.500f, 0.600f),
+                    new Keyframe(1.000f, 0.800f)
+                )
+            };
+            
+            defaults[new DefaultKey(TrainCarType.LocoDiesel, SoundType.Dynamo)] = new AudioSettings()
+            {
+                clip = Resources.Load<AudioClip>("Dynamo_DE6_01") ?? Resources.Load<AudioClip>("TM_DE6_02"),
+                minPitch = 0.800f,
+                maxPitch = 2.000f,
+                pitch = 1.000f,
+                pitchCurve = new AnimationCurve(),
+                volumeCurve = new AnimationCurve(
+                    new Keyframe(0.000f, 0.200f),
+                    new Keyframe(0.500f, 0.600f),
+                    new Keyframe(1.000f, 0.800f)
+                )
+            };
+            
+            defaults[new DefaultKey(TrainCarType.LocoMicroshunter, SoundType.Dynamo)] = new AudioSettings()
+            {
+                clip = Resources.Load<AudioClip>("Dynamo_E2_01") ?? Resources.Load<AudioClip>("TM_E2_01"),
+                minPitch = 0.800f,
+                maxPitch = 2.000f,
+                pitch = 1.000f,
+                pitchCurve = new AnimationCurve(),
+                volumeCurve = new AnimationCurve(
+                    new Keyframe(0.000f, 0.200f),
+                    new Keyframe(0.500f, 0.600f),
+                    new Keyframe(1.000f, 0.800f)
+                )
+            };
+            
+            // Steam locomotive dynamo defaults
+            defaults[new DefaultKey(TrainCarType.LocoS060, SoundType.Dynamo)] = new AudioSettings()
+            {
+                clip = Resources.Load<AudioClip>("Dynamo_Steam_01") ?? Resources.Load<AudioClip>("Dynamo_E2_01"),
+                minPitch = 0.800f,
+                maxPitch = 1.800f,
+                pitch = 1.000f,
+                pitchCurve = new AnimationCurve(),
+                volumeCurve = new AnimationCurve(
+                    new Keyframe(0.000f, 0.100f),
+                    new Keyframe(0.400f, 0.500f),
+                    new Keyframe(1.000f, 0.700f)
+                )
+            };
+            
+            defaults[new DefaultKey(TrainCarType.LocoSteamHeavy, SoundType.Dynamo)] = new AudioSettings()
+            {
+                clip = Resources.Load<AudioClip>("Dynamo_Steam_Heavy_01") ?? Resources.Load<AudioClip>("Dynamo_Steam_01"),
+                minPitch = 0.800f,
+                maxPitch = 1.800f,
+                pitch = 1.000f,
+                pitchCurve = new AnimationCurve(),
+                volumeCurve = new AnimationCurve(
+                    new Keyframe(0.000f, 0.100f),
+                    new Keyframe(0.400f, 0.500f),
+                    new Keyframe(1.000f, 0.700f)
+                )
+            };
+            
+            // Air Compressor defaults for all locomotives
+            defaults[new DefaultKey(TrainCarType.LocoShunter, SoundType.AirCompressor)] = new AudioSettings()
+            {
+                clip = Resources.Load<AudioClip>("AirCompressor_01") ?? Resources.Load<AudioClip>("TM_DE2_02"), // Fallback
+                minPitch = 0.900f,
+                maxPitch = 1.100f,
+                pitch = 1.000f,
+                pitchCurve = new AnimationCurve(),
+                volumeCurve = new AnimationCurve(
+                    new Keyframe(0.000f, 0.000f),
+                    new Keyframe(0.100f, 0.800f),
+                    new Keyframe(0.900f, 0.800f),
+                    new Keyframe(1.000f, 0.000f)
+                )
+            };
+            
+            defaults[new DefaultKey(TrainCarType.LocoDiesel, SoundType.AirCompressor)] = new AudioSettings()
+            {
+                clip = Resources.Load<AudioClip>("AirCompressor_01") ?? Resources.Load<AudioClip>("TM_DE6_02"),
+                minPitch = 0.900f,
+                maxPitch = 1.100f,
+                pitch = 1.000f,
+                pitchCurve = new AnimationCurve(),
+                volumeCurve = new AnimationCurve(
+                    new Keyframe(0.000f, 0.000f),
+                    new Keyframe(0.100f, 0.800f),
+                    new Keyframe(0.900f, 0.800f),
+                    new Keyframe(1.000f, 0.000f)
+                )
+            };
+            
+            defaults[new DefaultKey(TrainCarType.LocoMicroshunter, SoundType.AirCompressor)] = new AudioSettings()
+            {
+                clip = Resources.Load<AudioClip>("AirCompressor_01") ?? Resources.Load<AudioClip>("TM_E2_01"),
+                minPitch = 0.900f,
+                maxPitch = 1.100f,
+                pitch = 1.000f,
+                pitchCurve = new AnimationCurve(),
+                volumeCurve = new AnimationCurve(
+                    new Keyframe(0.000f, 0.000f),
+                    new Keyframe(0.100f, 0.800f),
+                    new Keyframe(0.900f, 0.800f),
+                    new Keyframe(1.000f, 0.000f)
+                )
+            };
+            
+            defaults[new DefaultKey(TrainCarType.LocoS060, SoundType.AirCompressor)] = new AudioSettings()
+            {
+                clip = Resources.Load<AudioClip>("AirCompressor_Steam_01") ?? Resources.Load<AudioClip>("AirCompressor_01"),
+                minPitch = 0.900f,
+                maxPitch = 1.100f,
+                pitch = 1.000f,
+                pitchCurve = new AnimationCurve(),
+                volumeCurve = new AnimationCurve(
+                    new Keyframe(0.000f, 0.000f),
+                    new Keyframe(0.100f, 0.800f),
+                    new Keyframe(0.900f, 0.800f),
+                    new Keyframe(1.000f, 0.000f)
+                )
+            };
+            
+            defaults[new DefaultKey(TrainCarType.LocoSteamHeavy, SoundType.AirCompressor)] = new AudioSettings()
+            {
+                clip = Resources.Load<AudioClip>("AirCompressor_Steam_01") ?? Resources.Load<AudioClip>("AirCompressor_01"),
+                minPitch = 0.900f,
+                maxPitch = 1.100f,
+                pitch = 1.000f,
+                pitchCurve = new AnimationCurve(),
+                volumeCurve = new AnimationCurve(
+                    new Keyframe(0.000f, 0.000f),
+                    new Keyframe(0.100f, 0.800f),
+                    new Keyframe(0.900f, 0.800f),
+                    new Keyframe(1.000f, 0.000f)
+                )
+            };
+            
             Main.mod?.Logger.Log($"CreateDefaults: Created {defaults.Count} default entries");
             }
             catch (Exception ex)
@@ -504,34 +652,77 @@ namespace DvMod.ZSounds
 
         public static void Apply(TrainCarType carType, SoundType soundType, SoundSet soundSet, ref AudioClip clip)
         {
+            Main.DebugLog(() => $"AudioUtils.Apply: Processing single AudioClip for {carType}/{soundType}");
+            
             var key = new DefaultKey(carType, soundType);
             var soundDefinition = soundSet[soundType];
 
             if (soundDefinition?.filename != null)
+            {
+                Main.DebugLog(() => $"AudioUtils.Apply: Using custom filename for {soundType}: {soundDefinition.filename}");
                 clip = FileAudio.Load(soundDefinition.filename);
+            }
             else
             {
+                Main.DebugLog(() => $"AudioUtils.Apply: No custom sound found for {soundType}, checking defaults...");
                 var defaults = CreateDefaults();
                 if (defaults.TryGetValue(key, out var defaultSettings) && defaultSettings.clip != null)
+                {
+                    Main.DebugLog(() => $"AudioUtils.Apply: Using default clip for {soundType}");
                     clip = defaultSettings.clip!;
+                }
+                else
+                {
+                    Main.DebugLog(() => $"AudioUtils.Apply: No defaults found for {soundType}, keeping original clip");
+                }
             }
+            
+            var clipName = clip?.name ?? "null";
+            Main.DebugLog(() => $"AudioUtils.Apply: Final clip for {soundType}: {clipName}");
         }
 
         public static void Apply(TrainCarType carType, SoundType soundType, SoundSet soundSet, ref AudioClip[] clips)
         {
+            Main.mod?.Logger.Log($"AudioUtils.Apply: *** PROCESSING AUDIOCLIP[] *** for {carType}/{soundType}");
+            
             var key = new DefaultKey(carType, soundType);
             var soundDefinition = soundSet[soundType];
 
+            Main.mod?.Logger.Log($"AudioUtils.Apply: Sound definition for {soundType}: {soundDefinition?.name ?? "NULL"}");
+            
+            // Note: AudioClip[] sounds (generic sounds) don't support pitch/volume configuration
+            // as they're played directly by the game's AudioManager without LayeredAudio
+            if (soundDefinition?.pitch != null || soundDefinition?.minPitch != null || soundDefinition?.maxPitch != null)
+            {
+                Main.mod?.Logger.Warning($"AudioUtils.Apply: Pitch settings ignored for {soundType} - AudioClip[] sounds don't support pitch configuration");
+            }
             if (soundDefinition != null && (soundDefinition.filenames?.Length ?? 0) > 0)
-                clips = soundDefinition.filenames.Select(FileAudio.Load).ToArray();
+            {
+                Main.DebugLog(() => $"AudioUtils.Apply: Using custom filenames for {soundType}: {string.Join(", ", soundDefinition.filenames!)}");
+                clips = soundDefinition.filenames!.Select(FileAudio.Load).ToArray();
+            }
             else if (soundDefinition?.filename != null)
+            {
+                Main.DebugLog(() => $"AudioUtils.Apply: Using custom filename for {soundType}: {soundDefinition.filename}");
                 clips = new AudioClip[] { FileAudio.Load(soundDefinition.filename) };
+            }
             else
             {
+                Main.DebugLog(() => $"AudioUtils.Apply: No custom sounds found for {soundType}, checking defaults...");
                 var defaults = CreateDefaults();
                 if (defaults.TryGetValue(key, out var defaultSettings) && defaultSettings.clips != null)
+                {
+                    Main.DebugLog(() => $"AudioUtils.Apply: Using default clips for {soundType}");
                     clips = defaultSettings.clips!;
+                }
+                else
+                {
+                    Main.DebugLog(() => $"AudioUtils.Apply: No defaults found for {soundType}, keeping original clips");
+                }
             }
+            
+            var finalClipCount = clips?.Length ?? 0;
+            Main.DebugLog(() => $"AudioUtils.Apply: Final clip count for {soundType}: {finalClipCount}");
         }
 
         private static AnimationCurve MakeCurve(AnimationCurve? defaultCurve, float? newMin, float? newMax)
@@ -555,13 +746,19 @@ namespace DvMod.ZSounds
 
         public static void Apply(TrainCarType carType, SoundType soundType, SoundSet soundSet, LayeredAudio audio)
         {
+            Main.DebugLog(() => $"AudioUtils.Apply: Processing LayeredAudio for {carType}/{soundType}");
+            
             var key = new DefaultKey(carType, soundType);
             var soundDefinition = soundSet[soundType];
             var mainLayer = audio.layers[0];
 
+            Main.DebugLog(() => $"AudioUtils.Apply: Sound definition found for {soundType}: {soundDefinition != null}");
+
             // Get defaults for this key
             var defaults = CreateDefaults();
             bool hasDefaults = defaults.TryGetValue(key, out var defaultSettings);
+            
+            Main.DebugLog(() => $"AudioUtils.Apply: Has defaults for {soundType}: {hasDefaults}");
             
             // Use default AudioSettings if no specific defaults found, with safe fallbacks
             var defaultAudioSettings = hasDefaults ? defaultSettings : new AudioSettings()
@@ -578,6 +775,9 @@ namespace DvMod.ZSounds
             bool wasPlaying = mainLayer.source.isPlaying;
             AudioClip? newClip = soundDefinition?.filename.Map(FileAudio.Load) ?? defaultAudioSettings.clip;
             
+            var newClipName = newClip?.name ?? "null";
+            Main.DebugLog(() => $"AudioUtils.Apply: New clip for {soundType}: {newClipName}");
+            
             if (wasPlaying && (mainLayer.source.clip != newClip || soundType == SoundType.EngineLoop))
             {
                 mainLayer.source.Stop();
@@ -586,6 +786,7 @@ namespace DvMod.ZSounds
             
             if (soundDefinition == null)
             {
+                Main.DebugLog(() => $"AudioUtils.Apply: Applying defaults for {soundType}");
                 audio.minPitch = defaultAudioSettings.minPitch;
                 audio.maxPitch = defaultAudioSettings.maxPitch;
                 mainLayer.source.clip = newClip;
@@ -597,17 +798,26 @@ namespace DvMod.ZSounds
             }
             else
             {
-                audio.minPitch = soundDefinition.minPitch ?? defaultAudioSettings.minPitch * defaultAudioSettings.pitch;
-                audio.maxPitch = soundDefinition.maxPitch ?? defaultAudioSettings.maxPitch * defaultAudioSettings.pitch;
+                Main.DebugLog(() => $"AudioUtils.Apply: Applying custom sound definition for {soundType}");
+                
+                // Apply pitch - use custom pitch if specified, otherwise use default
+                var basePitch = soundDefinition.pitch ?? defaultAudioSettings.pitch;
+                
+                audio.minPitch = soundDefinition.minPitch ?? defaultAudioSettings.minPitch * basePitch;
+                audio.maxPitch = soundDefinition.maxPitch ?? defaultAudioSettings.maxPitch * basePitch;
                 mainLayer.source.clip = newClip;
-                mainLayer.startPitch = 1f;
+                mainLayer.startPitch = basePitch;
                 
-                // Ensure curves are never null before passing to MakeCurve
-                var safePitchCurve = defaultAudioSettings.pitchCurve ?? new AnimationCurve();
-                var safeVolumeCurve = defaultAudioSettings.volumeCurve ?? new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 1f));
+                Main.DebugLog(() => $"AudioUtils.Apply: Applied pitch settings for {soundType} - startPitch: {basePitch}, minPitch: {audio.minPitch}, maxPitch: {audio.maxPitch}");
                 
-                mainLayer.pitchCurve = MakeCurve(safePitchCurve, soundDefinition.minPitch, soundDefinition.maxPitch);
-                mainLayer.volumeCurve = MakeCurve(safeVolumeCurve, soundDefinition.minVolume, soundDefinition.maxVolume);
+                // Use custom curves if available, otherwise use defaults
+                var basePitchCurve = soundDefinition.pitchCurve ?? defaultAudioSettings.pitchCurve ?? new AnimationCurve();
+                var baseVolumeCurve = soundDefinition.volumeCurve ?? defaultAudioSettings.volumeCurve ?? new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 1f));
+                
+                mainLayer.pitchCurve = MakeCurve(basePitchCurve, soundDefinition.minPitch, soundDefinition.maxPitch);
+                mainLayer.volumeCurve = MakeCurve(baseVolumeCurve, soundDefinition.minVolume, soundDefinition.maxVolume);
+
+                Main.DebugLog(() => $"AudioUtils.Apply: Applied custom curves for {soundType} - PitchCurve: {(soundDefinition.pitchCurve != null ? "Custom" : "Default")}, VolumeCurve: {(soundDefinition.volumeCurve != null ? "Custom" : "Default")}");
 
                 for (int i = 1; i < audio.layers.Length; i++)
                     audio.layers[i].source.mute = true;
@@ -618,6 +828,9 @@ namespace DvMod.ZSounds
             {
                 audio.Set(0f);
             }
+            
+            var finalClipName = mainLayer.source.clip?.name ?? "null";
+            Main.DebugLog(() => $"AudioUtils.Apply: LayeredAudio application completed for {soundType}. Final clip: {finalClipName}");
         }
 
         public static void ResetAllToDefaults(TrainCar car)
