@@ -75,6 +75,28 @@ namespace DvMod.ZSounds
 
         private void LoadSoundsFromFolder(TrainCarType trainType, SoundType soundType, string folder)
         {
+            LoadSoundsFromFolder(trainType, soundType, folder, null);
+        }
+        
+        private void LoadSoundsFromFolder(TrainCarType trainType, SoundType soundType, string folder, SoundConfiguration? globalConfig)
+        {
+            var isGeneric = trainType == TrainCarType.NotSet;
+            Main.DebugLog(() => $"FolderSoundLoader: Loading train-specific sounds for {trainType}/{soundType} from {folder}");
+            
+            // Load configuration for this sound type folder (local config)
+            var localConfig = SoundConfigurationLoader.LoadConfiguration(folder);
+            
+            // Use global config as fallback if no local config found
+            var config = localConfig ?? globalConfig;
+            if (config != null)
+            {
+                Main.DebugLog(() => $"FolderSoundLoader: Loaded configuration for {trainType}/{soundType}");
+            }
+            else
+            {
+                Main.DebugLog(() => $"FolderSoundLoader: No configuration found for {trainType}/{soundType}, using defaults");
+            }
+            
             var soundFiles = Directory.GetFiles(folder, "*.ogg")
                 .Concat(Directory.GetFiles(folder, "*.wav"))
                 .ToArray();
@@ -84,6 +106,8 @@ namespace DvMod.ZSounds
                 Main.mod?.Logger.Warning($"No sound files found in {folder}");
                 return;
             }
+            
+            Main.DebugLog(() => $"FolderSoundLoader: Found {soundFiles.Length} sound files in {folder}");
 
             foreach (var soundFile in soundFiles)
             {
@@ -100,6 +124,12 @@ namespace DvMod.ZSounds
 
                     // Apply default settings based on sound type
                     ApplyDefaultSettings(soundDef, soundType);
+                    
+                    // Apply configuration settings if available
+                    if (config != null)
+                    {
+                        ApplyConfigurationSettings(soundDef, config);
+                    }
 
                     // Validate the sound file can be loaded
                     try
@@ -115,16 +145,12 @@ namespace DvMod.ZSounds
                     loadedSounds[soundName] = soundDef;
 
                     // Add to train-specific sounds
-                    if (trainType != TrainCarType.NotSet)
+                    if (!trainSounds[trainType].ContainsKey(soundType))
                     {
-                        if (!trainSounds[trainType].ContainsKey(soundType))
-                        {
-                            trainSounds[trainType][soundType] = new List<SoundDefinition>();
-                        }
-                        trainSounds[trainType][soundType].Add(soundDef);
+                        trainSounds[trainType][soundType] = new List<SoundDefinition>();
                     }
-
-                    Main.DebugLog(() => $"Loaded sound: {soundName} from {soundFile}");
+                    trainSounds[trainType][soundType].Add(soundDef);
+                    Main.DebugLog(() => $"Loaded train-specific sound: {soundName} from {soundFile}");
                 }
                 catch (Exception ex)
                 {
@@ -151,7 +177,39 @@ namespace DvMod.ZSounds
                     soundDef.fadeStart = 0.27f;
                     soundDef.fadeDuration = 1.0f;
                     break;
+                case SoundType.Dynamo:
+                    soundDef.minPitch = 0.8f;
+                    soundDef.maxPitch = 2.0f;
+                    soundDef.minVolume = 0.2f;
+                    soundDef.maxVolume = 0.8f;
+                    break;
+                case SoundType.AirCompressor:
+                    soundDef.minPitch = 0.9f;
+                    soundDef.maxPitch = 1.1f;
+                    soundDef.minVolume = 0.0f;
+                    soundDef.maxVolume = 0.8f;
+                    break;
             }
+        }
+        
+        private void ApplyConfigurationSettings(SoundDefinition soundDef, SoundConfiguration config)
+        {
+            // Apply configuration values, overriding defaults where specified
+            if (config.pitch.HasValue) soundDef.pitch = config.pitch.Value;
+            if (config.minPitch.HasValue) soundDef.minPitch = config.minPitch.Value;
+            if (config.maxPitch.HasValue) soundDef.maxPitch = config.maxPitch.Value;
+            if (config.minVolume.HasValue) soundDef.minVolume = config.minVolume.Value;
+            if (config.maxVolume.HasValue) soundDef.maxVolume = config.maxVolume.Value;
+            if (config.fadeStart.HasValue) soundDef.fadeStart = config.fadeStart.Value;
+            if (config.fadeDuration.HasValue) soundDef.fadeDuration = config.fadeDuration.Value;
+            
+            // Apply animation curves
+            if (config.PitchCurve != null) soundDef.pitchCurve = config.PitchCurve;
+            if (config.VolumeCurve != null) soundDef.volumeCurve = config.VolumeCurve;
+            
+            Main.DebugLog(() => $"Applied configuration settings to {soundDef.name}: " +
+                              $"Pitch={config.pitch}, MinPitch={config.minPitch}, MaxPitch={config.maxPitch}, " +
+                              $"PitchCurve={config.PitchCurve != null}, VolumeCurve={config.VolumeCurve != null}");
         }
 
         public SoundSet CreateSoundSetForTrain(TrainCar car)
@@ -159,25 +217,9 @@ namespace DvMod.ZSounds
             var soundSet = new SoundSet();
             var trainType = car.carType;
 
-            if (!trainSounds.ContainsKey(trainType))
-            {
-                Main.DebugLog(() => $"No custom sounds found for train type: {trainType}");
-                return soundSet;
-            }
-
-            // Return an empty sound set - sounds will be applied individually when selected
-            // This prevents automatic application of all available sounds
-            Main.DebugLog(() => $"Created empty sound set for train type: {trainType} (sounds available but not auto-applied)");
-            return soundSet;
-        }
-
-        public SoundSet CreateGenericSoundSet()
-        {
-            var soundSet = new SoundSet();
-            foreach (var sound in loadedSounds.Values.Where(s => s.IsGeneric))
-            {
-                sound.Apply(soundSet);
-            }
+            // Always return an empty sound set - sounds are only applied when manually selected via CommsRadio
+            // This ensures no automatic sound replacement occurs
+            Main.DebugLog(() => $"Created empty sound set for train type: {trainType} - no automatic sound application");
             return soundSet;
         }
 
@@ -194,11 +236,6 @@ namespace DvMod.ZSounds
         public SoundDefinition? GetSound(string soundName)
         {
             return loadedSounds.TryGetValue(soundName, out var sound) ? sound : null;
-        }
-
-        public IEnumerable<SoundDefinition> GetAllSounds()
-        {
-            return loadedSounds.Values;
         }
 
         /// <summary>
