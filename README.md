@@ -1,125 +1,177 @@
 # ZSounds (Zeibach's Sounds) for Derail Valley
 
-# CURRENTLY UNDER DEVELOPMENT
-## Some Soundtypes are a one-shot and can not be restored until game restart!
-## All Sounds DO RESET ingame after a restart. THIS IS NOT A BUG
+> **Flexible, folder-based train sound replacement for Derail Valley**
 
 ---
 
-## Overview
-ZSounds is a powerful and flexible sound mod for Derail Valley that allows you to replace and extend in-game train sounds. It uses a simple folder-based system for loading custom sound files.
+## What is ZSounds?
+ZSounds is a mod for Derail Valley that lets you easily replace and customize train sounds using simple folders and config files. You can swap out horns, bells, engines, and more for each locomotive type—no coding required!
 
-- **Supports:** All major locomotive types (DE6, DE2, SH282, DH4, DM3, Microshunter, S060)
+- **Supports:** All major locomotives (DE6, DE2, SH282, DH4, DM3, Microshunter, S060)
 - **Features:**
-  - Folder-based sound loading
-  - CommsRadioAPI integration for in-game sound switching
-  - Full reset and fallback to original game sounds (Currently bugged. Need help)
+  - Drag-and-drop folder-based sound replacement
+  - In-game sound switching with CommsRadio
+  - Per-sound customization (pitch, volume, curves)
+  - Always resets to original sounds on game restart
 
 ---
 
-## Installation
-1. **Requirements:**
-   - Derail Valley
+## Quick Start
+1. **Install Requirements:**
    - [UnityModManager](https://www.nexusmods.com/site/mods/21)
    - [CommsRadioAPI](https://www.nexusmods.com/derailvalley/mods/813)
-2. **Install:**
-   - Download the latest Release from the Release tab
-   - Install the ZIP File with Unity Mod Manager
-   - Add your sounds as described below
+2. **Install ZSounds:**
+   - Download the latest release ZIP
+   - Install with Unity Mod Manager
+3. **Add Your Sounds:**
+   - Open the `Sounds/` folder in the mod directory
+   - Find the folder for your train (e.g. `LocoDiesel` for DE6)
+   - Place your `.ogg` or `.wav` files in the correct subfolder (e.g. `HornLoop`)
+   - (Optional) Add a `config.json` to customize pitch, volume, etc.
+4. **Launch the Game:**
+   - Use CommsRadio in-game to switch sounds
 
 ---
 
-## Folder-Based Sound System
+### Train Types
+- `LocoDiesel` - DE6
+- `LocoShunter` - DE2
+- `LocoSteamHeavy` - SH282
+- `LocoDH4` - DH4
+- `LocoDM3` - DM3
+- `LocoMicroshunter` - BE2
+- `LocoS060` - S060
 
-ZSounds now supports a simple folder-based sound system.
+### Sound Types
+- `HornHit` (Not on all trains)
+- `HornLoop`
+- `Bell` (Only Steam, DH4, DE6)
+- `EngineLoop`
+- `EngineLoadLoop`
+- `EngineStartup`
+- `EngineShutdown`
+- `TractionMotors`
+- `AirCompressor`
 
-### Folder Structure
-Organize your sounds in the following structure:
+**Steam Only:**
+- `Whistle`
+- `Dynamo`
+- `SteamCylinderChuffs`
+- `SteamStackChuffs`
+- `SteamValveGear`
+- `SteamChuffLoop`
 
-```
-Sounds/
-??? Generic/                    # Generic sounds (used for all trains)
-?   ??? Collision/
-?   ??? Coupling/
-?   ??? Uncoupling/
-?   ??? ...
-??? LocoDiesel/                # Sounds for DE6 locomotive
-?   ??? HornHit/
-?   ??? HornLoop/
-?   ??? Bell/
-?   ??? EngineStartup/
-?   ??? EngineLoop/
-?   ??? EngineShutdown/
-??? LocoShunter/               # Sounds for DE2 locomotive  
-?   ??? HornHit/
-?   ??? HornLoop/
-?   ??? EngineStartup/
-?   ??? EngineLoop/
-??? LocoSteamHeavy/            # Sounds for SH282 locomotive
-?   ??? Whistle/
-??? ...
-```
-
-#### Train Types
-Folder names must match the exact TrainCarType enum values:
-- `LocoDiesel` - DE6 diesel locomotive
-- `LocoShunter` - DE2 shunter locomotive  
-- `LocoSteamHeavy` - SH282 steam locomotive
-- `LocoDH4` - DH4 hydraulic locomotive
-- `LocoDM3` - DM3 diesel multiple unit
-- `LocoMicroshunter` - Microshunter
-- `LocoS060` - S060 steam locomotive
-
-#### Sound Types
-Sound type folder names must match the SoundType enum values:
-- `HornHit` - Horn hit sounds (Currently bugged. Can only be applied once)
-- `HornLoop` - Horn loop sounds  
-- `Whistle` - Steam whistle sounds
-- `Bell` - Bell sounds (Currently bugged. Won't reset until game restart)
-- `EngineStartup` - Engine startup sounds
-- `EngineLoop` - Engine idle/loop sounds
-- `EngineLoadLoop` - Engine under load sounds
-- `EngineShutdown` - Engine shutdown sounds
-- `TractionMotors` - Electric motor sounds
-
-##### Generic Sound Types
-- `Collision`
-- `Coupling`
-- `Uncoupling`
-- `RollingAudioDetailed`
-- `RollingAudioSimple`
-- `SquealAudioDetailed`
-- `SquealAudioSimple`
-- `Wind`
-- `DerailHit`
-- `Switch`
-- `SwitchForced`
-- `CargoLoadUnload`
-
-#### Supported Audio Formats
+### Supported Audio Formats
 - `.ogg` (recommended)
 - `.wav`
 
 ---
 
+## Sound Configuration (`config.json`)
+Each sound folder can have a `config.json` to control pitch, volume, and curves.
+The ingame default values are used if the file is missing
 
-#### Troubleshooting
-- **Sounds not loading?** Check the console for error messages
-- **Wrong train type?** Ensure folder names match exactly: `LocoDiesel`, `LocoShunter`, `LocoSteamHeavy`
-- **Wrong sound type?** Ensure folder names match: `HornHit`, `HornLoop`, `Bell`, `EngineStartup`, etc.
-- **Files not found?** Only `.ogg` and `.wav` files are supported
-- **Sounds not resetting?** Restart the game. All sounds will be reset
+**Example:**
+```json
+{
+  "pitch": 1.0,
+  "minPitch": 0.8,
+  "maxPitch": 1.2,
+  "minVolume": 0.0,
+  "maxVolume": 1.0,
+  "pitchCurve": [
+    { "time": 0.0, "value": 0.8 },
+    { "time": 0.5, "value": 1.0 },
+    { "time": 1.0, "value": 1.2 }
+  ],
+  "volumeCurve": [
+    { "time": 0.0, "value": 0.0 },
+    { "time": 0.2, "value": 1.0 },
+    { "time": 0.8, "value": 1.0 },
+    { "time": 1.0, "value": 0.0 }
+  ]
+}
+```
+
+**Config Fields:**
+- `pitch`: Base pitch multiplier (1.0 = normal)
+- `minPitch`/`maxPitch`: Pitch range
+- `minVolume`/`maxVolume`: Volume range
+- `pitchCurve`/`volumeCurve`: Animation curves (see below)
+
+**Curve Keyframe Format:**
+```json
+{ "time": 0.0, "value": 1.0 }
+```
+- `time`: 0.0 (start) to 1.0 (end)
+- `value`: Pitch or volume at that point
 
 ---
 
+## Usage Workflow
+- **Replace a sound:** Drop your file in the right folder and click in Settings on "Update Soundlist"
+- **Switch sounds in-game:** Use CommsRadio to pick which sound to use for each type.
+- **Reset to default:** Restart the game. All sounds revert to original unless you re-select them.
 
-## Development & Contribution
-- **Source:** [GitHub](https://github.com/Fuggschen/dv-zsounds)
-- **License:** MIT
+---
+
+## Example Configurations
+
+**1. Lower the bell volume:**
+```json
+{ "maxVolume": 0.5 }
+```
+
+**2. Make the dynamo pitch rise with speed:**
+```json
+{
+  "pitchCurve": [
+    { "time": 0.0, "value": 0.7 },
+    { "time": 1.0, "value": 1.3 }
+  ]
+}
+```
+
+**3. Fade out the air compressor at high speed:**
+```json
+{
+  "volumeCurve": [
+    { "time": 0.0, "value": 1.0 },
+    { "time": 0.8, "value": 1.0 },
+    { "time": 1.0, "value": 0.0 }
+  ]
+}
+```
+
+---
+
+## Troubleshooting
+- **Sound not playing?**
+  - Check file format (`.ogg` or `.wav`)
+  - Make sure folder names match exactly
+  - Check the log for errors
+- **CommsRadio not switching sounds?**
+  - Make sure CommsRadioAPI is installed and up to date
+  - Only sound types with files in their folders will appear in the menu
+- **Sounds not resetting?**
+  - Restart the game to restore all original sounds
+- **One-shot sounds (e.g. HornHit, Bell) not working?**
+  - These can only be changed once per game session due to limitations
+
+---
+
+## Advanced Tips
+- Use multiple keyframes in curves for more complex pitch/volume changes
+- You can use `null` for any config field to leave it at the default
 
 ---
 
 ## Credits
 - Original mod by [Zeibach](https://github.com/mspielberg/dv-zsounds)
-- Rewrite, folder system, and CommsRadioAPI integration by **Fuggschen**
+- Rewrite by **Fuggschen**
+
+---
+
+## License
+MIT
 
