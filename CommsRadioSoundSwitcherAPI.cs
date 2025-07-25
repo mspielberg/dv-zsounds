@@ -238,7 +238,7 @@ namespace DvMod.ZSounds
                         // Special sound types that may not have AudioMapper entries but can still be applied
                         carSupportsType = true;
                     }
-                    else if (AudioMapper.mappings.TryGetValue(carType, out var mapper))
+                    else if (AudioMapper.Mappers.TryGetValue(carType, out var mapper))
                     {
                         var hasLayered = SoundTypes.layeredAudioSoundTypes.Contains(soundType) && 
                                        mapper.GetLayeredAudio(soundType, AudioUtils.GetTrainAudio(car)) != null;

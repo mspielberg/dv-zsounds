@@ -131,7 +131,7 @@ namespace DvMod.ZSounds
 
         public static bool HasHorn(DV.ThingTypes.TrainCarType carType)
         {
-            return AudioMapper.mappings.ContainsKey(carType);
+            return AudioMapper.Mappers.ContainsKey(carType);
         }
     }
 }
