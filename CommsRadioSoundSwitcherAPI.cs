@@ -89,7 +89,7 @@ namespace DvMod.ZSounds
     // State: Select a car to modify sounds
     public class SelectCarBehaviour : AStateBehaviour
     {
-        private const float SIGNAL_RANGE = 100f;
+        private const float SIGNAL_RANGE = 200f; // Increased range for VR
         private readonly LayerMask trainCarMask;
 
         public SelectCarBehaviour() : base(new CommsRadioState(
@@ -97,22 +97,44 @@ namespace DvMod.ZSounds
             contentText: "Aim at the vehicle you wish to change sounds on.",
             buttonBehaviour: ButtonBehaviourType.Regular))
         {
-            trainCarMask = LayerMask.GetMask("Train_Big_Collider");
+            // Use multiple layer masks to catch more train car colliders in VR
+            trainCarMask = LayerMask.GetMask("Train_Big_Collider", "Train_Car", "TrainCar", "Default");
         }
 
         public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
         {
-            if (!Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, out RaycastHit hit, SIGNAL_RANGE, trainCarMask))
+            // Try raycast with debug logging for VR troubleshooting
+            Vector3 rayOrigin = utility.SignalOrigin.position;
+            Vector3 rayDirection = utility.SignalOrigin.forward;
+            
+            Main.DebugLog(() => $"CommsRadio raycast: origin={rayOrigin}, direction={rayDirection}, range={SIGNAL_RANGE}, mask={trainCarMask.value}");
+            
+            if (!Physics.Raycast(rayOrigin, rayDirection, out RaycastHit hit, SIGNAL_RANGE, trainCarMask))
             {
+                // Try a broader raycast with all layers for debugging
+                if (Physics.Raycast(rayOrigin, rayDirection, out RaycastHit debugHit, SIGNAL_RANGE))
+                {
+                    Main.DebugLog(() => $"CommsRadio raycast hit something else: {debugHit.transform.name} on layer {debugHit.transform.gameObject.layer}");
+                }
                 return this;
             }
+
+            Main.DebugLog(() => $"CommsRadio raycast hit: {hit.transform.name} (root: {hit.transform.root.name})");
 
             TrainCar? targetCar = TrainCar.Resolve(hit.transform.root);
-            if (targetCar == null || !CarTypes.IsLocomotive(targetCar.carLivery))
+            if (targetCar == null)
             {
+                Main.DebugLog(() => $"CommsRadio: Could not resolve TrainCar from hit object {hit.transform.root.name}");
+                return this;
+            }
+            
+            if (!CarTypes.IsLocomotive(targetCar.carLivery))
+            {
+                Main.DebugLog(() => $"CommsRadio: Car {targetCar.ID} is not a locomotive (type: {targetCar.carType})");
                 return this;
             }
 
+            Main.DebugLog(() => $"CommsRadio: Valid locomotive found: {targetCar.ID} ({targetCar.carType})");
             utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
             return new PointAtCarBehaviour(targetCar);
         }
@@ -126,7 +148,7 @@ namespace DvMod.ZSounds
     // State: Pointing at a valid car
     public class PointAtCarBehaviour : AStateBehaviour
     {
-        private const float SIGNAL_RANGE = 100f;
+        private const float SIGNAL_RANGE = 200f; // Increased range for VR
         private readonly LayerMask trainCarMask;
         private readonly TrainCar selectedCar;
 
@@ -137,7 +159,7 @@ namespace DvMod.ZSounds
             buttonBehaviour: ButtonBehaviourType.Regular))
         {
             selectedCar = car;
-            trainCarMask = LayerMask.GetMask("Train_Big_Collider");
+            trainCarMask = LayerMask.GetMask("Train_Big_Collider", "Train_Car", "TrainCar", "Default");
             
             Main.mod?.Logger.Log($"CommsRadioAPI: Targeting car {car.ID} ({car.carType}) for sound modification");
         }
@@ -172,7 +194,7 @@ namespace DvMod.ZSounds
     // State: Select which sound type to modify
     public class SelectSoundTypeBehaviour : AStateBehaviour
     {
-        private const float SIGNAL_RANGE = 100f;
+        private const float SIGNAL_RANGE = 200f; // Increased range for VR
         private readonly LayerMask trainCarMask;
         private readonly TrainCar selectedCar;
         private readonly SoundType[] availableSoundTypes;
@@ -183,7 +205,7 @@ namespace DvMod.ZSounds
             selectedCar = car;
             availableSoundTypes = GetAvailableSoundTypes(car);
             soundTypeIndex = index;
-            trainCarMask = LayerMask.GetMask("Train_Big_Collider");
+            trainCarMask = LayerMask.GetMask("Train_Big_Collider", "Train_Car", "TrainCar", "Default");
         }
 
         private static SoundType[] GetAvailableSoundTypes(TrainCar car)
@@ -193,50 +215,48 @@ namespace DvMod.ZSounds
             
             Main.DebugLog(() => $"CommsRadioAPI: Getting available sound types for car {car.ID} (type: {carType})");
             
-            if (AudioMapper.mappings.TryGetValue(carType, out var mapper))
+            if (Main.soundLoader == null)
             {
-                foreach (var soundType in Enum.GetValues(typeof(SoundType)).Cast<SoundType>())
+                Main.DebugLog(() => $"CommsRadioAPI: SoundLoader is null");
+                return supportedTypes.ToArray();
+            }
+
+            // Get all sound types that have actual sound files available
+            foreach (var soundType in Enum.GetValues(typeof(SoundType)).Cast<SoundType>())
+            {
+                if (soundType == SoundType.Unknown) continue;
+                
+                // Check if we have sound files for this sound type
+                if (HasAvailableSounds(car, soundType))
                 {
-                    if (soundType == SoundType.Unknown) continue;
-                    if (soundType >= SoundType.Collision) continue; // Skip generic sounds
+                    // Also verify that the car actually supports this sound type through AudioMapper
+                    // (except for special cases like EngineStartup/EngineShutdown)
+                    bool carSupportsType = false;
                     
-                    // Special handling for EngineStartup and EngineShutdown - they may not have AudioMapper entries
-                    // but can still be applied if sound files are available
                     if (soundType == SoundType.EngineStartup || soundType == SoundType.EngineShutdown)
                     {
-                        if (HasAvailableSounds(car, soundType))
-                        {
-                            supportedTypes.Add(soundType);
-                            Main.DebugLog(() => $"CommsRadioAPI: Added special sound type {soundType} for car {carType} (sounds available)");
-                        }
-                        else
-                        {
-                            Main.DebugLog(() => $"CommsRadioAPI: No sounds available for special sound type {soundType} (car: {carType})");
-                        }
-                        continue;
+                        // Special sound types that may not have AudioMapper entries but can still be applied
+                        carSupportsType = true;
+                    }
+                    else if (AudioMapper.mappings.TryGetValue(carType, out var mapper))
+                    {
+                        var hasLayered = SoundTypes.layeredAudioSoundTypes.Contains(soundType) && 
+                                       mapper.GetLayeredAudio(soundType, AudioUtils.GetTrainAudio(car)) != null;
+                        var hasClips = SoundTypes.audioClipsSoundTypes.Contains(soundType) && 
+                                     mapper.GetAudioClipPortReader(soundType, AudioUtils.GetTrainAudio(car)) != null;
+                        carSupportsType = hasLayered || hasClips;
                     }
                     
-                    // Check if this car type supports this sound type through AudioMapper
-                    var hasLayered = SoundTypes.layeredAudioSoundTypes.Contains(soundType) && 
-                                   mapper.GetLayeredAudio(soundType, AudioUtils.GetTrainAudio(car)) != null;
-                    var hasClips = SoundTypes.audioClipsSoundTypes.Contains(soundType) && 
-                                 mapper.GetAudioClipPortReader(soundType, AudioUtils.GetTrainAudio(car)) != null;
-                    
-                    // Only include this sound type if the car supports it AND sounds are available
-                    if ((hasLayered || hasClips) && HasAvailableSounds(car, soundType))
+                    if (carSupportsType)
                     {
                         supportedTypes.Add(soundType);
-                        Main.DebugLog(() => $"CommsRadioAPI: Added sound type {soundType} for car {carType}");
+                        Main.DebugLog(() => $"CommsRadioAPI: Added sound type {soundType} for car {carType} (sounds available and car supports it)");
                     }
-                    else if (hasLayered || hasClips)
+                    else
                     {
-                        Main.DebugLog(() => $"CommsRadioAPI: Car {carType} supports {soundType} but no sounds available");
+                        Main.DebugLog(() => $"CommsRadioAPI: Sound type {soundType} has files but car {carType} doesn't support it");
                     }
                 }
-            }
-            else
-            {
-                Main.DebugLog(() => $"CommsRadioAPI: No audio mapper found for car type {carType}");
             }
             
             Main.DebugLog(() => $"CommsRadioAPI: Found {supportedTypes.Count} available sound types for car {carType}: {string.Join(", ", supportedTypes)}");
@@ -251,7 +271,7 @@ namespace DvMod.ZSounds
                 return false;
             }
             
-            // Check car-specific sounds first
+            // Only check car-specific sounds - don't fall back to generic sounds
             var carSounds = Main.soundLoader.GetAvailableSoundsForTrain(car.carType);
             if (carSounds.TryGetValue(soundType, out var carSpecificSounds) && carSpecificSounds.Count > 0)
             {
@@ -259,15 +279,7 @@ namespace DvMod.ZSounds
                 return true;
             }
             
-            // If no car-specific sounds, check generic sounds of this type
-            var genericSounds = Main.soundLoader.GetSoundsOfType(soundType);
-            if (genericSounds.Count > 0)
-            {
-                Main.DebugLog(() => $"CommsRadioAPI: Found {genericSounds.Count} generic {soundType} sounds");
-                return true;
-            }
-            
-            Main.DebugLog(() => $"CommsRadioAPI: No sounds available for {soundType} (car: {car.carType})");
+            Main.DebugLog(() => $"CommsRadioAPI: No car-specific sounds available for {soundType} (car: {car.carType})");
             return false;
         }
 
@@ -348,7 +360,7 @@ namespace DvMod.ZSounds
     // State: Confirm HornHit warning
     public class ConfirmHornHitBehaviour : AStateBehaviour
     {
-        private const float SIGNAL_RANGE = 100f;
+        private const float SIGNAL_RANGE = 200f; // Increased range for VR
         private readonly LayerMask trainCarMask;
         private readonly TrainCar selectedCar;
         private readonly SoundType soundType;
@@ -361,7 +373,7 @@ namespace DvMod.ZSounds
         {
             selectedCar = car;
             soundType = type;
-            trainCarMask = LayerMask.GetMask("Train_Big_Collider");
+            trainCarMask = LayerMask.GetMask("Train_Big_Collider", "Train_Car", "TrainCar", "Default");
         }
 
         public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
@@ -394,7 +406,7 @@ namespace DvMod.ZSounds
     // State: Select specific sound
     public class SelectSoundBehaviour : AStateBehaviour
     {
-        private const float SIGNAL_RANGE = 100f;
+        private const float SIGNAL_RANGE = 200f; // Increased range for VR
         private readonly LayerMask trainCarMask;
         private readonly TrainCar selectedCar;
         private readonly SoundType soundType;
@@ -407,7 +419,7 @@ namespace DvMod.ZSounds
             soundType = type;
             availableSounds = GetAvailableSounds(car, type);
             soundIndex = index;
-            trainCarMask = LayerMask.GetMask("Train_Big_Collider");
+            trainCarMask = LayerMask.GetMask("Train_Big_Collider", "Train_Car", "TrainCar", "Default");
         }
 
         private static List<SoundDefinition> GetAvailableSounds(TrainCar car, SoundType soundType)
@@ -416,17 +428,11 @@ namespace DvMod.ZSounds
             
             if (Main.soundLoader != null)
             {
-                // Get car-specific sounds first
+                // Only get car-specific sounds (no generic sounds exist anymore)
                 var carSounds = Main.soundLoader.GetAvailableSoundsForTrain(car.carType);
                 if (carSounds.TryGetValue(soundType, out var carSpecificSounds))
                 {
                     sounds.AddRange(carSpecificSounds);
-                }
-                
-                // If no car-specific sounds, get generic sounds of this type
-                if (sounds.Count == 0)
-                {
-                    sounds.AddRange(Main.soundLoader.GetSoundsOfType(soundType));
                 }
             }
             
