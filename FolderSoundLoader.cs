@@ -32,13 +32,8 @@ namespace DvMod.ZSounds
             loadedSounds.Clear();
             trainSounds.Clear();
 
-            // Load generic sounds first
-            LoadGenericSounds();
-
             // Load train-specific sounds
-            var trainTypeFolders = Directory.GetDirectories(baseSoundsPath)
-                .Where(dir => !Path.GetFileName(dir).Equals("Generic", StringComparison.OrdinalIgnoreCase))
-                .ToArray();
+            var trainTypeFolders = Directory.GetDirectories(baseSoundsPath);
 
             foreach (var trainTypeFolder in trainTypeFolders)
             {
@@ -54,25 +49,6 @@ namespace DvMod.ZSounds
             }
 
             Main.mod?.Logger.Log($"Loaded {loadedSounds.Count} sound definitions from folder structure");
-        }
-
-        private void LoadGenericSounds()
-        {
-            var genericPath = Path.Combine(baseSoundsPath, "Generic");
-            if (!Directory.Exists(genericPath))
-            {
-                return;
-            }
-
-            var soundTypeFolders = Directory.GetDirectories(genericPath);
-            foreach (var soundTypeFolder in soundTypeFolders)
-            {
-                var soundTypeName = Path.GetFileName(soundTypeFolder);
-                if (Enum.TryParse<SoundType>(soundTypeName, true, out var soundType))
-                {
-                    LoadSoundsFromFolder(TrainCarType.NotSet, soundType, soundTypeFolder);
-                }
-            }
         }
 
         private void LoadTrainSounds(TrainCarType trainType, string trainTypeFolder)

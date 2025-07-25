@@ -1,21 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json.Linq;
+using UnityEngine;
 
 namespace DvMod.ZSounds
 {
     public class SoundSet
     {
         public readonly Dictionary<SoundType, SoundDefinition> sounds = new Dictionary<SoundType, SoundDefinition>();
-
-        public JObject ToJson()
-        {
-            var obj = new JObject();
-            foreach (var (type, sound) in sounds)
-                obj.Add(type.ToString(), sound.name);
-            return obj;
-        }
 
         public SoundDefinition? this[SoundType type]
         {
@@ -49,23 +41,8 @@ namespace DvMod.ZSounds
         SteamStackChuffs,
         SteamValveGear,
         SteamChuffLoop,
-
-        // generic sounds
-
-        Collision,
-        JunctionJoint,
-        RollingAudioDetailed,
-        RollingAudioSimple,
-        SquealAudioDetailed,
-        SquealAudioSimple,
-        AirflowAudio,
-        Coupling,
-        Uncoupling,
-        Wind,
-        DerailHit,
-        Switch,
-        SwitchForced,
-        CargoLoadUnload,
+        Dynamo,
+        AirCompressor,
     }
 
     public static class SoundTypes
@@ -82,6 +59,8 @@ namespace DvMod.ZSounds
             SoundType.SteamStackChuffs,
             SoundType.SteamValveGear,
             SoundType.SteamChuffLoop,
+            SoundType.Dynamo,
+            SoundType.AirCompressor,
         ];
 
         public static readonly SoundType[] audioClipsSoundTypes =
@@ -105,6 +84,10 @@ namespace DvMod.ZSounds
         public float? maxVolume;
         public float? fadeStart;
         public float? fadeDuration;
+        
+        // Animation curve properties
+        public AnimationCurve? pitchCurve;
+        public AnimationCurve? volumeCurve;
 
         public SoundDefinition(string name, SoundType type)
         {
@@ -125,8 +108,6 @@ namespace DvMod.ZSounds
             foreach (var f in filenames ?? new string[0])
                 ValidateFile(f);
         }
-
-        public bool IsGeneric => type >= SoundType.Collision;
 
         public override string ToString()
         {
