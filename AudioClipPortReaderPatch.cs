@@ -21,7 +21,8 @@ namespace DvMod.ZSounds
                 var trainCar = __instance.GetComponentInParent<TrainCar>();
                 if (trainCar == null)
                 {
-                    Main.DebugLog(() => "AudioClipPortReaderPatch: No TrainCar found for AudioClipPortReader");
+                    // This is expected for non-train audio components (environment, UI, etc.)
+                    // Silently return without logging
                     return;
                 }
                 
@@ -81,7 +82,7 @@ namespace DvMod.ZSounds
         private static SoundType DetermineSoundType(AudioClipPortReader portReader, TrainCarType carType)
         {
             // First try to match using AudioMapper
-            if (AudioMapper.mappings.TryGetValue(carType, out var mapper))
+            if (AudioMapper.Mappers.TryGetValue(carType, out var mapper))
             {
                 // Check each possible audio clip sound type to see if this portReader matches
                 foreach (var soundType in SoundTypes.audioClipsSoundTypes)

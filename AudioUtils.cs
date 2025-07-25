@@ -841,7 +841,7 @@ namespace DvMod.ZSounds
         public static void ResetAllToDefaults(TrainAudio trainAudio)
         {
             var carType = trainAudio.car.carType;
-            if (!AudioMapper.mappings.TryGetValue(carType, out var audioMapper))
+            if (!AudioMapper.Mappers.TryGetValue(carType, out var audioMapper))
             {
                 return;
             }
@@ -885,7 +885,7 @@ namespace DvMod.ZSounds
         public static void Apply(TrainAudio trainAudio, SoundSet soundSet)
         {
             var carType = trainAudio.car.carType;
-            if (!AudioMapper.mappings.TryGetValue(carType, out var audioMapper))
+            if (!AudioMapper.Mappers.TryGetValue(carType, out var audioMapper))
                 return;
 
             foreach (var soundType in SoundTypes.audioClipsSoundTypes)
@@ -911,7 +911,7 @@ namespace DvMod.ZSounds
         public static void ResetAndApply(TrainAudio trainAudio, SoundType soundType, SoundSet soundSet)
         {
             var carType = trainAudio.car.carType;
-            if (!AudioMapper.mappings.TryGetValue(carType, out var audioMapper))
+            if (!AudioMapper.Mappers.TryGetValue(carType, out var audioMapper))
                 return;
 
             var defaults = CreateDefaults();
