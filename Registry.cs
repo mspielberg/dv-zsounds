@@ -1,5 +1,3 @@
-using HarmonyLib;
-using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
 namespace DvMod.ZSounds

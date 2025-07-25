@@ -3,8 +3,6 @@ using System;
 using System.Linq;
 using UnityEngine;
 using UnityModManagerNet;
-using DV;
-using DV.ThingTypes;
 
 namespace DvMod.ZSounds
 {
