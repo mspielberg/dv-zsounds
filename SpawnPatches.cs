@@ -5,21 +5,27 @@ namespace DvMod.ZSounds
 {
     public static class SpawnPatches
     {
+        /// <summary>
+        /// Manually applies audio to a train car. Only used when explicitly called via CommsRadio.
+        /// </summary>
         public static void ApplyAudio(TrainAudio trainAudio)
         {
             var car = trainAudio.car;
             
-            // Apply custom sounds
+            // Get the current sound set (which may have been manually configured)
             var soundSet = Registry.Get(car);
-            Main.DebugLog(() => $"Applying sounds for {car.ID}");
+            Main.DebugLog(() => $"Manually applying sounds for {car.ID}");
             AudioUtils.Apply(trainAudio, soundSet);
         }
 
+        /// <summary>
+        /// Manually applies audio to a train car. Only used when explicitly called via CommsRadio.
+        /// </summary>
         public static void ApplyAudio(TrainCar car)
         {
-            // Apply custom sounds
+            // Get the current sound set (which may have been manually configured)
             var soundSet = Registry.Get(car);
-            Main.DebugLog(() => $"Applying sounds for {car.ID}");
+            Main.DebugLog(() => $"Manually applying sounds for {car.ID}");
             AudioUtils.Apply(car, soundSet);
         }
 
@@ -28,14 +34,8 @@ namespace DvMod.ZSounds
         {
             public static void Postfix(TrainAudio __instance)
             {
-                try 
-                {
-                    ApplyAudio(__instance);
-                }
-                catch (Exception ex)
-                {
-                    Main.mod?.Logger.Error($"Failed to apply audio to car {__instance.car?.ID}: {ex.Message}");
-                }
+                // No automatic sound application - sounds are only applied when manually selected via CommsRadio
+                Main.DebugLog(() => $"TrainAudio setup completed for car {__instance.car?.ID} - no automatic sound changes applied");
             }
         }
     }
