@@ -43,6 +43,22 @@ namespace DvMod.ZSounds
         SteamChuffLoop,
         Dynamo,
         AirCompressor,
+        // Steam chuff frequencies
+        SteamChuff2_67Hz,
+        SteamChuff3Hz,
+        SteamChuff4Hz,
+        SteamChuff5_33Hz,
+        SteamChuff8Hz,
+        SteamChuff10_67Hz,
+        SteamChuff16Hz,
+        // Water chuffs
+        SteamChuff4HzWater,
+        SteamChuff16HzWater,
+        // Ash chuffs
+        SteamChuff2HzAsh,
+        SteamChuff4HzAsh,
+        SteamChuff8HzAsh,
+        SteamChuff8HzWater,
     }
 
     public static class SoundTypes
@@ -61,6 +77,22 @@ namespace DvMod.ZSounds
             SoundType.SteamChuffLoop,
             SoundType.Dynamo,
             SoundType.AirCompressor,
+            // Steam chuff frequencies
+            SoundType.SteamChuff2_67Hz,
+            SoundType.SteamChuff3Hz,
+            SoundType.SteamChuff4Hz,
+            SoundType.SteamChuff5_33Hz,
+            SoundType.SteamChuff8Hz,
+            SoundType.SteamChuff10_67Hz,
+            SoundType.SteamChuff16Hz,
+            // Water chuffs
+            SoundType.SteamChuff4HzWater,
+            SoundType.SteamChuff16HzWater,
+            SoundType.SteamChuff8HzWater,
+            // Ash chuffs
+            SoundType.SteamChuff2HzAsh,
+            SoundType.SteamChuff4HzAsh,
+            SoundType.SteamChuff8HzAsh,
         ];
 
         public static readonly SoundType[] audioClipsSoundTypes =

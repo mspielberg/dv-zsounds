@@ -1,23 +1,5 @@
 {
   "pitch": 1.0,
-  "minPitch": null,
-  "maxPitch": null,
-  "minVolume": 0.0,
-  "maxVolume": 1.0,
-  "pitchCurve": [
-    {
-      "time": 0.0,
-      "value": 1.0
-    }
-  ],
-  "volumeCurve": [
-    {
-      "time": 0.0,
-      "value": 1.0
-    },
-    {
-      "time": 1.0,
-      "value": 1.0
-    }
-  ]
+  "volume": 1.0,
+  "comment": "Steam chuff sound - replaces all chuff frequencies (2.67Hz to 16Hz) with this single sound"
 }
