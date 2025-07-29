@@ -6,3 +6,5 @@ obj/
 Directory.Build.targets
 .github/
 References/
+dist/
+build-release.ps1
