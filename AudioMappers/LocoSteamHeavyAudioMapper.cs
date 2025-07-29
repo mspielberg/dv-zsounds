@@ -28,8 +28,6 @@ namespace DvMod.ZSounds.AudioMappers
             { SoundType.SteamChuff2HzAsh, "2AshChuffsPerSecond" },
             { SoundType.SteamChuff4HzAsh, "4AshChuffsPerSecond" },
             { SoundType.SteamChuff8HzAsh, "8AshChuffsPerSecond" },
-            // Legacy support
-            { SoundType.SteamChuffLoop, "2.67ChuffsPerSecond" }
         };
     }
 }
