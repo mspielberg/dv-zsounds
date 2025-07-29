@@ -164,8 +164,9 @@ namespace DvMod.ZSounds
         // Normalizes chuff frequency to 0-1 range for pitch curve evaluation
         private static float NormalizeChuffFrequency(float chuffFrequency, SoundType soundType)
         {
-            // For steam chuff sounds, normalize the frequency based on typical locomotive speed ranges
-            const float minFreq = 2.0f;   // Minimum chuff frequency (idle)
+            // For steam chuff sounds, normalize the frequency based on actual locomotive speed ranges
+            // Adjusted to better match real-world steam locomotive chuff frequencies at different speeds
+            const float minFreq = 1.0f;   // Minimum chuff frequency (very slow/idle)
             const float maxFreq = 16.0f;  // Maximum chuff frequency (high speed)
             
             // Clamp and normalize to 0-1 range
