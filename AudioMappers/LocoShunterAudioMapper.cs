@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace DvMod.ZSounds.AudioMappers
 {
-    /// Audio mapper for LocoShunter train type
+    // Audio mapper for LocoShunter train type
     public class LocoShunterAudioMapper : BaseAudioMapper
     {
         public override Dictionary<SoundType, string> SoundMapping { get; } = new()

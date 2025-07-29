@@ -36,7 +36,7 @@ namespace DvMod.ZSounds
                     Main.soundLoader?.LoadAllSounds();
                     Main.mod?.Logger.Log("Sounds reloaded successfully from folder structure");
                     
-                    // Reinitialize CommsRadio to refresh available sounds
+                    // Reinitialize CommsRadio with updated sound list
                     try
                     {
                         CommsRadioSoundSwitcherAPI.Reinitialize();
@@ -85,7 +85,7 @@ namespace DvMod.ZSounds
                             }
                         }
                         
-                        // Clear the customization tracking and sound set
+                        // Clear customization tracking and sound set
                         Registry.soundSets.Remove(car.logicCar.carGuid);
                         Registry.ClearCustomization(car);
                         
@@ -94,8 +94,8 @@ namespace DvMod.ZSounds
                             Main.mod?.Logger.Log("Using stored defaults to reset sounds...");
                             AudioUtils.ResetAllToDefaults(car);
                             
-                            // After resetting to defaults, reapply sounds from the now-empty Registry
-                            // This should cause the game to use its original audio with default settings
+                            // After resetting to defaults, reapply sounds from cleared Registry
+                            // This causes game to use original audio with default settings
                             Main.mod?.Logger.Log("Reapplying sounds from cleared Registry to restore game defaults...");
                             var emptySoundSet = Registry.Get(car);
                             AudioUtils.Apply(car, emptySoundSet);
@@ -104,8 +104,8 @@ namespace DvMod.ZSounds
                         {
                             Main.mod?.Logger.Warning("No stored defaults found - this shouldn't happen with comprehensive defaults capture!");
                             Main.mod?.Logger.Log("Clearing customizations only - game should restore originals automatically");
-                            // When no defaults exist, just clearing the customizations should allow the game
-                            // to restore the original sounds automatically
+                            // When no defaults exist, clearing customizations allows game
+                            // to restore original sounds automatically
                         }
                         
                         Main.mod?.Logger.Log($"Successfully reset {car.carType} sounds to default");
@@ -120,7 +120,7 @@ namespace DvMod.ZSounds
 
             GUILayout.EndHorizontal();
             
-            // Show current car info
+            // Current car info
             var currentCar = PlayerManager.Car;
             if (currentCar != null)
             {
@@ -138,11 +138,11 @@ namespace DvMod.ZSounds
                         customSoundsCount = soundSet.sounds.Count;
                     }
                     
-                    // Add some debug info when logging is enabled
+                    // Debug info when logging is enabled
                     var debugInfo = enableLogging ? $" (Customized: {isCustomized}, GUID: {currentCar.CarGUID.Substring(0, 8)}...)" : "";
                     GUILayout.Label($"Custom Sounds Applied: {customSoundsCount}{debugInfo}", GUILayout.ExpandWidth(false));
                     
-                    // Show folder-based sound info
+                    // Folder-based sound info
                     if (Main.soundLoader != null)
                     {
                         var availableSounds = Main.soundLoader.GetAvailableSoundsForTrain(currentCar.carType);

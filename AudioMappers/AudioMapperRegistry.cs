@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 
 namespace DvMod.ZSounds
 {
-    /// Main audio mapper that delegates to specific train type mappers
+    // Main audio mapper that delegates to specific train type mappers
     public class AudioMapperRegistry
     {
         public static readonly IDictionary<TrainCarType, IAudioMapper> Mappers =

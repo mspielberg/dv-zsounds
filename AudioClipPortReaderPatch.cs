@@ -6,10 +6,8 @@ using System.Linq;
 
 namespace DvMod.ZSounds
 {
-    /// <summary>
-    /// Patches AudioClipPortReader to apply custom pitch and volume from ZSounds configuration
-    /// This enables pitch/volume control for sounds that use AudioClip arrays (like horn hits, engine startup/shutdown)
-    /// </summary>
+    // Patches AudioClipPortReader to apply custom pitch and volume from ZSounds configuration
+    // This enables pitch/volume control for sounds that use AudioClip arrays (like horn hits, engine startup/shutdown)
     [HarmonyPatch(typeof(AudioClipPortReader), nameof(AudioClipPortReader.OnValueUpdate))]
     public static class AudioClipPortReaderPatch
     {
@@ -75,10 +73,8 @@ namespace DvMod.ZSounds
             }
         }
         
-        /// <summary>
-        /// Attempts to determine which SoundType this AudioClipPortReader represents
-        /// based on the clips it contains and the car type
-        /// </summary>
+        // Attempts to determine which SoundType this AudioClipPortReader represents
+        // based on the clips it contains and the car type
         private static SoundType DetermineSoundType(AudioClipPortReader portReader, TrainCarType carType)
         {
             // First try to match using AudioMapper

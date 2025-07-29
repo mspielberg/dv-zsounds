@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace DvMod.ZSounds.AudioMappers
 {
-    /// Base implementation for audio mappers
+    // Base implementation for audio mappers
     public abstract class BaseAudioMapper : IAudioMapper
     {
         public abstract Dictionary<SoundType, string> SoundMapping { get; }

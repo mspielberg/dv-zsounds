@@ -42,11 +42,11 @@ namespace DvMod.ZSounds
             modEntry.OnSaveGUI = OnSaveGui;
             modEntry.OnToggle = OnToggle;
 
-            // Only use the folder-based sound loader
+            // Initialize folder-based sound loader
             soundLoader = new FolderSoundLoader(modEntry.Path);
             soundLoader.LoadAllSounds();
 
-            // Initialize CommsRadio API integration if available
+            // Initialize CommsRadio API integration
             try
             {
                 CommsRadioSoundSwitcherAPI.Initialize();
@@ -83,7 +83,7 @@ namespace DvMod.ZSounds
                 
                 harmony.PatchAll();
                 
-                // Reinitialize CommsRadio API integration when mod is enabled/reloaded
+                // Reinitialize CommsRadio API integration
                 try
                 {
                     CommsRadioSoundSwitcherAPI.Reinitialize();
@@ -104,6 +104,7 @@ namespace DvMod.ZSounds
                 harmony.UnpatchAll();
                 
                 // Cleanup CommsRadio API integration when mod is disabled
+                // Cleanup CommsRadio API integration
                 try
                 {
                     CommsRadioSoundSwitcherAPI.Cleanup();
@@ -133,5 +134,6 @@ namespace DvMod.ZSounds
         {
             return AudioMapper.Mappers.ContainsKey(carType);
         }
+
     }
 }

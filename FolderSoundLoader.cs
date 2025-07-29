@@ -32,7 +32,7 @@ namespace DvMod.ZSounds
             loadedSounds.Clear();
             trainSounds.Clear();
 
-            // Load train-specific sounds
+            // Load train sounds
             var trainTypeFolders = Directory.GetDirectories(baseSoundsPath);
 
             foreach (var trainTypeFolder in trainTypeFolders)
@@ -81,12 +81,12 @@ namespace DvMod.ZSounds
         private void LoadSoundsFromFolder(TrainCarType trainType, SoundType soundType, string folder, SoundConfiguration? globalConfig)
         {
             var isGeneric = trainType == TrainCarType.NotSet;
-            Main.DebugLog(() => $"FolderSoundLoader: Loading train-specific sounds for {trainType}/{soundType} from {folder}");
+            Main.DebugLog(() => $"FolderSoundLoader: Loading sounds for {trainType}/{soundType} from {folder}");
             
-            // Load configuration for this sound type folder (local config)
+            // Load local configuration for this sound type folder
             var localConfig = SoundConfigurationLoader.LoadConfiguration(folder);
             
-            // Use global config as fallback if no local config found
+            // Use global config as fallback
             var config = localConfig ?? globalConfig;
             if (config != null)
             {
@@ -217,7 +217,7 @@ namespace DvMod.ZSounds
             var soundSet = new SoundSet();
             var trainType = car.carType;
 
-            // Always return an empty sound set - sounds are only applied when manually selected via CommsRadio
+            // Always return empty sound set - sounds only applied when manually selected via CommsRadio
             // This ensures no automatic sound replacement occurs
             Main.DebugLog(() => $"Created empty sound set for train type: {trainType} - no automatic sound application");
             return soundSet;
@@ -238,12 +238,7 @@ namespace DvMod.ZSounds
             return loadedSounds.TryGetValue(soundName, out var sound) ? sound : null;
         }
 
-        /// <summary>
-        /// Applies a specific sound to a train car. Useful for manual sound management.
-        /// </summary>
-        /// <param name="car">The train car to apply the sound to</param>
-        /// <param name="soundType">The type of sound to apply</param>
-        /// <param name="soundName">The name of the specific sound to apply (or null for random)</param>
+        // Applies a specific sound to a train car using the modern sound replacement system.
         public void ApplySoundToTrain(TrainCar car, SoundType soundType, string? soundName = null)
         {
             var soundSet = Registry.Get(car);
@@ -265,8 +260,10 @@ namespace DvMod.ZSounds
             if (sound != null)
             {
                 sound.Apply(soundSet);
+                
+                // Apply sound changes using the registry system
                 AudioUtils.Apply(car, soundSet);
-                Main.DebugLog(() => $"Manually applied {soundType} sound: {sound.name} to {car.ID}");
+                Main.DebugLog(() => $"Applied {soundType} sound: {sound.name} to {car.ID}");
             }
             else
             {

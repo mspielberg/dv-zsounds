@@ -26,7 +26,7 @@ namespace DvMod.ZSounds
             if (!AudioTypes.ContainsKey(extension))
                 throw new ConfigException($"Unsupported file extension for sound file: \"{path}\"");
             
-            // Check if file exists before attempting to load
+            // Check file exists before loading
             if (!File.Exists(path))
                 throw new ConfigException($"Sound file not found: \"{path}\"");
             
@@ -37,7 +37,7 @@ namespace DvMod.ZSounds
             {
             }
             
-            // Check for web request errors before accessing the audio clip
+            // Check for errors before accessing audio clip
             if (webRequest.isNetworkError || webRequest.isHttpError)
             {
                 var error = $"Failed to load audio file \"{path}\": {webRequest.error}";
@@ -46,12 +46,12 @@ namespace DvMod.ZSounds
             }
             
             clip = DownloadHandlerAudioClip.GetContent(webRequest);
-            webRequest.Dispose(); // Clean up the web request
+            webRequest.Dispose(); // Clean up web request
             
             if (clip == null)
                 throw new ConfigException($"Failed to extract audio clip from file: \"{path}\"");
             
-            // Set the clip name to the filename for easier debugging
+            // Set clip name to filename for debugging
             clip.name = Path.GetFileNameWithoutExtension(path);
             
             cache[path] = clip;
