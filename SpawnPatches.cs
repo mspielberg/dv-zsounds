@@ -9,20 +9,18 @@ namespace DvMod.ZSounds
         public static void ApplyAudio(TrainAudio trainAudio)
         {
             var car = trainAudio.car;
-            
-            // Get the current sound set (which may have been manually configured)
-            var soundSet = Registry.Get(car);
-            Main.DebugLog(() => $"Manually applying sounds for {car.ID}");
-            AudioUtils.Apply(trainAudio, soundSet);
+            ApplyAudio(car);
         }
 
         // Manually applies audio to a train car using the registry system
         public static void ApplyAudio(TrainCar car)
         {
-            // Get the current sound set (which may have been manually configured)
-            var soundSet = Registry.Get(car);
             Main.DebugLog(() => $"Manually applying sounds for {car.ID}");
+            
+            // Use registry system
+            var soundSet = Registry.Get(car);
             AudioUtils.Apply(car, soundSet);
+            Main.DebugLog(() => $"Applied sounds for {car.ID}");
         }
 
         [HarmonyPatch(typeof(TrainAudio), nameof(TrainAudio.SetupForCar))]

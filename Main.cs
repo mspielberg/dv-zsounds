@@ -81,7 +81,19 @@ namespace DvMod.ZSounds
                 modEntry.Logger.Log("ZSounds mod enabling...");
                 modEntry.Logger.Log($"AudioUtils Defaults count at startup: {AudioUtils.GetDefaultsCount()}");
                 
-                harmony.PatchAll();
+                try
+                {
+                    harmony.PatchAll();
+                    modEntry.Logger.Log("Harmony patches applied successfully");
+                    
+                    // Clear caches on startup
+                    LayeredAudioSetPitchPatch.ClearCaches();
+                    AudioSourcePitchPatch.ClearCaches();
+                }
+                catch (Exception ex)
+                {
+                    modEntry.Logger.Error($"Failed to apply Harmony patches: {ex}");
+                }
                 
                 // Reinitialize CommsRadio API integration
                 try
@@ -103,7 +115,10 @@ namespace DvMod.ZSounds
             {
                 harmony.UnpatchAll();
                 
-                // Cleanup CommsRadio API integration when mod is disabled
+                // Clear performance caches
+                LayeredAudioSetPitchPatch.ClearCaches();
+                AudioSourcePitchPatch.ClearCaches();
+                
                 // Cleanup CommsRadio API integration
                 try
                 {

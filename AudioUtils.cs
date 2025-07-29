@@ -9,19 +9,21 @@ namespace DvMod.ZSounds
 {
     public static class AudioUtils
     {
-        private struct AudioSettings
+        public struct AudioSettings
         {
             public AudioClip? clip;
             public AudioClip[]? clips;
             public float pitch;
             public float minPitch;
             public float maxPitch;
+            public float minVolume;
+            public float maxVolume;
             public AnimationCurve? pitchCurve;
             public AnimationCurve? volumeCurve;
 
             public override string ToString()
             {
-                return $"clip={clip?.length},clips={clips?.Length},pitch={pitch},minPitch={minPitch},maxPitch={maxPitch}";
+                return $"clip={clip?.length},clips={clips?.Length},pitch={pitch},minPitch={minPitch},maxPitch={maxPitch},minVolume={minVolume},maxVolume={maxVolume}";
             }
         }
 
@@ -42,6 +44,31 @@ namespace DvMod.ZSounds
             }
         }
 
+        private static AudioSettings CreateAudioSettings(
+            AudioClip? clip = null,
+            AudioClip[]? clips = null,
+            float pitch = 1.0f,
+            float minPitch = 1.0f,
+            float maxPitch = 1.0f,
+            float minVolume = 1.0f,
+            float maxVolume = 1.0f,
+            AnimationCurve? pitchCurve = null,
+            AnimationCurve? volumeCurve = null)
+        {
+            return new AudioSettings
+            {
+                clip = clip,
+                clips = clips,
+                pitch = pitch,
+                minPitch = minPitch,
+                maxPitch = maxPitch,
+                minVolume = minVolume,
+                maxVolume = maxVolume,
+                pitchCurve = pitchCurve,
+                volumeCurve = volumeCurve
+            };
+        }
+
         private static Dictionary<DefaultKey, AudioSettings> CreateDefaults()
         {
             var defaults = new Dictionary<DefaultKey, AudioSettings>();
@@ -49,20 +76,17 @@ namespace DvMod.ZSounds
             try
             {
                 // LocoMicroshunter defaults
-                defaults[new DefaultKey(TrainCarType.LocoMicroshunter, SoundType.HornLoop)] = new AudioSettings()
-                {
-                    clip = Resources.Load<AudioClip>("Horn_Microshunter_01"),
-                    minPitch = 1.000f,
-                    maxPitch = 1.000f,
-                    pitch = 1.000f,
-                    pitchCurve = new AnimationCurve(),
-                    volumeCurve = new AnimationCurve(
+                defaults[new DefaultKey(TrainCarType.LocoMicroshunter, SoundType.HornLoop)] = CreateAudioSettings(
+                    Resources.Load<AudioClip>("Horn_Microshunter_01"),
+                    minPitch: 1.000f, maxPitch: 1.000f, pitch: 1.000f,
+                    pitchCurve: new AnimationCurve(),
+                    volumeCurve: new AnimationCurve(
                         new Keyframe(0.000f, 0.000f),
                         new Keyframe(0.395f, 0.000f),
                         new Keyframe(0.500f, 0.499f),
                         new Keyframe(1.000f, 0.499f)
                     )
-                };
+                );
         
             defaults[new DefaultKey(TrainCarType.LocoMicroshunter, SoundType.TractionMotors)] = new AudioSettings()
             {
@@ -584,6 +608,11 @@ namespace DvMod.ZSounds
             return defaults.Count;
         }
 
+        public static Dictionary<DefaultKey, AudioSettings> GetDefaults()
+        {
+            return CreateDefaults();
+        }
+
         public static void ResetToDefault(TrainCarType carType, SoundType soundType, SoundSet soundSet, ref AudioClip clip)
         {
             var key = new DefaultKey(carType, soundType);
@@ -773,7 +802,7 @@ namespace DvMod.ZSounds
             // For EngineLoop sounds, always stop the audio when applying new clips to prevent
             // unwanted playback when the engine should be off
             bool wasPlaying = mainLayer.source.isPlaying;
-            AudioClip? newClip = soundDefinition?.filename.Map(FileAudio.Load) ?? defaultAudioSettings.clip;
+            AudioClip? newClip = soundDefinition?.filename != null ? FileAudio.Load(soundDefinition.filename) : defaultAudioSettings.clip;
             
             var newClipName = newClip?.name ?? "null";
             Main.DebugLog(() => $"AudioUtils.Apply: New clip for {soundType}: {newClipName}");
