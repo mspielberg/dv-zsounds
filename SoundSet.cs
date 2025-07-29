@@ -70,6 +70,7 @@ namespace DvMod.ZSounds
             SoundType.Bell,
             SoundType.EngineLoop,
             SoundType.EngineLoadLoop,
+            SoundType.EngineStartup,
             SoundType.TractionMotors,
             SoundType.SteamCylinderChuffs,
             SoundType.SteamStackChuffs,
@@ -98,7 +99,6 @@ namespace DvMod.ZSounds
         public static readonly SoundType[] audioClipsSoundTypes =
         [
             SoundType.HornHit,
-            SoundType.EngineStartup,
             SoundType.EngineShutdown,
         ];
     }

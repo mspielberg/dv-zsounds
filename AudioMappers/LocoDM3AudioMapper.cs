@@ -9,12 +9,12 @@ namespace DvMod.ZSounds.AudioMappers
         {
             { SoundType.EngineLoop, "Engine_Layered" },
             { SoundType.EngineLoadLoop, "EnginePiston_Layered" },
+            { SoundType.EngineStartup, "EngineIgnition_Layered" },
+            { SoundType.EngineShutdown, "ICE_FuelCutoff_01" },
             // LocoDM3 is diesel-mechanical, not diesel-electric, so no electric traction motors or dynamo
             { SoundType.AirCompressor, "Compressor_Layered" },
             { SoundType.HornLoop, "Horn_Layered" },
-            { SoundType.EngineStartup, "EngineIgnition_Layered" },
-            // HornHit clips - need to check actual clip names in the game for DM3
-            // { SoundType.HornHit, "Horn_LocoDM3_01_Pulse" },
+            // No HornHit audio clips available for LocoDM3
         };
     }
 }

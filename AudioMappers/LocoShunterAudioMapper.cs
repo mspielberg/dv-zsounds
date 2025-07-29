@@ -9,6 +9,7 @@ namespace DvMod.ZSounds.AudioMappers
         {
             { SoundType.EngineLoop, "Engine_Layered" },
             { SoundType.EngineLoadLoop, "EnginePiston_Layered" },
+            { SoundType.EngineStartup, "EngineIgnition_Layered" },
             { SoundType.TractionMotors, "ElectricMotor_Layered" },
             { SoundType.AirCompressor, "Compressor_Layered" },
             { SoundType.HornLoop, "Horn_Layered" },
