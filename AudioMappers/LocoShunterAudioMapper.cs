@@ -13,7 +13,6 @@ namespace DvMod.ZSounds.AudioMappers
             { SoundType.TractionMotors, "ElectricMotor_Layered" },
             { SoundType.AirCompressor, "Compressor_Layered" },
             { SoundType.HornLoop, "Horn_Layered" },
-            { SoundType.EngineStartup, "EngineIgnition_Layered" },
             { SoundType.HornHit, "Horn_LocoDE2_01_Pulse" },
         };
     }
