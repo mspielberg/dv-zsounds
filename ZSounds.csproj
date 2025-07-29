@@ -12,7 +12,7 @@
   </ItemGroup>
   <!-- Exclude decompiled game source to avoid conflicting builds -->
   <ItemGroup>
-    <Compile Remove="Assembly-CSharp\**\*.cs" />
+    <Compile Remove="References\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>

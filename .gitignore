@@ -5,3 +5,4 @@ obj/
 /*.dll
 Directory.Build.targets
 .github/
+References/
