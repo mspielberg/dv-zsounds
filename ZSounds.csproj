@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <RootNamespace>DvMod.ZSounds</RootNamespace>
     <InformationalVersion>0.2.1</InformationalVersion>
     <LangVersion>latest</LangVersion>
