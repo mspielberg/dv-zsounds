@@ -1,9 +1,11 @@
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+
 using DV.ModularAudioCar;
 using DV.Simulation.Ports;
 using DV.ThingTypes;
+
 using DvMod.ZSounds.AudioMappers;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace DvMod.ZSounds
 {

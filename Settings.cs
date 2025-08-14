@@ -1,5 +1,7 @@
 using System.Linq;
+
 using UnityEngine;
+
 using UnityModManagerNet;
 
 namespace DvMod.ZSounds
@@ -23,19 +25,19 @@ namespace DvMod.ZSounds
         public void Draw()
         {
             this.Draw(Main.mod);
-            
+
             GUILayout.Space(10);
             GUILayout.Label("ZSounds Actions:", GUILayout.ExpandWidth(false));
-            
+
             GUILayout.BeginHorizontal();
-            
+
             if (GUILayout.Button("Update Soundlist", GUILayout.Width(120)))
             {
                 try
                 {
                     Main.soundLoader?.LoadAllSounds();
                     Main.mod?.Logger.Log("Sounds reloaded successfully from folder structure");
-                    
+
                     // Reinitialize CommsRadio with updated sound list
                     try
                     {
@@ -52,12 +54,12 @@ namespace DvMod.ZSounds
                     Main.mod?.Logger.Error($"Failed to reload sounds: {ex.Message}");
                 }
             }
-            
+
             GUILayout.EndHorizontal();
-            
+
             GUILayout.BeginHorizontal();
-            
-            
+
+
             if (GUILayout.Button("Reset Current Car", GUILayout.Width(120)))
             {
                 var car = PlayerManager.Car;
@@ -74,7 +76,7 @@ namespace DvMod.ZSounds
                     try
                     {
                         Main.mod?.Logger.Log($"Resetting {car.carType} sounds to default...");
-                        
+
                         var hasValidDefaults = false;
                         foreach (var soundType in SoundTypes.audioClipsSoundTypes.Concat(SoundTypes.layeredAudioSoundTypes))
                         {
@@ -84,16 +86,16 @@ namespace DvMod.ZSounds
                                 hasValidDefaults = true;
                             }
                         }
-                        
+
                         // Clear customization tracking and sound set
                         Registry.soundSets.Remove(car.logicCar.carGuid);
                         Registry.ClearCustomization(car);
-                        
+
                         if (hasValidDefaults)
                         {
                             Main.mod?.Logger.Log("Using stored defaults to reset sounds...");
                             AudioUtils.ResetAllToDefaults(car);
-                            
+
                             // After resetting to defaults, reapply sounds from cleared Registry
                             // This causes game to use original audio with default settings
                             Main.mod?.Logger.Log("Reapplying sounds from cleared Registry to restore game defaults...");
@@ -107,7 +109,7 @@ namespace DvMod.ZSounds
                             // When no defaults exist, clearing customizations allows game
                             // to restore original sounds automatically
                         }
-                        
+
                         Main.mod?.Logger.Log($"Successfully reset {car.carType} sounds to default");
                     }
                     catch (System.Exception ex)
@@ -119,29 +121,29 @@ namespace DvMod.ZSounds
             }
 
             GUILayout.EndHorizontal();
-            
+
             // Current car info
             var currentCar = PlayerManager.Car;
             if (currentCar != null)
             {
                 GUILayout.Space(5);
                 GUILayout.Label($"Current Car: {currentCar.carType} ({currentCar.CarGUID})", GUILayout.ExpandWidth(false));
-                
+
                 if (Main.HasHorn(currentCar.carType))
                 {
                     var isCustomized = Registry.IsCustomized(currentCar);
                     var customSoundsCount = 0;
-                    
+
                     if (isCustomized)
                     {
                         var soundSet = Registry.Get(currentCar);
                         customSoundsCount = soundSet.sounds.Count;
                     }
-                    
+
                     // Debug info when logging is enabled
                     var debugInfo = enableLogging ? $" (Customized: {isCustomized}, GUID: {currentCar.CarGUID.Substring(0, 8)}...)" : "";
                     GUILayout.Label($"Custom Sounds Applied: {customSoundsCount}{debugInfo}", GUILayout.ExpandWidth(false));
-                    
+
                     // Folder-based sound info
                     if (Main.soundLoader != null)
                     {

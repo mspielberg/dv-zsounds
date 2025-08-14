@@ -6,7 +6,7 @@ namespace DvMod.ZSounds
     {
         public static readonly Dictionary<string, SoundSet> soundSets = new Dictionary<string, SoundSet>();
         public static readonly HashSet<string> customizedCars = new HashSet<string>();
-        
+
         public static SoundSet Get(TrainCar car)
         {
             if (!soundSets.TryGetValue(car.logicCar.carGuid, out var soundSet))
@@ -20,17 +20,17 @@ namespace DvMod.ZSounds
             }
             return soundSet;
         }
-        
+
         public static void MarkAsCustomized(TrainCar car)
         {
             customizedCars.Add(car.logicCar.carGuid);
         }
-        
+
         public static bool IsCustomized(TrainCar car)
         {
             return customizedCars.Contains(car.logicCar.carGuid);
         }
-        
+
         public static void ClearCustomization(TrainCar car)
         {
             customizedCars.Remove(car.logicCar.carGuid);

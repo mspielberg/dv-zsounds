@@ -1,9 +1,12 @@
-using HarmonyLib;
-using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using DV.ThingTypes;
+
+using HarmonyLib;
+
+using UnityEngine;
 
 namespace DvMod.ZSounds
 {
@@ -17,7 +20,7 @@ namespace DvMod.ZSounds
         private static readonly Dictionary<int, (TrainCar trainCar, SoundType soundType)?> _trainInfoCache = new Dictionary<int, (TrainCar, SoundType)?>();
         private static readonly Dictionary<int, bool> _hasPitchCurveCache = new Dictionary<int, bool>();
         private static readonly Dictionary<string, TrainCar> _trainCarCache = new Dictionary<string, TrainCar>();
-        
+
         private static string GetHierarchyPath(Transform transform)
         {
             string path = transform.name;
@@ -29,19 +32,19 @@ namespace DvMod.ZSounds
             }
             return path;
         }
-        
+
         public static void Prefix(AudioSource __instance, ref float value)
         {
             var instanceId = __instance?.GetInstanceID() ?? 0;
             var audioName = __instance?.name ?? "null";
             var currentPitch = value;  // Capture the value for logging
-            
+
             // Early null checks
             if (__instance == null || Main.soundLoader == null)
             {
                 return;
             }
-            
+
             // Ultra-fast cache check - if we've already determined this audio has no pitch curve, skip entirely
             if (_hasPitchCurveCache.TryGetValue(instanceId, out var hasCurve) && !hasCurve)
             {
@@ -57,7 +60,7 @@ namespace DvMod.ZSounds
             }
 
             // Debug: Log when we're processing supported sounds
-            bool isTargetSound = audioName.Contains("whistle") || audioName.Contains("Whistle") || 
+            bool isTargetSound = audioName.Contains("whistle") || audioName.Contains("Whistle") ||
                                 audioName.Contains("bell") || audioName.Contains("Bell");
             if (isTargetSound)
             {
@@ -88,24 +91,24 @@ namespace DvMod.ZSounds
                 // First try to get pitch curve from available sounds (CommsRadio approach)
                 // This doesn't require Registry.IsCustomized() 
                 var availableSounds = Main.soundLoader?.GetAvailableSoundsForTrain(trainCar.carType);
-                
+
                 if (availableSounds != null && availableSounds.TryGetValue(soundType, out var soundsOfType))
                 {
                     // Use the first available sound of this type that has a pitch curve
                     var soundWithCurve = soundsOfType.FirstOrDefault(s => s.pitchCurve != null);
-                    
+
                     if (soundWithCurve?.pitchCurve != null)
                     {
                         _hasPitchCurveCache[instanceId] = true; // Cache positive result
-                        
+
                         // Apply the pitch curve
                         var normalizedInput = NormalizePitchInput(value, soundType);
                         var curvePitchValue = soundWithCurve.pitchCurve.Evaluate(normalizedInput);
-                        
+
                         // Replace the pitch with the curve value (not multiply)
                         var originalPitch = value;
                         var finalPitch = value = curvePitchValue;
-                        
+
                         // Log detailed debugging for curve evaluation
                         Main.DebugLog(() => $"AudioSourcePitchPatch: Applied pitch curve to {soundType} - original: {originalPitch:F2} → normalized: {normalizedInput:F3} → curve: {curvePitchValue:F2} → final: {finalPitch:F2}");
                         return;
@@ -134,19 +137,19 @@ namespace DvMod.ZSounds
                 // Fallback: try Registry approach
                 var soundSet = Registry.Get(trainCar);
                 var soundDefinition = soundSet?[soundType];
-                
+
                 if (soundDefinition?.pitchCurve != null)
                 {
                     _hasPitchCurveCache[instanceId] = true; // Cache positive result
-                    
+
                     // Apply the pitch curve from Registry
                     var normalizedInput = NormalizePitchInput(value, soundType);
                     var curvePitchValue = soundDefinition.pitchCurve.Evaluate(normalizedInput);
-                    
+
                     // Replace the pitch with the curve value (not multiply)
                     var originalPitch = value;
                     var finalPitch = value = curvePitchValue;
-                    
+
                     // Log only successful Registry pitch curve applications
                     Main.DebugLog(() => $"AudioSourcePitchPatch: Applied Registry pitch curve to {soundType} - original: {originalPitch:F2} → final: {finalPitch:F2}");
                     return;
@@ -155,7 +158,7 @@ namespace DvMod.ZSounds
                 {
                     Main.DebugLog(() => $"AudioSourcePitchPatch: FAIL - {audioName} - Registry has no {soundType} definition with pitch curve");
                 }
-                
+
                 // No pitch curve available - cache negative result
                 _hasPitchCurveCache[instanceId] = false;
                 if (isTargetSound)
@@ -176,24 +179,24 @@ namespace DvMod.ZSounds
         {
             // Convert to lowercase for case-insensitive matching
             var name = audioName.ToLower();
-            
+
             // Only handle supported sound types that are non-speed-related
             // Horn and whistle sounds
             if (name.Contains("horn") || name.Contains("whistle")) return true;
-            
+
             // Bell sounds
             if (name.Contains("bell")) return true;
-            
+
             // Air compressor sounds
             if (name.Contains("compressor")) return true;
-            
+
             // Engine startup/shutdown sounds (non-speed-related)
             if (name.Contains("enginestartup") || name.Contains("engineignition")) return true;
             if (name.Contains("engineshutdown")) return true;
-            
+
             // Dynamo/electrical sounds
             if (name.Contains("dynamo")) return true;
-            
+
             return false;
         }
 
@@ -201,7 +204,7 @@ namespace DvMod.ZSounds
         private static float NormalizePitchInput(float inputValue, SoundType soundType)
         {
             float normalized;
-            
+
             if (soundType == SoundType.Whistle)
             {
                 // For whistles, based on observed values: 0.5 to 1.80
@@ -217,7 +220,7 @@ namespace DvMod.ZSounds
                 const float maxPitch = 2.0f;
                 normalized = Mathf.Clamp01((inputValue - minPitch) / (maxPitch - minPitch));
             }
-            
+
             return normalized;
         }
 
@@ -229,12 +232,12 @@ namespace DvMod.ZSounds
             {
                 // Fast TrainCar lookup using GetComponentInParent first (most efficient)
                 var trainCar = audioSource.GetComponentInParent<TrainCar>();
-                
+
                 // If GetComponentInParent fails, check cache first, then fall back to search
                 if (trainCar == null)
                 {
                     var hierarchyPath = GetHierarchyPath(audioSource.transform);
-                    
+
                     // Extract the base locomotive name from path for caching
                     string? cacheKey = null;
                     if (hierarchyPath.Contains("LocoS282A")) cacheKey = "LocoS282A";
@@ -244,7 +247,7 @@ namespace DvMod.ZSounds
                     else if (hierarchyPath.Contains("LocoDM1U")) cacheKey = "LocoDM1U";
                     else if (hierarchyPath.Contains("LocoShunter")) cacheKey = "LocoShunter";
                     else if (hierarchyPath.Contains("LocoMicroshunter")) cacheKey = "LocoMicroshunter";
-                    
+
                     if (cacheKey != null)
                     {
                         // Check cache first
@@ -257,7 +260,7 @@ namespace DvMod.ZSounds
                                 trainCar = null;
                             }
                         }
-                        
+
                         // If not in cache or invalid, do targeted search
                         if (trainCar == null)
                         {
@@ -265,8 +268,8 @@ namespace DvMod.ZSounds
                             var allTrainCars = UnityEngine.Object.FindObjectsOfType<TrainCar>();
                             foreach (var candidate in allTrainCars)
                             {
-                                if (candidate.name.Contains(cacheKey) && 
-                                    !candidate.name.Contains("[interior]") && 
+                                if (candidate.name.Contains(cacheKey) &&
+                                    !candidate.name.Contains("[interior]") &&
                                     !candidate.name.Contains("Audio") &&
                                     candidate.carType == carType)
                                 {
@@ -320,7 +323,7 @@ namespace DvMod.ZSounds
         private static SoundType DetermineSoundTypeFromPath(string audioName, string hierarchyPath)
         {
             var name = audioName.ToLower();
-            
+
             // Map to existing supported SoundType enum values only
             if (name.Contains("bell")) return SoundType.Bell;
             if (name.Contains("whistle")) return SoundType.Whistle;

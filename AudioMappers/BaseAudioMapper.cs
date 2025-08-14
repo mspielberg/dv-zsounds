@@ -1,8 +1,10 @@
+using System.Collections.Generic;
+using System.Linq;
+
 using DV.ModularAudioCar;
 using DV.Simulation.Controllers;
 using DV.Simulation.Ports;
-using System.Collections.Generic;
-using System.Linq;
+
 using UnityEngine;
 
 namespace DvMod.ZSounds.AudioMappers
@@ -28,7 +30,7 @@ namespace DvMod.ZSounds.AudioMappers
             // First try direct LayeredAudioPortReader entries
             var portReaders = simAudio.layeredAudioSimReadersController.entries.OfType<LayeredAudioPortReader>();
             var match = portReaders.FirstOrDefault(entry => entry.name == path)?.layeredAudio;
-            
+
             if (match != null)
                 return match;
 
@@ -37,7 +39,7 @@ namespace DvMod.ZSounds.AudioMappers
             {
                 match = FindChuffLayeredAudio(simAudio.transform, path);
             }
-            
+
             if (match == null)
                 Main.DebugLog(() => $"Could not find LayeredAudio: carType={trainAudio.car.carType}, soundType={soundType}, path={path}");
             return match;
@@ -67,7 +69,7 @@ namespace DvMod.ZSounds.AudioMappers
             for (int i = 0; i < parent.childCount; i++)
             {
                 var child = parent.GetChild(i);
-                
+
                 // Check if this child has a LayeredAudio component with the target name
                 var layeredAudio = child.GetComponent<LayeredAudio>();
                 if (layeredAudio != null && child.name == targetName)
@@ -75,13 +77,13 @@ namespace DvMod.ZSounds.AudioMappers
                     Main.DebugLog(() => $"Found nested LayeredAudio: {targetName} at path: {GetTransformPath(child)}");
                     return layeredAudio;
                 }
-                
+
                 // Recursively search children
                 var found = FindChuffLayeredAudio(child, targetName);
                 if (found != null)
                     return found;
             }
-            
+
             return null;
         }
 
@@ -113,7 +115,7 @@ namespace DvMod.ZSounds.AudioMappers
             }
 
             var portReaders = simAudio.audioClipSimReadersController.entries.OfType<AudioClipPortReader>();
-            
+
             var match = portReaders.FirstOrDefault(portReader => portReader.clips.Any(clip => clip.name == path));
             if (match == null)
                 Main.DebugLog(() => $"Could not find AudioClipPortReader: carType={trainAudio.car.carType}, soundType={soundType}, path={path}");

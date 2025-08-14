@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using UnityEngine;
 
 namespace DvMod.ZSounds
@@ -116,7 +117,7 @@ namespace DvMod.ZSounds
         public float? maxVolume;
         public float? fadeStart;
         public float? fadeDuration;
-        
+
         // Animation curve properties
         public AnimationCurve? pitchCurve;
         public AnimationCurve? volumeCurve;

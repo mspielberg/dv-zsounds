@@ -1,5 +1,4 @@
 using System;
-using HarmonyLib;
 
 namespace DvMod.ZSounds
 {
@@ -16,21 +15,13 @@ namespace DvMod.ZSounds
         public static void ApplyAudio(TrainCar car)
         {
             Main.DebugLog(() => $"Manually applying sounds for {car.ID}");
-            
+
             // Use registry system
             var soundSet = Registry.Get(car);
             AudioUtils.Apply(car, soundSet);
             Main.DebugLog(() => $"Applied sounds for {car.ID}");
         }
 
-        [HarmonyPatch(typeof(TrainAudio), nameof(TrainAudio.SetupForCar))]
-        public static class SetupForCarPatch
-        {
-            public static void Postfix(TrainAudio __instance)
-            {
-                // No automatic sound changes - sounds applied manually via CommsRadio
-                Main.DebugLog(() => $"TrainAudio setup completed for car {__instance.car?.ID} - no automatic sound changes applied");
-            }
-        }
+        // Intentionally no automatic patching of TrainAudio.SetupForCar.
     }
 }

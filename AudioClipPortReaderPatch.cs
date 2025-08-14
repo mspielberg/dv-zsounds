@@ -1,8 +1,11 @@
+using System.Linq;
+
 using DV.Simulation.Ports;
 using DV.ThingTypes;
+
 using HarmonyLib;
+
 using UnityEngine;
-using System.Linq;
 
 namespace DvMod.ZSounds
 {
@@ -23,7 +26,7 @@ namespace DvMod.ZSounds
                     // Silently return without logging
                     return;
                 }
-                
+
                 // Get the sound set for this car
                 var soundSet = Registry.Get(trainCar);
                 if (soundSet == null)
@@ -31,7 +34,7 @@ namespace DvMod.ZSounds
                     Main.DebugLog(() => $"AudioClipPortReaderPatch: No sound set found for car {trainCar.ID}");
                     return;
                 }
-                
+
                 // Try to determine which sound type this AudioClipPortReader represents
                 var soundType = DetermineSoundType(__instance, trainCar.carType);
                 if (soundType == SoundType.Unknown)
@@ -39,7 +42,7 @@ namespace DvMod.ZSounds
                     Main.DebugLog(() => $"AudioClipPortReaderPatch: Could not determine sound type for {__instance.name}");
                     return;
                 }
-                
+
                 // Get the sound definition for this sound type
                 var soundDefinition = soundSet[soundType];
                 if (soundDefinition == null)
@@ -47,21 +50,21 @@ namespace DvMod.ZSounds
                     Main.DebugLog(() => $"AudioClipPortReaderPatch: No sound definition found for {soundType}");
                     return;
                 }
-                
+
                 // Apply custom pitch if specified
                 if (soundDefinition.pitch.HasValue)
                 {
                     ___pitch *= soundDefinition.pitch.Value;
                     Main.DebugLog(() => $"AudioClipPortReaderPatch: Applied custom pitch {soundDefinition.pitch.Value} to {soundType}");
                 }
-                
+
                 // Apply custom volume if specified (use maxVolume as the main volume control)
                 if (soundDefinition.maxVolume.HasValue)
                 {
                     ___volume *= soundDefinition.maxVolume.Value;
                     Main.DebugLog(() => $"AudioClipPortReaderPatch: Applied custom volume {soundDefinition.maxVolume.Value} to {soundType}");
                 }
-                
+
                 // Store final values for logging
                 var finalPitch = ___pitch;
                 var finalVolume = ___volume;
@@ -72,7 +75,7 @@ namespace DvMod.ZSounds
                 Main.mod?.Logger.Error($"AudioClipPortReaderPatch error: {ex.Message}");
             }
         }
-        
+
         // Attempts to determine which SoundType this AudioClipPortReader represents
         // based on the clips it contains and the car type
         private static SoundType DetermineSoundType(AudioClipPortReader portReader, TrainCarType carType)
@@ -98,14 +101,14 @@ namespace DvMod.ZSounds
                     }
                 }
             }
-            
+
             // Fallback: try to guess from the clips' names or GameObject name
             var objectName = portReader.name.ToLowerInvariant();
-            
+
             if (portReader.clips != null && portReader.clips.Length > 0)
             {
                 var clipName = portReader.clips[0].name.ToLowerInvariant();
-                
+
                 if (clipName.Contains("horn") && (clipName.Contains("hit") || clipName.Contains("pulse")))
                     return SoundType.HornHit;
                 if (clipName.Contains("engine") && clipName.Contains("startup"))
@@ -113,7 +116,7 @@ namespace DvMod.ZSounds
                 if (clipName.Contains("engine") && clipName.Contains("shutdown"))
                     return SoundType.EngineShutdown;
             }
-            
+
             // Also check GameObject name
             if (objectName.Contains("horn") && objectName.Contains("hit"))
                 return SoundType.HornHit;
@@ -121,9 +124,9 @@ namespace DvMod.ZSounds
                 return SoundType.EngineStartup;
             if (objectName.Contains("engine") && objectName.Contains("shutdown"))
                 return SoundType.EngineShutdown;
-            
+
             Main.DebugLog(() => $"AudioClipPortReaderPatch: Could not determine sound type for {objectName} with clips: {string.Join(", ", portReader.clips?.Select(c => c.name) ?? new string[0])}");
-            
+
             return SoundType.Unknown;
         }
     }

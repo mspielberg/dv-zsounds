@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -25,18 +26,18 @@ namespace DvMod.ZSounds
             var extension = Path.GetExtension(path);
             if (!AudioTypes.ContainsKey(extension))
                 throw new ConfigException($"Unsupported file extension for sound file: \"{path}\"");
-            
+
             // Check file exists before loading
             if (!File.Exists(path))
                 throw new ConfigException($"Sound file not found: \"{path}\"");
-            
+
             var audioType = AudioTypes[Path.GetExtension(path)];
             var webRequest = UnityWebRequestMultimedia.GetAudioClip(new Uri(path).AbsoluteUri, audioType);
             var async = webRequest.SendWebRequest();
             while (!async.isDone)
             {
             }
-            
+
             // Check for errors before accessing audio clip
             if (webRequest.isNetworkError || webRequest.isHttpError)
             {
@@ -44,16 +45,16 @@ namespace DvMod.ZSounds
                 webRequest.Dispose();
                 throw new ConfigException(error);
             }
-            
+
             clip = DownloadHandlerAudioClip.GetContent(webRequest);
             webRequest.Dispose(); // Clean up web request
-            
+
             if (clip == null)
                 throw new ConfigException($"Failed to extract audio clip from file: \"{path}\"");
-            
+
             // Set clip name to filename for debugging
             clip.name = Path.GetFileNameWithoutExtension(path);
-            
+
             cache[path] = clip;
             return clip;
         }

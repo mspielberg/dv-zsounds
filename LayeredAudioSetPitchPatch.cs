@@ -1,9 +1,12 @@
-using HarmonyLib;
-using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using DV.ThingTypes;
+
+using HarmonyLib;
+
+using UnityEngine;
 
 namespace DvMod.ZSounds
 {
@@ -17,7 +20,7 @@ namespace DvMod.ZSounds
         private static readonly Dictionary<int, (TrainCar trainCar, SoundType soundType)?> _trainInfoCache = new Dictionary<int, (TrainCar, SoundType)?>();
         private static readonly Dictionary<int, bool> _hasPitchCurveCache = new Dictionary<int, bool>();
         private static readonly Dictionary<string, TrainCar> _trainCarCache = new Dictionary<string, TrainCar>();
-        
+
         private static string GetHierarchyPath(Transform transform)
         {
             string path = transform.name;
@@ -29,21 +32,21 @@ namespace DvMod.ZSounds
             }
             return path;
         }
-        
+
         public static void Prefix(LayeredAudio __instance, ref float __0)
         {
             if (__instance == null || Main.soundLoader == null)
             {
                 return;
             }
-            
+
             var instanceId = __instance.GetInstanceID();
             var audioName = __instance.name;
             var currentPitch = __0;  // Capture the value for logging
-            
+
             // Remove verbose ALL CALLS logging since whistles don't use LayeredAudio
             // Main.DebugLog(() => $"LayeredAudioSetPitch: ALL CALLS - '{audioName}' with pitch {currentPitch:F3}");
-            
+
             // Ultra-fast cache check - skip if no pitch curve
             if (_hasPitchCurveCache.TryGetValue(instanceId, out var hasCurve) && !hasCurve)
             {
@@ -86,7 +89,7 @@ namespace DvMod.ZSounds
                     _hasPitchCurveCache[instanceId] = false; // Cache negative result
                     return;
                 }
-                
+
                 // Try to get pitch curve from available sounds (CommsRadio approach)
                 var availableSounds = Main.soundLoader?.GetAvailableSoundsForTrain(trainCar.carType);
                 if (availableSounds != null && availableSounds.TryGetValue(soundType, out var soundsOfType))
@@ -96,15 +99,15 @@ namespace DvMod.ZSounds
                     if (soundWithCurve?.pitchCurve != null)
                     {
                         _hasPitchCurveCache[instanceId] = true; // Cache positive result
-                        
+
                         // Apply the pitch curve
                         var normalizedInput = NormalizePitchInput(__0, soundType);
                         var curveMultiplier = soundWithCurve.pitchCurve.Evaluate(normalizedInput);
-                        
+
                         // Modify the pitch with the curve
                         var originalPitch = __0;
                         var finalPitch = __0 *= curveMultiplier;
-                        
+
                         // Enhanced debug logging for all sound types
                         Main.DebugLog(() => $"LayeredAudioSetPitchPatch: Applied pitch curve to {soundType} - original: {originalPitch:F2}, normalized: {normalizedInput:F2}, multiplier: {curveMultiplier:F2}, final: {finalPitch:F2}");
                         return;
@@ -114,22 +117,22 @@ namespace DvMod.ZSounds
                 // Fallback: try Registry approach
                 var soundSet = Registry.Get(trainCar);
                 var soundDefinition = soundSet?[soundType];
-                
+
                 if (soundDefinition?.pitchCurve != null)
                 {
                     _hasPitchCurveCache[instanceId] = true; // Cache positive result
-                    
+
                     // Apply the pitch curve from Registry
                     var normalizedInput = NormalizePitchInput(__0, soundType);
                     var curveMultiplier = soundDefinition.pitchCurve.Evaluate(normalizedInput);
-                    
+
                     var originalPitch = __0;
                     var finalPitch = __0 *= curveMultiplier;
-                    
+
                     Main.DebugLog(() => $"LayeredAudioSetPitchPatch: Applied Registry pitch curve to {soundType} - original: {originalPitch:F2}, normalized: {normalizedInput:F2}, multiplier: {curveMultiplier:F2}, final: {finalPitch:F2}");
                     return;
                 }
-                
+
                 // No pitch curve available - cache negative result
                 _hasPitchCurveCache[instanceId] = false;
             }
@@ -148,16 +151,16 @@ namespace DvMod.ZSounds
             {
                 return NormalizeChuffFrequency(inputValue, soundType);
             }
-            
+
             // For other sounds like Whistle, Bell, Horn - input is already a pitch value (typically 0.5-2.0)
             // Normalize to 0-1 range assuming typical pitch range of 0.5 to 2.0
             const float minPitch = 0.5f;
             const float maxPitch = 2.0f;
-            
+
             var normalized = Mathf.Clamp01((inputValue - minPitch) / (maxPitch - minPitch));
-            
+
             Main.DebugLog(() => $"LayeredAudioSetPitchPatch: Normalized pitch {inputValue:F2} to {normalized:F3} for {soundType}");
-            
+
             return normalized;
         }
 
@@ -168,12 +171,12 @@ namespace DvMod.ZSounds
             // Adjusted to better match real-world steam locomotive chuff frequencies at different speeds
             const float minFreq = 1.0f;   // Minimum chuff frequency (very slow/idle)
             const float maxFreq = 16.0f;  // Maximum chuff frequency (high speed)
-            
+
             // Clamp and normalize to 0-1 range
             var normalized = Mathf.Clamp01((chuffFrequency - minFreq) / (maxFreq - minFreq));
-            
+
             Main.DebugLog(() => $"LayeredAudioSetPitchPatch: Normalized frequency {chuffFrequency:F2} Hz to {normalized:F3} for {soundType}");
-            
+
             return normalized;
         }
 
@@ -185,12 +188,12 @@ namespace DvMod.ZSounds
             {
                 // Fast TrainCar lookup using GetComponentInParent first (most efficient)
                 var trainCar = layeredAudio.GetComponentInParent<TrainCar>();
-                
+
                 // If GetComponentInParent fails, check cache first, then fall back to search
                 if (trainCar == null)
                 {
                     var hierarchyPath = GetHierarchyPath(layeredAudio.transform);
-                    
+
                     // Extract the base locomotive name from path for caching
                     string? cacheKey = null;
                     if (hierarchyPath.Contains("LocoS282A")) cacheKey = "LocoS282A";
@@ -200,7 +203,7 @@ namespace DvMod.ZSounds
                     else if (hierarchyPath.Contains("LocoDM1U")) cacheKey = "LocoDM1U";
                     else if (hierarchyPath.Contains("LocoShunter")) cacheKey = "LocoShunter";
                     else if (hierarchyPath.Contains("LocoMicroshunter")) cacheKey = "LocoMicroshunter";
-                    
+
                     if (cacheKey != null)
                     {
                         // Check cache first
@@ -213,7 +216,7 @@ namespace DvMod.ZSounds
                                 trainCar = null;
                             }
                         }
-                        
+
                         // If not in cache or invalid, do targeted search
                         if (trainCar == null)
                         {
@@ -221,8 +224,8 @@ namespace DvMod.ZSounds
                             var allTrainCars = UnityEngine.Object.FindObjectsOfType<TrainCar>();
                             foreach (var candidate in allTrainCars)
                             {
-                                if (candidate.name.Contains(cacheKey) && 
-                                    !candidate.name.Contains("[interior]") && 
+                                if (candidate.name.Contains(cacheKey) &&
+                                    !candidate.name.Contains("[interior]") &&
                                     !candidate.name.Contains("Audio") &&
                                     candidate.carType == carType)
                                 {

@@ -1,8 +1,9 @@
-using DV.ThingTypes;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
+using DV.ThingTypes;
 
 namespace DvMod.ZSounds
 {
@@ -22,7 +23,7 @@ namespace DvMod.ZSounds
         public void LoadAllSounds()
         {
             Main.mod?.Logger.Log($"Loading sounds from folder structure: {baseSoundsPath}");
-            
+
             if (!Directory.Exists(baseSoundsPath))
             {
                 Main.mod?.Logger.Warning($"Sounds directory not found: {baseSoundsPath}");
@@ -77,15 +78,15 @@ namespace DvMod.ZSounds
         {
             LoadSoundsFromFolder(trainType, soundType, folder, null);
         }
-        
+
         private void LoadSoundsFromFolder(TrainCarType trainType, SoundType soundType, string folder, SoundConfiguration? globalConfig)
         {
             var isGeneric = trainType == TrainCarType.NotSet;
             Main.DebugLog(() => $"FolderSoundLoader: Loading sounds for {trainType}/{soundType} from {folder}");
-            
+
             // Load local configuration for this sound type folder
             var localConfig = SoundConfigurationLoader.LoadConfiguration(folder);
-            
+
             // Use global config as fallback
             var config = localConfig ?? globalConfig;
             if (config != null)
@@ -96,7 +97,7 @@ namespace DvMod.ZSounds
             {
                 Main.DebugLog(() => $"FolderSoundLoader: No configuration found for {trainType}/{soundType}, using defaults");
             }
-            
+
             var soundFiles = Directory.GetFiles(folder, "*.ogg")
                 .Concat(Directory.GetFiles(folder, "*.wav"))
                 .ToArray();
@@ -106,7 +107,7 @@ namespace DvMod.ZSounds
                 Main.mod?.Logger.Warning($"No sound files found in {folder}");
                 return;
             }
-            
+
             Main.DebugLog(() => $"FolderSoundLoader: Found {soundFiles.Length} sound files in {folder}");
 
             foreach (var soundFile in soundFiles)
@@ -115,7 +116,7 @@ namespace DvMod.ZSounds
                 {
                     var fileName = Path.GetFileNameWithoutExtension(soundFile);
                     var soundName = $"{trainType}_{soundType}_{fileName}";
-                    
+
                     // Create sound definition
                     var soundDef = new SoundDefinition(soundName, soundType)
                     {
@@ -124,7 +125,7 @@ namespace DvMod.ZSounds
 
                     // Apply default settings based on sound type
                     ApplyDefaultSettings(soundDef, soundType);
-                    
+
                     // Apply configuration settings if available
                     if (config != null)
                     {
@@ -191,7 +192,7 @@ namespace DvMod.ZSounds
                     break;
             }
         }
-        
+
         private void ApplyConfigurationSettings(SoundDefinition soundDef, SoundConfiguration config)
         {
             // Apply configuration values, overriding defaults where specified
@@ -202,11 +203,11 @@ namespace DvMod.ZSounds
             if (config.maxVolume.HasValue) soundDef.maxVolume = config.maxVolume.Value;
             if (config.fadeStart.HasValue) soundDef.fadeStart = config.fadeStart.Value;
             if (config.fadeDuration.HasValue) soundDef.fadeDuration = config.fadeDuration.Value;
-            
+
             // Apply animation curves
             if (config.PitchCurve != null) soundDef.pitchCurve = config.PitchCurve;
             if (config.VolumeCurve != null) soundDef.volumeCurve = config.VolumeCurve;
-            
+
             Main.DebugLog(() => $"Applied configuration settings to {soundDef.name}: " +
                               $"Pitch={config.pitch}, MinPitch={config.minPitch}, MaxPitch={config.maxPitch}, " +
                               $"PitchCurve={config.PitchCurve != null}, VolumeCurve={config.VolumeCurve != null}");
@@ -260,7 +261,7 @@ namespace DvMod.ZSounds
             if (sound != null)
             {
                 sound.Apply(soundSet);
-                
+
                 // Apply sound changes using the registry system
                 AudioUtils.Apply(car, soundSet);
                 Main.DebugLog(() => $"Applied {soundType} sound: {sound.name} to {car.ID}");
