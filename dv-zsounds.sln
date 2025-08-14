@@ -4,8 +4,6 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZSounds", "ZSounds.csproj", "{3AD87E7C-217B-A91A-9A47-F1AA32B910CB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp\Assembly-CSharp.csproj", "{D5850B53-BB39-A878-F532-761A89269B04}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -16,15 +14,8 @@ Global
 		{3AD87E7C-217B-A91A-9A47-F1AA32B910CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3AD87E7C-217B-A91A-9A47-F1AA32B910CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3AD87E7C-217B-A91A-9A47-F1AA32B910CB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D5850B53-BB39-A878-F532-761A89269B04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D5850B53-BB39-A878-F532-761A89269B04}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D5850B53-BB39-A878-F532-761A89269B04}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D5850B53-BB39-A878-F532-761A89269B04}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {6E6259F3-3D0B-48EA-BCBE-93540C4DA558}
 	EndGlobalSection
 EndGlobal
