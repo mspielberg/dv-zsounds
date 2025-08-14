@@ -1,530 +1,569 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CommsRadioAPI;
+using System.Reflection;
+
 using DV;
 using DV.ThingTypes;
+
+using HarmonyLib;
+
 using UnityEngine;
 
 namespace DvMod.ZSounds
 {
+    // Registers a CarChanger-style Comms Radio mode
     public static class CommsRadioSoundSwitcherAPI
     {
-        private static CommsRadioMode? soundSwitcherMode;
-
         public static void Initialize()
         {
-            try
-            {
-                Main.mod?.Logger.Log("Initializing CommsRadio Sound Switcher API integration...");
-                
-                // Subscribe to the CommsRadio ready event
-                ControllerAPI.Ready += StartCommsRadioMode;
-                Main.mod?.Logger.Log("Successfully subscribed to CommsRadio ready event");
-            }
-            catch (Exception ex)
-            {
-                Main.mod?.Logger.Error($"Failed to subscribe to CommsRadio ready event: {ex.Message}");
-                Main.mod?.Logger.Error($"Stack trace: {ex.StackTrace}");
-            }
+            // No-op: Harmony in Main.PatchAll will discover our patch below and register the mode.
+            Main.mod?.Logger.Log("CommsRadio: Sound Switcher mode ready (Harmony registration)");
         }
 
         public static void Cleanup()
         {
-            try
-            {
-                Main.mod?.Logger.Log("Cleaning up CommsRadio Sound Switcher API integration...");
-                
-                // Unsubscribe from the CommsRadio ready event
-                ControllerAPI.Ready -= StartCommsRadioMode;
-                
-                // Clear the sound switcher mode reference
-                soundSwitcherMode = null;
-                
-                Main.mod?.Logger.Log("CommsRadio Sound Switcher API cleanup completed");
-            }
-            catch (Exception ex)
-            {
-                Main.mod?.Logger.Error($"Failed to cleanup CommsRadio integration: {ex.Message}");
-                Main.mod?.Logger.Error($"Stack trace: {ex.StackTrace}");
-            }
+            // Nothing to cleanup explicitly; CommsRadio recreates modes per controller instance.
         }
 
         public static void Reinitialize()
         {
-            Main.mod?.Logger.Log("Reinitializing CommsRadio Sound Switcher API integration...");
-            Cleanup();
-            Initialize();
+            // Nothing dynamic to rewire; the mode queries sounds live each time.
         }
 
-        private static void StartCommsRadioMode()
+        // Harmony patches that attach and register our mode component
+        internal static class CommsRadioControllerPatches
         {
-            try
+            [HarmonyPatch(typeof(CommsRadioController), "Awake")]
+            internal static class Awake
             {
-                Main.mod?.Logger.Log("CommsRadio ready event triggered, attempting to register Sound Switcher mode...");
-                
-                if (soundSwitcherMode != null)
+                private static void Postfix(CommsRadioController __instance)
                 {
-                    Main.mod?.Logger.Log("CommsRadio Sound Switcher mode already registered");
+                    try
+                    {
+                        var existing = __instance.GetComponent<CommsRadioSoundSwitcherMode>();
+                        if (existing == null)
+                        {
+                            existing = __instance.gameObject.AddComponent<CommsRadioSoundSwitcherMode>();
+                            Main.mod?.Logger.Log("CommsRadio: Sound Switcher mode component added to controller");
+                        }
+                        CommsRadioModeRegistrar.TryRegisterOnce(__instance, existing);
+                    }
+                    catch (Exception ex)
+                    {
+                        Main.mod?.Logger.Warning($"Failed to attach Sound Switcher mode: {ex.Message}");
+                    }
+                }
+            }
+
+            [HarmonyPatch(typeof(CommsRadioController), "Start")]
+            internal static class Start
+            {
+                private static void Postfix(CommsRadioController __instance)
+                {
+                    try
+                    {
+                        var existing = __instance.GetComponent<CommsRadioSoundSwitcherMode>();
+                        if (existing != null)
+                        {
+                            CommsRadioModeRegistrar.TryRegisterOnce(__instance, existing);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Main.mod?.Logger.Warning($"Failed to register Sound Switcher mode in Start: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        internal static class CommsRadioModeRegistrar
+        {
+            private static readonly HashSet<int> Registered = new HashSet<int>();
+
+            internal static void TryRegisterOnce(CommsRadioController controller, ICommsRadioMode mode)
+            {
+                var id = controller.GetInstanceID();
+                if (Registered.Contains(id))
                     return;
-                }
-
-                var initialState = new SelectCarBehaviour();
-                soundSwitcherMode = CommsRadioMode.Create(
-                    initialState,
-                    laserColor: new Color(0.53f, 0f, 1f), // Purple laser color
-                    insertBefore: mode => mode == ControllerAPI.GetVanillaMode(VanillaMode.LED)
-                );
-                
-                Main.mod?.Logger.Log("CommsRadio Sound Switcher mode registered successfully using CommsRadioAPI");
-            }
-            catch (Exception ex)
-            {
-                Main.mod?.Logger.Error($"Failed to register CommsRadio Sound Switcher mode: {ex.Message}");
-                Main.mod?.Logger.Error($"Stack trace: {ex.StackTrace}");
-            }
-        }
-    }
-
-    // State: Select a car to modify sounds
-    public class SelectCarBehaviour : AStateBehaviour
-    {
-        private const float SIGNAL_RANGE = 200f; // Increased range for VR
-        private readonly LayerMask trainCarMask;
-
-        public SelectCarBehaviour() : base(new CommsRadioState(
-            titleText: "SOUNDS",
-            contentText: "Aim at the vehicle you wish to change sounds on.",
-            buttonBehaviour: ButtonBehaviourType.Regular))
-        {
-            // Use multiple layer masks to catch more train car colliders in VR
-            trainCarMask = LayerMask.GetMask("Train_Big_Collider", "Train_Car", "TrainCar", "Default");
-        }
-
-        public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
-        {
-            // Try raycast with debug logging for VR troubleshooting
-            Vector3 rayOrigin = utility.SignalOrigin.position;
-            Vector3 rayDirection = utility.SignalOrigin.forward;
-            
-            Main.DebugLog(() => $"CommsRadio raycast: origin={rayOrigin}, direction={rayDirection}, range={SIGNAL_RANGE}, mask={trainCarMask.value}");
-            
-            if (!Physics.Raycast(rayOrigin, rayDirection, out RaycastHit hit, SIGNAL_RANGE, trainCarMask))
-            {
-                // Try a broader raycast with all layers for debugging
-                if (Physics.Raycast(rayOrigin, rayDirection, out RaycastHit debugHit, SIGNAL_RANGE))
+                if (TryRegisterMode(controller, mode, "SOUNDS"))
                 {
-                    Main.DebugLog(() => $"CommsRadio raycast hit something else: {debugHit.transform.name} on layer {debugHit.transform.gameObject.layer}");
+                    Registered.Add(id);
                 }
-                return this;
             }
 
-            Main.DebugLog(() => $"CommsRadio raycast hit: {hit.transform.name} (root: {hit.transform.root.name})");
-
-            TrainCar? targetCar = TrainCar.Resolve(hit.transform.root);
-            if (targetCar == null)
+            private static bool TryRegisterMode(CommsRadioController controller, ICommsRadioMode mode, string title)
             {
-                Main.DebugLog(() => $"CommsRadio: Could not resolve TrainCar from hit object {hit.transform.root.name}");
-                return this;
-            }
-            
-            if (!CarTypes.IsLocomotive(targetCar.carLivery))
-            {
-                Main.DebugLog(() => $"CommsRadio: Car {targetCar.ID} is not a locomotive (type: {targetCar.carType})");
-                return this;
-            }
-
-            Main.DebugLog(() => $"CommsRadio: Valid locomotive found: {targetCar.ID} ({targetCar.carType})");
-            utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
-            return new PointAtCarBehaviour(targetCar);
-        }
-
-        public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
-        {
-            return this;
-        }
-    }
-
-    // State: Pointing at a valid car
-    public class PointAtCarBehaviour : AStateBehaviour
-    {
-        private const float SIGNAL_RANGE = 200f; // Increased range for VR
-        private readonly LayerMask trainCarMask;
-        private readonly TrainCar selectedCar;
-
-        public PointAtCarBehaviour(TrainCar car) : base(new CommsRadioState(
-            titleText: "SOUNDS",
-            contentText: $"Car: {car.carType}\nPress to select this locomotive",
-            actionText: "select",
-            buttonBehaviour: ButtonBehaviourType.Regular))
-        {
-            selectedCar = car;
-            trainCarMask = LayerMask.GetMask("Train_Big_Collider", "Train_Car", "TrainCar", "Default");
-            
-            Main.mod?.Logger.Log($"CommsRadioAPI: Targeting car {car.ID} ({car.carType}) for sound modification");
-        }
-
-        public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
-        {
-            if (!Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, out RaycastHit hit, SIGNAL_RANGE, trainCarMask))
-            {
-                return new SelectCarBehaviour();
-            }
-
-            TrainCar? targetCar = TrainCar.Resolve(hit.transform.root);
-            if (targetCar != selectedCar)
-            {
-                return new SelectCarBehaviour();
-            }
-
-            return this;
-        }
-
-        public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
-        {
-            if (action == InputAction.Activate)
-            {
-                utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-                return new SelectSoundTypeBehaviour(selectedCar);
-            }
-            return this;
-        }
-    }
-
-    // State: Select which sound type to modify
-    public class SelectSoundTypeBehaviour : AStateBehaviour
-    {
-        private const float SIGNAL_RANGE = 200f; // Increased range for VR
-        private readonly LayerMask trainCarMask;
-        private readonly TrainCar selectedCar;
-        private readonly SoundType[] availableSoundTypes;
-        private readonly int soundTypeIndex;
-
-        public SelectSoundTypeBehaviour(TrainCar car, int index = 0) : base(CreateState(car, GetAvailableSoundTypes(car), index))
-        {
-            selectedCar = car;
-            availableSoundTypes = GetAvailableSoundTypes(car);
-            soundTypeIndex = index;
-            trainCarMask = LayerMask.GetMask("Train_Big_Collider", "Train_Car", "TrainCar", "Default");
-        }
-
-        private static SoundType[] GetAvailableSoundTypes(TrainCar car)
-        {
-            var carType = car.carType;
-            var supportedTypes = new List<SoundType>();
-            
-            Main.DebugLog(() => $"CommsRadioAPI: Getting available sound types for car {car.ID} (type: {carType})");
-            
-            if (Main.soundLoader == null)
-            {
-                Main.DebugLog(() => $"CommsRadioAPI: SoundLoader is null");
-                return supportedTypes.ToArray();
-            }
-
-            // Get all sound types that have actual sound files available
-            foreach (var soundType in Enum.GetValues(typeof(SoundType)).Cast<SoundType>())
-            {
-                if (soundType == SoundType.Unknown) continue;
-                
-                // Check if we have sound files for this sound type
-                if (HasAvailableSounds(car, soundType))
+                try
                 {
-                    // Also verify that the car actually supports this sound type through AudioMapper
-                    // (except for special cases like EngineStartup/EngineShutdown)
-                    bool carSupportsType = false;
-                    
-                    if (soundType == SoundType.EngineStartup || soundType == SoundType.EngineShutdown)
+                    var methods = controller.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                        .Where(m => m.Name == "AddMode");
+
+                    int inspected = 0;
+                    foreach (var m in methods)
                     {
-                        // Special sound types that may not have AudioMapper entries but can still be applied
-                        carSupportsType = true;
+                        inspected++;
+                        var ps = m.GetParameters();
+                        if (ps.Length >= 2)
+                        {
+                            // Build args for any order where both a mode and a title are present
+                            object[] BuildArgsDynamic(int modeIndex, int titleIndex)
+                            {
+                                var args = new object[ps.Length];
+                                for (int i = 0; i < ps.Length; i++)
+                                {
+                                    var pt = ps[i].ParameterType;
+                                    if (i == modeIndex)
+                                        args[i] = mode;
+                                    else if (i == titleIndex)
+                                        args[i] = title;
+                                    else if (pt == typeof(bool))
+                                        args[i] = false; // don't require cheat/sandbox
+                                    else if (ps[i].HasDefaultValue)
+                                        args[i] = ps[i].DefaultValue!;
+                                    else
+                                        args[i] = pt.IsValueType ? Activator.CreateInstance(pt)! : default!;
+                                }
+                                return args;
+                            }
+
+                            // Find mode index and title index anywhere
+                            int modeIdx = Array.FindIndex(ps, p => p.ParameterType.IsInstanceOfType(mode));
+                            int titleIdx = Array.FindIndex(ps, p => p.ParameterType == typeof(string));
+                            if (modeIdx >= 0 && titleIdx >= 0 && modeIdx != titleIdx)
+                            {
+                                var args = BuildArgsDynamic(modeIdx, titleIdx);
+                                m.Invoke(controller, args);
+                                Main.mod?.Logger.Log($"CommsRadio: Sound Switcher mode registered via AddMode overload (#{inspected}, params: {string.Join(", ", ps.Select(p => p.ParameterType.Name))})");
+                                return true;
+                            }
+                        }
                     }
-                    else if (AudioMapper.Mappers.TryGetValue(carType, out var mapper))
+
+                    Main.mod?.Logger.Warning("CommsRadio: Could not find AddMode to register Sound Switcher; mode may be undiscoverable.");
+                    // Fallback: try injecting into any IList<ICommsRadioMode> on the controller
+                    var fields = controller.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    foreach (var f in fields)
                     {
-                        var hasLayered = SoundTypes.layeredAudioSoundTypes.Contains(soundType) && 
-                                       mapper.GetLayeredAudio(soundType, AudioUtils.GetTrainAudio(car)) != null;
-                        var hasClips = SoundTypes.audioClipsSoundTypes.Contains(soundType) && 
-                                     mapper.GetAudioClipPortReader(soundType, AudioUtils.GetTrainAudio(car)) != null;
-                        carSupportsType = hasLayered || hasClips;
+                        if (!typeof(System.Collections.IList).IsAssignableFrom(f.FieldType))
+                            continue;
+                        var t = f.FieldType;
+                        var gen = t.IsGenericType ? t.GetGenericArguments().FirstOrDefault() : null;
+                        if (gen == null) continue;
+                        if (!typeof(ICommsRadioMode).IsAssignableFrom(gen)) continue;
+
+                        var list = (System.Collections.IList?)f.GetValue(controller);
+                        if (list == null) continue;
+                        if (!list.Contains(mode))
+                        {
+                            list.Add(mode);
+                            Main.mod?.Logger.Log($"CommsRadio: Injected Sound Switcher into field '{f.Name}' ({t.Name})");
+                            return true;
+                        }
                     }
-                    
-                    if (carSupportsType)
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    Main.mod?.Logger.Warning($"CommsRadio: AddMode registration failed: {ex.Message}");
+                    return false;
+                }
+            }
+        }
+    }
+
+    internal class CommsRadioSoundSwitcherMode : MonoBehaviour, ICommsRadioMode
+    {
+        private enum State
+        {
+            PointAtCar,
+            CarSelected_SelectType,
+            CarSelected_SelectSound,
+        }
+
+        // UI/Controller
+        public CommsRadioController Controller = null!;
+        public CommsRadioDisplay Display = null!;
+        public Transform SignalOrigin = null!;
+
+        public ButtonBehaviourType ButtonBehaviour { get; private set; }
+
+        // Highlight
+        private static readonly Vector3 HighlightExtra = new Vector3(0.25f, 0.8f, 0f);
+        private GameObject _highlighter = null!;
+        private Renderer _highlighterRender = null!;
+
+        // Raycast/selection
+        private int _mask;
+        private TrainCar _pointedCar = null!;
+        private TrainCar _selectedCar = null!;
+        private State _state;
+
+        // Data for selection
+        private SoundType[] _availableTypes = Array.Empty<SoundType>();
+        private int _typeIndex;
+
+        private readonly List<SoundDefinition> _availableSounds = new List<SoundDefinition>();
+        private int _soundIndex;
+
+        private void Awake()
+        {
+            Controller = GetComponent<CommsRadioController>();
+            SignalOrigin = Controller.laserBeam.transform;
+            Display = Controller.cargoLoaderControl.display;
+
+            // Be generous with colliders in VR/PC
+            _mask = LayerMask.GetMask("Train_Big_Collider", "Train_Car", "TrainCar", "Default");
+
+            // Setup highlight
+            _highlighter = Instantiate(Controller.cargoLoaderControl.trainHighlighter);
+            _highlighter.SetActive(false);
+            _highlighterRender = _highlighter.GetComponentInChildren<MeshRenderer>(true);
+
+            SetStartingDisplay();
+        }
+
+        private void OnDestroy()
+        {
+            if (_highlighter != null)
+            {
+                Destroy(_highlighter.gameObject);
+            }
+        }
+
+        public void SetStartingDisplay()
+        {
+            Display.SetDisplay("SOUNDS", "Aim at the vehicle you wish to change sounds on.");
+            ButtonBehaviour = ButtonBehaviourType.Regular;
+            _state = State.PointAtCar;
+        }
+
+        public void Enable()
+        {
+            SetStartingDisplay();
+        }
+
+        public void Disable()
+        {
+            ClearHighlightCar();
+            ButtonBehaviour = ButtonBehaviourType.Regular;
+            _state = State.PointAtCar;
+            _pointedCar = null!;
+            _selectedCar = null!;
+            _availableTypes = Array.Empty<SoundType>();
+            _availableSounds.Clear();
+        }
+
+        public void OnUpdate()
+        {
+            Controller.laserBeam.SetBeamColor(GetLaserBeamColor());
+
+            // Update pointer
+            if (Physics.Raycast(SignalOrigin.position, SignalOrigin.forward, out var hit, 200f, _mask))
+            {
+                var car = TrainCar.Resolve(hit.transform.root);
+                PointToCar(car);
+            }
+            else
+            {
+                PointToCar(null!);
+            }
+
+            switch (_state)
+            {
+                case State.PointAtCar:
+                    if (_pointedCar)
                     {
-                        supportedTypes.Add(soundType);
-                        Main.DebugLog(() => $"CommsRadioAPI: Added sound type {soundType} for car {carType} (sounds available and car supports it)");
+                        Display.SetContent($"{_pointedCar.carType} ({_pointedCar.ID})");
                     }
                     else
                     {
-                        Main.DebugLog(() => $"CommsRadioAPI: Sound type {soundType} has files but car {carType} doesn't support it");
+                        SetStartingDisplay();
                     }
-                }
+                    break;
+
+                case State.CarSelected_SelectType:
+                    // Show current sound type
+                    if (_availableTypes.Length == 0)
+                    {
+                        Display.SetContentAndAction($"{_selectedCar.carType} ({_selectedCar.ID})\nNo sound types available", "cancel");
+                        ButtonBehaviour = ButtonBehaviourType.Regular;
+                    }
+                    else
+                    {
+                        var currentType = _availableTypes[_typeIndex];
+                        Display.SetContentAndAction($"{_selectedCar.carType} ({_selectedCar.ID})\n{currentType}", "next");
+                        ButtonBehaviour = ButtonBehaviourType.Override;
+                    }
+                    break;
+
+                case State.CarSelected_SelectSound:
+                    if (_availableSounds.Count == 0)
+                    {
+                        Display.SetContentAndAction($"{_selectedCar.carType} ({_selectedCar.ID})\nNo sounds", "cancel");
+                        ButtonBehaviour = ButtonBehaviourType.Regular;
+                    }
+                    else
+                    {
+                        var sound = _availableSounds[_soundIndex];
+                        var warn = (GetCurrentType() == SoundType.HornHit) ? "\n[WARNING: May not work if changed before]" : string.Empty;
+                        Display.SetContentAndAction($"{_selectedCar.carType} ({_selectedCar.ID})\n{sound.name}{warn}", "confirm");
+                        ButtonBehaviour = ButtonBehaviourType.Override;
+                    }
+                    break;
             }
-            
-            Main.DebugLog(() => $"CommsRadioAPI: Found {supportedTypes.Count} available sound types for car {carType}: {string.Join(", ", supportedTypes)}");
-            return supportedTypes.ToArray();
         }
+
+        public void OnUse()
+        {
+            switch (_state)
+            {
+                case State.PointAtCar:
+                    if (!_pointedCar || !IsLocomotive(_pointedCar))
+                    {
+                        // cancel beep
+                        return;
+                    }
+                    SelectCar(_pointedCar);
+                    return;
+
+                case State.CarSelected_SelectType:
+                    if (_availableTypes.Length == 0)
+                    {
+                        // back to start
+                        _state = State.PointAtCar;
+                        return;
+                    }
+                    // If HornHit, show warning as in old flow, else go to sounds
+                    if (GetCurrentType() == SoundType.HornHit)
+                    {
+                        // Directly proceed; warning is displayed in content
+                    }
+                    BuildAvailableSounds();
+                    _state = State.CarSelected_SelectSound;
+                    return;
+
+                case State.CarSelected_SelectSound:
+                    if (_availableSounds.Count == 0)
+                    {
+                        _state = State.CarSelected_SelectType;
+                        return;
+                    }
+                    ApplySelectedSound();
+                    // After apply, return to start for next target
+                    _state = State.PointAtCar;
+                    return;
+            }
+        }
+
+        public bool ButtonACustomAction()
+        {
+            switch (_state)
+            {
+                case State.CarSelected_SelectType:
+                    if (_availableTypes.Length > 0)
+                    {
+                        _typeIndex = Wrap(_typeIndex + 1, _availableTypes.Length);
+                        return true;
+                    }
+                    return false;
+                case State.CarSelected_SelectSound:
+                    if (_availableSounds.Count > 0)
+                    {
+                        _soundIndex = Wrap(_soundIndex + 1, _availableSounds.Count);
+                        return true;
+                    }
+                    return false;
+                default:
+                    return false;
+            }
+        }
+
+        public bool ButtonBCustomAction()
+        {
+            switch (_state)
+            {
+                case State.CarSelected_SelectType:
+                    if (_availableTypes.Length > 0)
+                    {
+                        _typeIndex = Wrap(_typeIndex - 1, _availableTypes.Length);
+                        return true;
+                    }
+                    return false;
+                case State.CarSelected_SelectSound:
+                    if (_availableSounds.Count > 0)
+                    {
+                        _soundIndex = Wrap(_soundIndex - 1, _availableSounds.Count);
+                        return true;
+                    }
+                    return false;
+                default:
+                    return false;
+            }
+        }
+
+        public void OverrideSignalOrigin(Transform signalOrigin)
+        {
+            SignalOrigin = signalOrigin;
+        }
+
+        public Color GetLaserBeamColor()
+        {
+            // purple-ish and animated like sample, but stable hue for clarity
+            return new Color(0.53f, 0f, 1f);
+        }
+
+        // --- Selection helpers ---
+
+        private void SelectCar(TrainCar car)
+        {
+            _selectedCar = car;
+            ButtonBehaviour = ButtonBehaviourType.Override;
+
+            BuildAvailableTypes();
+            _typeIndex = Wrap(_typeIndex, Math.Max(_availableTypes.Length, 1));
+            _state = State.CarSelected_SelectType;
+        }
+
+        private void BuildAvailableTypes()
+        {
+            var list = new List<SoundType>();
+
+            if (Main.soundLoader == null)
+            {
+                _availableTypes = Array.Empty<SoundType>();
+                return;
+            }
+
+            foreach (var st in Enum.GetValues(typeof(SoundType)).Cast<SoundType>())
+            {
+                if (st == SoundType.Unknown) continue;
+                if (!HasAvailableSounds(_selectedCar, st)) continue;
+
+                bool supported = (st == SoundType.EngineStartup || st == SoundType.EngineShutdown);
+
+                if (!supported && AudioMapper.Mappers.TryGetValue(_selectedCar.carType, out var mapper))
+                {
+                    var ta = AudioUtils.GetTrainAudio(_selectedCar);
+                    bool hasLayered = SoundTypes.layeredAudioSoundTypes.Contains(st) && mapper.GetLayeredAudio(st, ta) != null;
+                    bool hasClips = SoundTypes.audioClipsSoundTypes.Contains(st) && mapper.GetAudioClipPortReader(st, ta) != null;
+                    supported = hasLayered || hasClips;
+                }
+
+                if (supported)
+                    list.Add(st);
+            }
+
+            _availableTypes = list.ToArray();
+        }
+
+        private void BuildAvailableSounds()
+        {
+            _availableSounds.Clear();
+            if (Main.soundLoader == null)
+                return;
+
+            var carSounds = Main.soundLoader.GetAvailableSoundsForTrain(_selectedCar.carType);
+            if (carSounds.TryGetValue(GetCurrentType(), out var carSpecific))
+                _availableSounds.AddRange(carSpecific);
+
+            _soundIndex = Wrap(_soundIndex, Math.Max(_availableSounds.Count, 1));
+        }
+
+        private SoundType GetCurrentType() =>
+            (_availableTypes.Length == 0) ? SoundType.Unknown : _availableTypes[_typeIndex];
 
         private static bool HasAvailableSounds(TrainCar car, SoundType soundType)
         {
-            if (Main.soundLoader == null) 
-            {
-                Main.DebugLog(() => $"CommsRadioAPI: SoundLoader is null for {soundType} check");
+            if (Main.soundLoader == null)
                 return false;
-            }
-            
-            // Only check car-specific sounds - don't fall back to generic sounds
+
             var carSounds = Main.soundLoader.GetAvailableSoundsForTrain(car.carType);
-            if (carSounds.TryGetValue(soundType, out var carSpecificSounds) && carSpecificSounds.Count > 0)
-            {
-                Main.DebugLog(() => $"CommsRadioAPI: Found {carSpecificSounds.Count} car-specific {soundType} sounds for {car.carType}");
-                return true;
-            }
-            
-            Main.DebugLog(() => $"CommsRadioAPI: No car-specific sounds available for {soundType} (car: {car.carType})");
-            return false;
-        }
-
-        private static CommsRadioState CreateState(TrainCar car, SoundType[] soundTypes, int index)
-        {
-            if (soundTypes.Length == 0)
-            {
-                return new CommsRadioState(
-                    titleText: "SOUNDS",
-                    contentText: $"No sound types available for {car.carType}",
-                    actionText: "cancel",
-                    buttonBehaviour: ButtonBehaviourType.Regular);
-            }
-
-            var currentType = soundTypes[index];
-            var content = $"Car: {car.carType}\nSound Type:\n{currentType}";
-            
-            return new CommsRadioState(
-                titleText: "SOUNDS",
-                contentText: content,
-                actionText: "next",
-                buttonBehaviour: ButtonBehaviourType.Override);
-        }
-
-        public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
-        {
-            if (!Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, out RaycastHit hit, SIGNAL_RANGE, trainCarMask))
-            {
-                return new SelectCarBehaviour();
-            }
-
-            TrainCar? targetCar = TrainCar.Resolve(hit.transform.root);
-            if (targetCar != selectedCar)
-            {
-                return new SelectCarBehaviour();
-            }
-
-            return this;
-        }
-
-        public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
-        {
-            if (availableSoundTypes.Length == 0)
-            {
-                return new SelectCarBehaviour();
-            }
-
-            switch (action)
-            {
-                case InputAction.Activate:
-                    var currentType = availableSoundTypes[soundTypeIndex];
-                    utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-                    
-                    // Check if it's HornHit and show warning
-                    if (currentType == SoundType.HornHit)
-                    {
-                        return new ConfirmHornHitBehaviour(selectedCar, currentType);
-                    }
-                    else
-                    {
-                        return new SelectSoundBehaviour(selectedCar, currentType);
-                    }
-
-                case InputAction.Up:
-                    var newIndex = (soundTypeIndex + 1) % availableSoundTypes.Length;
-                    return new SelectSoundTypeBehaviour(selectedCar, newIndex);
-
-                case InputAction.Down:
-                    var prevIndex = (soundTypeIndex - 1 + availableSoundTypes.Length) % availableSoundTypes.Length;
-                    return new SelectSoundTypeBehaviour(selectedCar, prevIndex);
-
-                default:
-                    return this;
-            }
-        }
-    }
-
-    // State: Confirm HornHit warning
-    public class ConfirmHornHitBehaviour : AStateBehaviour
-    {
-        private const float SIGNAL_RANGE = 200f; // Increased range for VR
-        private readonly LayerMask trainCarMask;
-        private readonly TrainCar selectedCar;
-        private readonly SoundType soundType;
-
-        public ConfirmHornHitBehaviour(TrainCar car, SoundType type) : base(new CommsRadioState(
-            titleText: "SOUNDS",
-            contentText: "WARNING: HornHit sounds may only work once and can cause issues.\n\nContinue anyway?",
-            actionText: "confirm",
-            buttonBehaviour: ButtonBehaviourType.Regular))
-        {
-            selectedCar = car;
-            soundType = type;
-            trainCarMask = LayerMask.GetMask("Train_Big_Collider", "Train_Car", "TrainCar", "Default");
-        }
-
-        public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
-        {
-            if (!Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, out RaycastHit hit, SIGNAL_RANGE, trainCarMask))
-            {
-                return new SelectCarBehaviour();
-            }
-
-            TrainCar? targetCar = TrainCar.Resolve(hit.transform.root);
-            if (targetCar != selectedCar)
-            {
-                return new SelectCarBehaviour();
-            }
-
-            return this;
-        }
-
-        public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
-        {
-            if (action == InputAction.Activate)
-            {
-                utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-                return new SelectSoundBehaviour(selectedCar, soundType);
-            }
-            return this;
-        }
-    }
-
-    // State: Select specific sound
-    public class SelectSoundBehaviour : AStateBehaviour
-    {
-        private const float SIGNAL_RANGE = 200f; // Increased range for VR
-        private readonly LayerMask trainCarMask;
-        private readonly TrainCar selectedCar;
-        private readonly SoundType soundType;
-        private readonly List<SoundDefinition> availableSounds;
-        private readonly int soundIndex;
-
-        public SelectSoundBehaviour(TrainCar car, SoundType type, int index = 0) : base(CreateState(car, type, GetAvailableSounds(car, type), index))
-        {
-            selectedCar = car;
-            soundType = type;
-            availableSounds = GetAvailableSounds(car, type);
-            soundIndex = index;
-            trainCarMask = LayerMask.GetMask("Train_Big_Collider", "Train_Car", "TrainCar", "Default");
-        }
-
-        private static List<SoundDefinition> GetAvailableSounds(TrainCar car, SoundType soundType)
-        {
-            var sounds = new List<SoundDefinition>();
-            
-            if (Main.soundLoader != null)
-            {
-                // Only get car-specific sounds (no generic sounds exist anymore)
-                var carSounds = Main.soundLoader.GetAvailableSoundsForTrain(car.carType);
-                if (carSounds.TryGetValue(soundType, out var carSpecificSounds))
-                {
-                    sounds.AddRange(carSpecificSounds);
-                }
-            }
-            
-            return sounds;
-        }
-
-        private static CommsRadioState CreateState(TrainCar car, SoundType soundType, List<SoundDefinition> sounds, int index)
-        {
-            if (sounds.Count == 0)
-            {
-                return new CommsRadioState(
-                    titleText: "SOUNDS",
-                    contentText: $"No {soundType} sounds available",
-                    actionText: "cancel",
-                    buttonBehaviour: ButtonBehaviourType.Regular);
-            }
-
-            var currentSound = sounds[index];
-            var content = $"Sound:\n{currentSound.name}";
-            
-            if (soundType == SoundType.HornHit)
-            {
-                content += "\n[WARNING: May not work if changed before]";
-            }
-            
-            return new CommsRadioState(
-                titleText: "SOUNDS",
-                contentText: content,
-                actionText: "confirm",
-                buttonBehaviour: ButtonBehaviourType.Override);
-        }
-
-        public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
-        {
-            if (!Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, out RaycastHit hit, SIGNAL_RANGE, trainCarMask))
-            {
-                return new SelectCarBehaviour();
-            }
-
-            TrainCar? targetCar = TrainCar.Resolve(hit.transform.root);
-            if (targetCar != selectedCar)
-            {
-                return new SelectCarBehaviour();
-            }
-
-            return this;
-        }
-
-        public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
-        {
-            if (availableSounds.Count == 0)
-            {
-                return new SelectCarBehaviour();
-            }
-
-            switch (action)
-            {
-                case InputAction.Activate:
-                    ApplySelectedSound();
-                    utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-                    return new SelectCarBehaviour();
-
-                case InputAction.Up:
-                    var newIndex = (soundIndex + 1) % availableSounds.Count;
-                    return new SelectSoundBehaviour(selectedCar, soundType, newIndex);
-
-                case InputAction.Down:
-                    var prevIndex = (soundIndex - 1 + availableSounds.Count) % availableSounds.Count;
-                    return new SelectSoundBehaviour(selectedCar, soundType, prevIndex);
-
-                default:
-                    return this;
-            }
+            return carSounds.TryGetValue(soundType, out var specific) && specific.Count > 0;
         }
 
         private void ApplySelectedSound()
         {
-            if (availableSounds.Count == 0) return;
+            if (_availableSounds.Count == 0) return;
 
-            var selectedSound = availableSounds[soundIndex];
-            
-            Main.DebugLog(() => $"CommsRadioAPI: Applying sound {selectedSound.name} (type: {selectedSound.type}) to car {selectedCar.ID}");
+            var selected = _availableSounds[_soundIndex];
+            Main.DebugLog(() => $"CommsRadio: Applying {selected.name} ({selected.type}) to {_selectedCar.ID}");
 
-            var soundSet = Registry.Get(selectedCar);
-            selectedSound.Apply(soundSet);
-            Registry.MarkAsCustomized(selectedCar);
+            var soundSet = Registry.Get(_selectedCar);
+            selected.Apply(soundSet);
+            Registry.MarkAsCustomized(_selectedCar);
+            AudioUtils.ResetAndApply(_selectedCar, selected.type, soundSet);
+        }
 
-            // Use ResetAndApply to ensure proper application
-            AudioUtils.ResetAndApply(selectedCar, selectedSound.type, soundSet);
-            Main.DebugLog(() => $"CommsRadioAPI: Applied sound {selectedSound.name} to car {selectedCar.ID}");
-            
-            Main.DebugLog(() => $"CommsRadioAPI: Sound application completed for {selectedSound.type}");
+        // --- Ray/Highlight helpers ---
+
+        private void PointToCar(TrainCar car)
+        {
+            if (_pointedCar == car)
+                return;
+
+            if (_pointedCar)
+                _pointedCar.OnDestroyCar -= OnPointedCarDestroyed;
+
+            if (car && IsLocomotive(car))
+            {
+                _pointedCar = car;
+                _pointedCar.OnDestroyCar += OnPointedCarDestroyed;
+                HighlightCar(_pointedCar, Controller.cargoLoaderControl.validMaterial);
+                CommsRadioController.PlayAudioFromRadio(Controller.cargoLoaderControl.hoverOverCar, transform);
+            }
+            else
+            {
+                _pointedCar = null!;
+                ClearHighlightCar();
+            }
+        }
+
+        private static bool IsLocomotive(TrainCar car)
+        {
+            return CarTypes.IsLocomotive(car.carLivery);
+        }
+
+        private void HighlightCar(TrainCar car, Material mat)
+        {
+            _highlighterRender.material = mat;
+            _highlighter.transform.localScale = car.Bounds.size + HighlightExtra;
+
+            var up = car.transform.up * (_highlighter.transform.localScale.y * 0.5f);
+            var fwd = car.transform.forward * car.Bounds.center.z;
+            var pos = car.transform.position + up + fwd;
+
+            _highlighter.transform.SetPositionAndRotation(pos, car.transform.rotation);
+            _highlighter.SetActive(true);
+            _highlighter.transform.SetParent(car.transform, true);
+        }
+
+        private void ClearHighlightCar()
+        {
+            if (_pointedCar)
+            {
+                _pointedCar.OnDestroyCar -= OnPointedCarDestroyed;
+            }
+
+            if (_highlighter != null)
+            {
+                _highlighter.SetActive(false);
+                _highlighter.transform.SetParent(null);
+            }
+        }
+
+        private void OnPointedCarDestroyed(TrainCar destroyedCar)
+        {
+            if (destroyedCar)
+                destroyedCar.OnDestroyCar -= OnPointedCarDestroyed;
+            ClearHighlightCar();
+        }
+
+        private static int Wrap(int value, int count)
+        {
+            if (count <= 0) return 0;
+            var v = value % count;
+            return v < 0 ? v + count : v;
         }
     }
 }
