@@ -1,13 +1,12 @@
 {
   "Id": "ZSounds",
   "DisplayName": "Zeibach's Sounds",
-  "Author": "Zeibach, rewrite by Fuggschen",
-  "Version": "0.2.1",
+  "Author": "Zeibach | Maintained by Fuggschen",
+  "Version": "2.0.0",
   "ManagerVersion": "0.27.3",
-  "LoadAfter": ["DVCustomCarLoader", "CommsRadioAPI"],
-  "Requirements": ["CommsRadioAPI"],
+  "LoadAfter": ["DVCustomCarLoader"],
   "AssemblyName": "ZSounds.dll",
   "EntryMethod": "DvMod.ZSounds.Main.Load",
-  "HomePage": "https://www.nexusmods.com/derailvalley/mods/1231",
-  "Repository": "https://raw.githubusercontent.com/Fuggschen/dv-zsounds/refs/heads/master/resources/repository.json"
+  "HomePage": "https://www.nexusmods.com/derailvalley/mods/249",
+  "Repository": "https://raw.githubusercontent.com/mspielberg/dv-zsounds/refs/heads/master/resources/repository.json"
 }
