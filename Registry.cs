@@ -1,6 +1,3 @@
-using DvMod.ZSounds.Config;
-using HarmonyLib;
-using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
 namespace DvMod.ZSounds
@@ -8,59 +5,35 @@ namespace DvMod.ZSounds
     public static class Registry
     {
         public static readonly Dictionary<string, SoundSet> soundSets = new Dictionary<string, SoundSet>();
+        public static readonly HashSet<string> customizedCars = new HashSet<string>();
+
         public static SoundSet Get(TrainCar car)
         {
             if (!soundSets.TryGetValue(car.logicCar.carGuid, out var soundSet))
             {
-                soundSets[car.logicCar.carGuid] = soundSet = Config.Config.Active!.Apply(car);
+                if (Main.soundLoader != null)
+                {
+                    soundSet = Main.soundLoader.CreateSoundSetForTrain(car);
+                }
+                soundSet ??= new SoundSet();
+                soundSets[car.logicCar.carGuid] = soundSet;
             }
             return soundSet;
         }
 
-        public static void LoadFromSaveManager()
+        public static void MarkAsCustomized(TrainCar car)
         {
-            var saved = SaveGameManager.data?.GetJObject(typeof(Registry).FullName);
-            if (saved == null)
-                return;
-
-            foreach (var (guid, soundsObj) in saved)
-            {
-                if (soundsObj is JObject obj)
-                {
-                    var soundSet = new SoundSet();
-                    foreach (var (typeStr, soundName) in obj)
-                    {
-                        if (Config.Config.Active!.sounds.TryGetValue(soundName.Value<string>(), out var soundDefinition))
-                            soundSet.sounds[Config.Util.ParseEnum<SoundType>(typeStr)] = soundDefinition;
-                    }
-                    if (soundSet.sounds.Count > 0)
-                        soundSets[guid] = soundSet;
-                }
-            }
+            customizedCars.Add(car.logicCar.carGuid);
         }
 
-        [HarmonyPatch(typeof(SaveGameManager), nameof(SaveGameManager.Save))]
-        public static class SavePatch
+        public static bool IsCustomized(TrainCar car)
         {
-            public static void Prefix()
-            {
-                var obj = new JObject();
-                foreach (var (guid, soundSet) in soundSets)
-                {
-                    if (soundSet.sounds.Count > 0)
-                        obj[guid] = soundSet.ToJson();
-                }
-                SaveGameManager.data.SetJObject(typeof(Registry).FullName, obj);
-            }
+            return customizedCars.Contains(car.logicCar.carGuid);
         }
 
-        [HarmonyPatch(typeof(SaveGameManager), nameof(SaveGameManager.Load))]
-        public static class LoadPatch
+        public static void ClearCustomization(TrainCar car)
         {
-            public static void Postfix()
-            {
-                LoadFromSaveManager();
-            }
+            customizedCars.Remove(car.logicCar.carGuid);
         }
     }
 }

@@ -3,3 +3,8 @@ bin/
 obj/
 /dv
 /*.dll
+Directory.Build.targets
+.github/
+References/
+dist/
+build-release.ps1

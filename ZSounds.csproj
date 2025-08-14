@@ -1,26 +1,42 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <RootNamespace>DvMod.ZSounds</RootNamespace>
-    <InformationalVersion>1.4.2</InformationalVersion>
-    <LangVersion>8.0</LangVersion>
+    <InformationalVersion>2.0.0</InformationalVersion>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
   </ItemGroup>
+  <!-- Exclude decompiled game source to avoid conflicting builds -->
+  <ItemGroup>
+    <Compile Remove="References\**\*.cs" />
+  </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RedworkDE.Publicizer" Version="0.2.2" />
-    <PublicizeAssembly Include="Assembly-CSharp" Private="True" Readonly="True" />
+    <PackageReference Include="Krafs.Publicizer" Version="2.2.1" />
+    <Publicize Include="Assembly-CSharp" IncludeCompilerGeneratedMembers="false" />
+    <Publicize Include="CommandTerminal" IncludeCompilerGeneratedMembers="false" />
+    <Publicize Include="DV.Utils" IncludeCompilerGeneratedMembers="false" />
+    <Publicize Include="DV.CabControls.Spec" IncludeCompilerGeneratedMembers="false" />
+    <Publicize Include="DV.LayeredAudio" IncludeCompilerGeneratedMembers="false" />
+    <Publicize Include="DV.Simulation" IncludeCompilerGeneratedMembers="false" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Assembly-CSharp" />
-    <Reference Include="DV.Interaction" />
+    <Reference Include="CommandTerminal" />
+    <Reference Include="CommsRadioAPI" />
+    <Reference Include="DV.ThingTypes" />
     <Reference Include="DV.Utils" />
-    <Reference Include="DVCustomCarLoader" />
+    <Reference Include="DV.CabControls.Spec" />
+    <Reference Include="DV.LayeredAudio" />
+    <Reference Include="DV.Simulation" />
     <Reference Include="0Harmony" />
-    <Reference Include="NAudio" />
     <Reference Include="Newtonsoft.Json" />
+    <Reference Include="Unity.TextMeshPro" />
     <Reference Include="UnityEngine" />
     <Reference Include="UnityEngine.AudioModule" />
     <Reference Include="UnityEngine.CoreModule" />

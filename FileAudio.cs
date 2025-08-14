@@ -1,11 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+
 using UnityEngine;
 using UnityEngine.Networking;
 
 namespace DvMod.ZSounds
 {
+    public class ConfigException : Exception
+    {
+        public ConfigException(string message) : base(message) { }
+    }
+
     public static class FileAudio
     {
         private static readonly Dictionary<string, AudioClip> cache = new Dictionary<string, AudioClip>();
@@ -19,14 +25,36 @@ namespace DvMod.ZSounds
             Main.DebugLog(() => $"Loading {path}");
             var extension = Path.GetExtension(path);
             if (!AudioTypes.ContainsKey(extension))
-                throw new Config.ConfigException($"Unsupported file extension for sound file: \"{path}\"");
+                throw new ConfigException($"Unsupported file extension for sound file: \"{path}\"");
+
+            // Check file exists before loading
+            if (!File.Exists(path))
+                throw new ConfigException($"Sound file not found: \"{path}\"");
+
             var audioType = AudioTypes[Path.GetExtension(path)];
             var webRequest = UnityWebRequestMultimedia.GetAudioClip(new Uri(path).AbsoluteUri, audioType);
             var async = webRequest.SendWebRequest();
             while (!async.isDone)
             {
             }
+
+            // Check for errors before accessing audio clip
+            if (webRequest.isNetworkError || webRequest.isHttpError)
+            {
+                var error = $"Failed to load audio file \"{path}\": {webRequest.error}";
+                webRequest.Dispose();
+                throw new ConfigException(error);
+            }
+
             clip = DownloadHandlerAudioClip.GetContent(webRequest);
+            webRequest.Dispose(); // Clean up web request
+
+            if (clip == null)
+                throw new ConfigException($"Failed to extract audio clip from file: \"{path}\"");
+
+            // Set clip name to filename for debugging
+            clip.name = Path.GetFileNameWithoutExtension(path);
+
             cache[path] = clip;
             return clip;
         }

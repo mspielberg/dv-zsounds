@@ -1,40 +1,27 @@
-using HarmonyLib;
-using UnityModManagerNet;
+using System;
 
 namespace DvMod.ZSounds
 {
     public static class SpawnPatches
     {
-        public static void ApplyAudio(TrainCar car)
+        // Manually applies audio to a train car using the registry system
+        public static void ApplyAudio(TrainAudio trainAudio)
         {
-            var soundSet = Registry.Get(car);
-            Main.DebugLog(() => $"Applying sounds for {car.ID}");
-            switch (car.carType)
-            {
-                case TrainCarType.LocoDiesel:
-                    DieselAudio.Apply(car, soundSet);
-                    break;
-                case TrainCarType.LocoShunter:
-                    ShunterAudio.Apply(car, soundSet);
-                    break;
-                case TrainCarType.LocoSteamHeavy:
-                    SteamAudio.Apply(car, soundSet);
-                    break;
-                default:
-                    if (UnityModManager.FindMod("DVCustomCarLoader").Loaded)
-                        CCLAudio.Apply(car, soundSet);
-                    break;
-            }
+            var car = trainAudio.car;
+            ApplyAudio(car);
         }
 
-        [HarmonyPatch(typeof(TrainCar), nameof(TrainCar.InitAudio))]
-        public static class InitAudioPatch
+        // Manually applies audio to a train car using the registry system
+        public static void ApplyAudio(TrainCar car)
         {
-            public static void Postfix(TrainCar __instance)
-            {
-                if (CarTypes.IsLocomotive(__instance.carType))
-                    ApplyAudio(__instance);
-            }
+            Main.DebugLog(() => $"Manually applying sounds for {car.ID}");
+
+            // Use registry system
+            var soundSet = Registry.Get(car);
+            AudioUtils.Apply(car, soundSet);
+            Main.DebugLog(() => $"Applied sounds for {car.ID}");
         }
+
+        // Intentionally no automatic patching of TrainAudio.SetupForCar.
     }
 }
