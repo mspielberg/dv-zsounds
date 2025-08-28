@@ -12,6 +12,9 @@ namespace DvMod.ZSounds.AudioMappers
     // Base implementation for audio mappers
     public abstract class BaseAudioMapper : IAudioMapper
     {
+    // Cache readers per car to keep references stable even if clips are swapped
+    private static readonly Dictionary<string, Dictionary<SoundType, AudioClipPortReader>> _readerCache = new();
+
         public abstract Dictionary<SoundType, string> SoundMapping { get; }
 
         public LayeredAudio? GetLayeredAudio(SoundType soundType, TrainAudio trainAudio)
@@ -107,6 +110,18 @@ namespace DvMod.ZSounds.AudioMappers
             if (simAudio == null)
                 return null;
 
+            // Check cache first
+            var carGuid = trainAudio.car.logicCar?.carGuid;
+            var hasGuid = !string.IsNullOrEmpty(carGuid);
+            var carGuidNonNull = carGuid ?? string.Empty;
+            if (hasGuid && _readerCache.TryGetValue(carGuidNonNull, out var map) && map.TryGetValue(soundType, out var cached))
+            {
+                if (cached != null)
+                    return cached;
+                // Clean up null refs
+                map.Remove(soundType);
+            }
+
             // Check if the SimAudioModule is fully initialized
             if (simAudio.audioClipSimReadersController?.entries == null)
             {
@@ -116,10 +131,26 @@ namespace DvMod.ZSounds.AudioMappers
 
             var portReaders = simAudio.audioClipSimReadersController.entries.OfType<AudioClipPortReader>();
 
-            // Some entries may contain null clips; guard against nulls when matching by name
-            var match = portReaders.FirstOrDefault(portReader => portReader.clips != null && portReader.clips.Any(clip => clip != null && clip.name == path));
+            // Prefer matching by a stable identifier (object name),
+            // but also support legacy matching by clip name for older mappings.
+            var match = portReaders.FirstOrDefault(portReader =>
+                // Match by component or GameObject name (stable even if clips are replaced)
+                string.Equals(portReader.name, path, System.StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(portReader.gameObject.name, path, System.StringComparison.OrdinalIgnoreCase) ||
+                // Fallback: match by any clip name (can break after replacement)
+                (portReader.clips != null && portReader.clips.Any(clip => clip != null && string.Equals(clip.name, path, System.StringComparison.OrdinalIgnoreCase)))
+            );
             if (match == null)
                 Main.DebugLog(() => $"Could not find AudioClipPortReader: carType={trainAudio.car.carType}, soundType={soundType}, path={path}");
+            else if (hasGuid)
+            {
+                if (!_readerCache.TryGetValue(carGuidNonNull, out var dict))
+                {
+                    dict = new Dictionary<SoundType, AudioClipPortReader>();
+                    _readerCache[carGuidNonNull] = dict;
+                }
+                dict[soundType] = match;
+            }
             return match;
         }
     }
