@@ -116,7 +116,8 @@ namespace DvMod.ZSounds.AudioMappers
 
             var portReaders = simAudio.audioClipSimReadersController.entries.OfType<AudioClipPortReader>();
 
-            var match = portReaders.FirstOrDefault(portReader => portReader.clips.Any(clip => clip.name == path));
+            // Some entries may contain null clips; guard against nulls when matching by name
+            var match = portReaders.FirstOrDefault(portReader => portReader.clips != null && portReader.clips.Any(clip => clip != null && clip.name == path));
             if (match == null)
                 Main.DebugLog(() => $"Could not find AudioClipPortReader: carType={trainAudio.car.carType}, soundType={soundType}, path={path}");
             return match;

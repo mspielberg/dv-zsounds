@@ -88,6 +88,17 @@ namespace DvMod.ZSounds
 
                 var (trainCar, soundType) = trainInfo.Value;
 
+                // Only modify audio if this car has been customized via CommsRadio
+                if (!Registry.IsCustomized(trainCar))
+                {
+                    _hasPitchCurveCache[instanceId] = false; // Cache negative result
+                    if (isTargetSound)
+                    {
+                        Main.DebugLog(() => $"AudioSourcePitchPatch: SKIP - {audioName} - {trainCar.carType} not customized");
+                    }
+                    return;
+                }
+
                 // First try to get pitch curve from available sounds (CommsRadio approach)
                 // This doesn't require Registry.IsCustomized() 
                 var availableSounds = Main.soundLoader?.GetAvailableSoundsForTrain(trainCar.carType);

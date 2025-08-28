@@ -82,7 +82,6 @@ namespace DvMod.ZSounds
             if (value)
             {
                 modEntry.Logger.Log("ZSounds mod enabling...");
-                modEntry.Logger.Log($"AudioUtils Defaults count at startup: {AudioUtils.GetDefaultsCount()}");
 
                 try
                 {

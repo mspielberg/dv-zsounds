@@ -18,7 +18,7 @@ namespace DvMod.ZSounds
         public static void Initialize()
         {
             // No-op: Harmony in Main.PatchAll will discover our patch below and register the mode.
-            Main.mod?.Logger.Log("CommsRadio: Sound Switcher mode ready (Harmony registration)");
+            Main.DebugLog(() => "CommsRadio: Sound Switcher mode ready (Harmony registration)");
         }
 
         public static void Cleanup()
@@ -45,7 +45,7 @@ namespace DvMod.ZSounds
                         if (existing == null)
                         {
                             existing = __instance.gameObject.AddComponent<CommsRadioSoundSwitcherMode>();
-                            Main.mod?.Logger.Log("CommsRadio: Sound Switcher mode component added to controller");
+                            Main.DebugLog(() => "CommsRadio: Sound Switcher mode component added to controller");
                         }
                         CommsRadioModeRegistrar.TryRegisterOnce(__instance, existing);
                     }
@@ -134,7 +134,7 @@ namespace DvMod.ZSounds
                             {
                                 var args = BuildArgsDynamic(modeIdx, titleIdx);
                                 m.Invoke(controller, args);
-                                Main.mod?.Logger.Log($"CommsRadio: Sound Switcher mode registered via AddMode overload (#{inspected}, params: {string.Join(", ", ps.Select(p => p.ParameterType.Name))})");
+                                Main.DebugLog(() => $"CommsRadio: Sound Switcher mode registered via AddMode overload (#{inspected}, params: {string.Join(", ", ps.Select(p => p.ParameterType.Name))})");
                                 return true;
                             }
                         }
@@ -157,7 +157,7 @@ namespace DvMod.ZSounds
                         if (!list.Contains(mode))
                         {
                             list.Add(mode);
-                            Main.mod?.Logger.Log($"CommsRadio: Injected Sound Switcher into field '{f.Name}' ({t.Name})");
+                            Main.DebugLog(() => $"CommsRadio: Injected Sound Switcher into field '{f.Name}' ({t.Name})");
                             return true;
                         }
                     }
@@ -492,7 +492,7 @@ namespace DvMod.ZSounds
             var soundSet = Registry.Get(_selectedCar);
             selected.Apply(soundSet);
             Registry.MarkAsCustomized(_selectedCar);
-            AudioUtils.ResetAndApply(_selectedCar, selected.type, soundSet);
+            AudioUtils.Apply(_selectedCar, soundSet);
         }
 
         // --- Ray/Highlight helpers ---

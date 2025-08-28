@@ -60,66 +60,8 @@ namespace DvMod.ZSounds
             GUILayout.BeginHorizontal();
 
 
-            if (GUILayout.Button("Reset Current Car", GUILayout.Width(120)))
-            {
-                var car = PlayerManager.Car;
-                if (car == null)
-                {
-                    Main.mod?.Logger.Log("No car selected. Enter a locomotive to reset its sounds.");
-                }
-                else if (!Main.HasHorn(car.carType))
-                {
-                    Main.mod?.Logger.Log("Current car is not a locomotive. Only locomotive sounds can be reset.");
-                }
-                else
-                {
-                    try
-                    {
-                        Main.mod?.Logger.Log($"Resetting {car.carType} sounds to default...");
-
-                        var hasValidDefaults = false;
-                        foreach (var soundType in SoundTypes.audioClipsSoundTypes.Concat(SoundTypes.layeredAudioSoundTypes))
-                        {
-                            var key = new AudioUtils.DefaultKey(car.carType, soundType);
-                            if (AudioUtils.HasDefaults(key))
-                            {
-                                hasValidDefaults = true;
-                            }
-                        }
-
-                        // Clear customization tracking and sound set
-                        Registry.soundSets.Remove(car.logicCar.carGuid);
-                        Registry.ClearCustomization(car);
-
-                        if (hasValidDefaults)
-                        {
-                            Main.mod?.Logger.Log("Using stored defaults to reset sounds...");
-                            AudioUtils.ResetAllToDefaults(car);
-
-                            // After resetting to defaults, reapply sounds from cleared Registry
-                            // This causes game to use original audio with default settings
-                            Main.mod?.Logger.Log("Reapplying sounds from cleared Registry to restore game defaults...");
-                            var emptySoundSet = Registry.Get(car);
-                            AudioUtils.Apply(car, emptySoundSet);
-                        }
-                        else
-                        {
-                            Main.mod?.Logger.Warning("No stored defaults found - this shouldn't happen with comprehensive defaults capture!");
-                            Main.mod?.Logger.Log("Clearing customizations only - game should restore originals automatically");
-                            // When no defaults exist, clearing customizations allows game
-                            // to restore original sounds automatically
-                        }
-
-                        Main.mod?.Logger.Log($"Successfully reset {car.carType} sounds to default");
-                    }
-                    catch (System.Exception ex)
-                    {
-                        Main.mod?.Logger.Error($"Failed to reset car sounds: {ex.Message}");
-                        Main.mod?.Logger.Error($"Stack trace: {ex.StackTrace}");
-                    }
-                }
-            }
-
+            // Removed reset button for now
+            GUILayout.Label("Reset: For reliable sound reset, restart the game.", GUILayout.Width(300));
             GUILayout.EndHorizontal();
 
             // Current car info
