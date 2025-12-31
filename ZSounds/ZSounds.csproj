@@ -28,7 +28,6 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp" />
     <Reference Include="CommandTerminal" />
-    <Reference Include="CommsRadioAPI" />
     <Reference Include="DV.ThingTypes" />
     <Reference Include="DV.Utils" />
     <Reference Include="DV.CabControls.Spec" />
@@ -45,6 +44,7 @@
     <Reference Include="UnityEngine.UnityWebRequestAudioModule" />
     <Reference Include="UnityEngine.PhysicsModule" />
     <Reference Include="UnityModManager" />
+	<Reference Include="DerailValleyModToolbar" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

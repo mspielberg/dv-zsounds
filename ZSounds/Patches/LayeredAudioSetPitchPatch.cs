@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-
 using DV.ThingTypes;
-
 using HarmonyLib;
-
 using UnityEngine;
 
-namespace DvMod.ZSounds
+namespace DvMod.ZSounds.Patches
 {
     // Harmony patch that intercepts LayeredAudio.SetPitch calls to apply custom pitch curves
-    // from sound configurations. Needed because ChuffClipsSimReader continuously overwrites 
+    // from sound configurations. Needed because ChuffClipsSimReader continuously overwrites
     // pitch values, preventing custom curves from being applied.
     [HarmonyPatch(typeof(LayeredAudio), "SetPitch")]
     public static class LayeredAudioSetPitchPatch
@@ -35,7 +31,7 @@ namespace DvMod.ZSounds
 
         public static void Prefix(LayeredAudio __instance, ref float __0)
         {
-            if (__instance == null || Main.soundLoader == null)
+            if (__instance == null)
             {
                 return;
             }
@@ -84,52 +80,60 @@ namespace DvMod.ZSounds
                 var (trainCar, soundType) = trainInfo.Value;
 
                 // Early exit: Only proceed if this car has custom sounds applied
-                if (!Registry.IsCustomized(trainCar))
+                var isCustomized = Main.registryService?.IsCustomized(trainCar);
+                if (isCustomized != null)
                 {
                     _hasPitchCurveCache[instanceId] = false; // Cache negative result
                     return;
                 }
 
-                // Try to get pitch curve from available sounds (CommsRadio approach)
-                var availableSounds = Main.soundLoader?.GetAvailableSoundsForTrain(trainCar.carType);
-                if (availableSounds != null && availableSounds.TryGetValue(soundType, out var soundsOfType))
+                SoundDefinition? soundDefinition = null;
+
+                // ONLY get sound definition from the locomotive's SoundSet
+                // DO NOT use available sounds - that would apply configs to vanilla sounds!
+                var soundSet = Main.registryService?.GetSoundSet(trainCar);
+
+                if (soundType == SoundType.Unknown)
                 {
-                    // Use the first available sound of this type that has a pitch curve
-                    var soundWithCurve = soundsOfType.FirstOrDefault(s => s.pitchCurve != null);
-                    if (soundWithCurve?.pitchCurve != null)
+                    // Handle generic sounds by matching LayeredAudio name
+                    soundDefinition = soundSet?.GetGenericSound(audioName);
+
+                    if (soundDefinition == null)
                     {
-                        _hasPitchCurveCache[instanceId] = true; // Cache positive result
+                        // No custom generic sound selected, use defaults
+                        _hasPitchCurveCache[instanceId] = false;
+                        return;
+                    }
+                }
+                else
+                {
+                    // Get the sound definition from the SoundSet (only if actively selected)
+                    soundDefinition = soundSet?[soundType];
 
-                        // Apply the pitch curve
-                        var normalizedInput = NormalizePitchInput(__0, soundType);
-                        var curveMultiplier = soundWithCurve.pitchCurve.Evaluate(normalizedInput);
-
-                        // Modify the pitch with the curve
-                        var originalPitch = __0;
-                        var finalPitch = __0 *= curveMultiplier;
-
-                        // Enhanced debug logging for all sound types
-                        Main.DebugLog(() => $"LayeredAudioSetPitchPatch: Applied pitch curve to {soundType} - original: {originalPitch:F2}, normalized: {normalizedInput:F2}, multiplier: {curveMultiplier:F2}, final: {finalPitch:F2}");
+                    if (soundDefinition == null)
+                    {
+                        // No custom sound selected for this type, use defaults
+                        _hasPitchCurveCache[instanceId] = false;
                         return;
                     }
                 }
 
-                // Fallback: try Registry approach
-                var soundSet = Registry.Get(trainCar);
-                var soundDefinition = soundSet?[soundType];
-
+                // Apply pitch curve if we have a sound definition with one
                 if (soundDefinition?.pitchCurve != null)
                 {
                     _hasPitchCurveCache[instanceId] = true; // Cache positive result
 
-                    // Apply the pitch curve from Registry
+                    // Apply the pitch curve
                     var normalizedInput = NormalizePitchInput(__0, soundType);
                     var curveMultiplier = soundDefinition.pitchCurve.Evaluate(normalizedInput);
 
+                    // Modify the pitch with the curve
                     var originalPitch = __0;
                     var finalPitch = __0 *= curveMultiplier;
 
-                    Main.DebugLog(() => $"LayeredAudioSetPitchPatch: Applied Registry pitch curve to {soundType} - original: {originalPitch:F2}, normalized: {normalizedInput:F2}, multiplier: {curveMultiplier:F2}, final: {finalPitch:F2}");
+                    // Enhanced debug logging
+                    var soundName = soundType == SoundType.Unknown ? soundDefinition.name : soundType.ToString();
+                    Main.DebugLog(() => $"LayeredAudioSetPitchPatch: Applied pitch curve to {soundName} - original: {originalPitch:F2}, normalized: {normalizedInput:F2}, multiplier: {curveMultiplier:F2}, final: {finalPitch:F2}");
                     return;
                 }
 
@@ -245,11 +249,9 @@ namespace DvMod.ZSounds
 
                 // Determine sound type from the audio name (no need for full path analysis)
                 var soundType = DetermineSoundTypeFromPath(layeredAudio.name, "");
-                if (soundType == SoundType.Unknown)
-                {
-                    return null;
-                }
 
+                // For Unknown type, still return the info so generic sounds can be handled
+                // The caller will check if there's a generic sound definition
                 return (trainCar, soundType);
             }
             catch (Exception ex)

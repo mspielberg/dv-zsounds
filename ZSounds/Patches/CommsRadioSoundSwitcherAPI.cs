@@ -2,15 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
 using DV;
 using DV.ThingTypes;
-
 using HarmonyLib;
-
 using UnityEngine;
 
-namespace DvMod.ZSounds
+namespace DvMod.ZSounds.Patches
 {
     // Registers a CarChanger-style Comms Radio mode
     public static class CommsRadioSoundSwitcherAPI
@@ -96,52 +93,6 @@ namespace DvMod.ZSounds
             {
                 try
                 {
-                    var methods = controller.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                        .Where(m => m.Name == "AddMode");
-
-                    int inspected = 0;
-                    foreach (var m in methods)
-                    {
-                        inspected++;
-                        var ps = m.GetParameters();
-                        if (ps.Length >= 2)
-                        {
-                            // Build args for any order where both a mode and a title are present
-                            object[] BuildArgsDynamic(int modeIndex, int titleIndex)
-                            {
-                                var args = new object[ps.Length];
-                                for (int i = 0; i < ps.Length; i++)
-                                {
-                                    var pt = ps[i].ParameterType;
-                                    if (i == modeIndex)
-                                        args[i] = mode;
-                                    else if (i == titleIndex)
-                                        args[i] = title;
-                                    else if (pt == typeof(bool))
-                                        args[i] = false; // don't require cheat/sandbox
-                                    else if (ps[i].HasDefaultValue)
-                                        args[i] = ps[i].DefaultValue!;
-                                    else
-                                        args[i] = pt.IsValueType ? Activator.CreateInstance(pt)! : default!;
-                                }
-                                return args;
-                            }
-
-                            // Find mode index and title index anywhere
-                            int modeIdx = Array.FindIndex(ps, p => p.ParameterType.IsInstanceOfType(mode));
-                            int titleIdx = Array.FindIndex(ps, p => p.ParameterType == typeof(string));
-                            if (modeIdx >= 0 && titleIdx >= 0 && modeIdx != titleIdx)
-                            {
-                                var args = BuildArgsDynamic(modeIdx, titleIdx);
-                                m.Invoke(controller, args);
-                                Main.DebugLog(() => $"CommsRadio: Sound Switcher mode registered via AddMode overload (#{inspected}, params: {string.Join(", ", ps.Select(p => p.ParameterType.Name))})");
-                                return true;
-                            }
-                        }
-                    }
-
-                    Main.mod?.Logger.Warning("CommsRadio: Could not find AddMode to register Sound Switcher; mode may be undiscoverable.");
-                    // Fallback: try injecting into any IList<ICommsRadioMode> on the controller
                     var fields = controller.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                     foreach (var f in fields)
                     {
@@ -429,7 +380,9 @@ namespace DvMod.ZSounds
         {
             var list = new List<SoundType>();
 
-            if (Main.soundLoader == null)
+            // Check if loader service is available (new or legacy)
+            var hasLoaderService = Main.loaderService != null;
+            if (!hasLoaderService)
             {
                 _availableTypes = Array.Empty<SoundType>();
                 return;
@@ -442,12 +395,18 @@ namespace DvMod.ZSounds
 
                 bool supported = (st == SoundType.EngineStartup || st == SoundType.EngineShutdown);
 
-                if (!supported && AudioMapper.Mappers.TryGetValue(_selectedCar.carType, out var mapper))
+                // Try new discoveryService first, fallback to legacy AudioMapper
+                if (!supported)
                 {
-                    var ta = AudioUtils.GetTrainAudio(_selectedCar);
-                    bool hasLayered = SoundTypes.layeredAudioSoundTypes.Contains(st) && mapper.GetLayeredAudio(st, ta) != null;
-                    bool hasClips = SoundTypes.audioClipsSoundTypes.Contains(st) && mapper.GetAudioClipPortReader(st, ta) != null;
-                    supported = hasLayered || hasClips;
+                    if (Main.discoveryService != null)
+                    {
+                        // Use new service
+                        bool hasLayered = SoundTypes.layeredAudioSoundTypes.Contains(st) &&
+                                        Main.discoveryService.GetLayeredAudio(_selectedCar, st) != null;
+                        bool hasClips = SoundTypes.audioClipsSoundTypes.Contains(st) &&
+                                      Main.discoveryService.GetAudioClipPortReader(_selectedCar, st) != null;
+                        supported = hasLayered || hasClips;
+                    }
                 }
 
                 if (supported)
@@ -460,10 +419,13 @@ namespace DvMod.ZSounds
         private void BuildAvailableSounds()
         {
             _availableSounds.Clear();
-            if (Main.soundLoader == null)
+
+            // Try new service first, fallback to legacy
+            var carSounds = Main.loaderService?.GetAvailableSoundsForTrain(_selectedCar.carType);
+
+            if (carSounds == null)
                 return;
 
-            var carSounds = Main.soundLoader.GetAvailableSoundsForTrain(_selectedCar.carType);
             if (carSounds.TryGetValue(GetCurrentType(), out var carSpecific))
                 _availableSounds.AddRange(carSpecific);
 
@@ -475,10 +437,12 @@ namespace DvMod.ZSounds
 
         private static bool HasAvailableSounds(TrainCar car, SoundType soundType)
         {
-            if (Main.soundLoader == null)
+            // Try new service first, fallback to legacy
+            var carSounds = Main.loaderService?.GetAvailableSoundsForTrain(car.carType);
+
+            if (carSounds == null)
                 return false;
 
-            var carSounds = Main.soundLoader.GetAvailableSoundsForTrain(car.carType);
             return carSounds.TryGetValue(soundType, out var specific) && specific.Count > 0;
         }
 
@@ -489,10 +453,19 @@ namespace DvMod.ZSounds
             var selected = _availableSounds[_soundIndex];
             Main.DebugLog(() => $"CommsRadio: Applying {selected.name} ({selected.type}) to {_selectedCar.ID}");
 
-            var soundSet = Registry.Get(_selectedCar);
-            selected.Apply(soundSet);
-            Registry.MarkAsCustomized(_selectedCar);
-            AudioUtils.Apply(_selectedCar, soundSet);
+            // Use new services if available, fallback to legacy
+            if (Main.registryService != null && Main.applicatorService != null)
+            {
+                // New service architecture
+                var soundSet = Main.registryService.GetSoundSet(_selectedCar);
+                selected.Apply(soundSet);
+                Main.registryService.MarkAsCustomized(_selectedCar);
+                Main.applicatorService.ApplySoundSet(_selectedCar, soundSet);
+
+                // Save state persistently
+                Main.registryService.SaveSoundState(_selectedCar, soundSet);
+                Main.DebugLog(() => $"CommsRadio: Applied sound using new services");
+            }
         }
 
         // --- Ray/Highlight helpers ---

@@ -1,14 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-
 using DV.ThingTypes;
-
 using HarmonyLib;
-
 using UnityEngine;
 
-namespace DvMod.ZSounds
+namespace DvMod.ZSounds.Patches
 {
     // Harmony patch that intercepts AudioSource.pitch property sets to apply custom pitch curves
     // for whistle sounds. Needed because whistles use AudioSource directly instead of LayeredAudio.
@@ -40,7 +36,7 @@ namespace DvMod.ZSounds
             var currentPitch = value;  // Capture the value for logging
 
             // Early null checks
-            if (__instance == null || Main.soundLoader == null)
+            if (__instance == null)
             {
                 return;
             }
@@ -88,72 +84,16 @@ namespace DvMod.ZSounds
 
                 var (trainCar, soundType) = trainInfo.Value;
 
-                // Only modify audio if this car has been customized via CommsRadio
-                if (!Registry.IsCustomized(trainCar))
-                {
-                    _hasPitchCurveCache[instanceId] = false; // Cache negative result
-                    if (isTargetSound)
-                    {
-                        Main.DebugLog(() => $"AudioSourcePitchPatch: SKIP - {audioName} - {trainCar.carType} not customized");
-                    }
-                    return;
-                }
-
-                // First try to get pitch curve from available sounds (CommsRadio approach)
-                // This doesn't require Registry.IsCustomized() 
-                var availableSounds = Main.soundLoader?.GetAvailableSoundsForTrain(trainCar.carType);
-
-                if (availableSounds != null && availableSounds.TryGetValue(soundType, out var soundsOfType))
-                {
-                    // Use the first available sound of this type that has a pitch curve
-                    var soundWithCurve = soundsOfType.FirstOrDefault(s => s.pitchCurve != null);
-
-                    if (soundWithCurve?.pitchCurve != null)
-                    {
-                        _hasPitchCurveCache[instanceId] = true; // Cache positive result
-
-                        // Apply the pitch curve
-                        var normalizedInput = NormalizePitchInput(value, soundType);
-                        var curvePitchValue = soundWithCurve.pitchCurve.Evaluate(normalizedInput);
-
-                        // Replace the pitch with the curve value (not multiply)
-                        var originalPitch = value;
-                        var finalPitch = value = curvePitchValue;
-
-                        // Log detailed debugging for curve evaluation
-                        Main.DebugLog(() => $"AudioSourcePitchPatch: Applied pitch curve to {soundType} - original: {originalPitch:F2} → normalized: {normalizedInput:F3} → curve: {curvePitchValue:F2} → final: {finalPitch:F2}");
-                        return;
-                    }
-                    else if (isTargetSound)
-                    {
-                        Main.DebugLog(() => $"AudioSourcePitchPatch: FAIL - {audioName} - found {soundsOfType.Count} {soundType} sounds but none have pitch curves");
-                    }
-                }
-                else if (isTargetSound)
-                {
-                    Main.DebugLog(() => $"AudioSourcePitchPatch: FAIL - {audioName} - no available sounds for {trainCar.carType} {soundType}");
-                }
-
-                // Fallback: Only check Registry if we have customized sounds there
-                if (!Registry.IsCustomized(trainCar))
-                {
-                    _hasPitchCurveCache[instanceId] = false; // Cache negative result
-                    if (isTargetSound)
-                    {
-                        Main.DebugLog(() => $"AudioSourcePitchPatch: FAIL - {audioName} - car {trainCar.carType} not customized in Registry and no CommsRadio curves");
-                    }
-                    return;
-                }
-
-                // Fallback: try Registry approach
-                var soundSet = Registry.Get(trainCar);
+                // ONLY apply pitch curves from the locomotive's SoundSet (actively selected sounds)
+                // DO NOT use available sounds - that would apply configs to vanilla sounds!
+                var soundSet = Main.registryService?.GetSoundSet(trainCar);
                 var soundDefinition = soundSet?[soundType];
 
                 if (soundDefinition?.pitchCurve != null)
                 {
                     _hasPitchCurveCache[instanceId] = true; // Cache positive result
 
-                    // Apply the pitch curve from Registry
+                    // Apply the pitch curve
                     var normalizedInput = NormalizePitchInput(value, soundType);
                     var curvePitchValue = soundDefinition.pitchCurve.Evaluate(normalizedInput);
 
@@ -161,20 +101,16 @@ namespace DvMod.ZSounds
                     var originalPitch = value;
                     var finalPitch = value = curvePitchValue;
 
-                    // Log only successful Registry pitch curve applications
-                    Main.DebugLog(() => $"AudioSourcePitchPatch: Applied Registry pitch curve to {soundType} - original: {originalPitch:F2} → final: {finalPitch:F2}");
+                    // Log detailed debugging for curve evaluation
+                    Main.DebugLog(() => $"AudioSourcePitchPatch: Applied pitch curve to {soundType} - original: {originalPitch:F2} → normalized: {normalizedInput:F3} → curve: {curvePitchValue:F2} → final: {finalPitch:F2}");
                     return;
                 }
-                else if (isTargetSound)
-                {
-                    Main.DebugLog(() => $"AudioSourcePitchPatch: FAIL - {audioName} - Registry has no {soundType} definition with pitch curve");
-                }
 
-                // No pitch curve available - cache negative result
+                // No pitch curve in SoundSet, use defaults
                 _hasPitchCurveCache[instanceId] = false;
                 if (isTargetSound)
                 {
-                    Main.DebugLog(() => $"AudioSourcePitchPatch: FINAL FAIL - {audioName} - no pitch curve found anywhere, cached as no curve");
+                    Main.DebugLog(() => $"AudioSourcePitchPatch: No pitch curve for {soundType} in SoundSet, using defaults");
                 }
             }
             catch (System.Exception ex)
