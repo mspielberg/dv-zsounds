@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using DV.Simulation.Ports;
 using UnityEngine;
 
 namespace DvMod.ZSounds.SoundHandler
@@ -13,6 +15,39 @@ namespace DvMod.ZSounds.SoundHandler
         // Cache structure: trainCarID -> soundType -> cached settings
         private readonly Dictionary<string, Dictionary<SoundType, CachedAudioSettings>> _cache =
             new Dictionary<string, Dictionary<SoundType, CachedAudioSettings>>();
+
+        // Cache for AudioClipPortReader settings: trainCarID -> soundType -> cached settings
+        private readonly Dictionary<string, Dictionary<SoundType, CachedAudioClipSettings>> _audioClipCache =
+            new Dictionary<string, Dictionary<SoundType, CachedAudioClipSettings>>();
+
+        /// <summary>
+        /// Caches the current state of an AudioClipPortReader if not already cached.
+        /// This should be called BEFORE any modifications are made.
+        /// </summary>
+        public void CacheIfNeeded(TrainCar car, SoundType soundType, AudioClipPortReader portReader)
+        {
+            var carId = car.logicCar.ID;
+
+            // Check if already cached
+            if (_audioClipCache.ContainsKey(carId) && _audioClipCache[carId].ContainsKey(soundType))
+            {
+                Main.DebugLog(() => $"VanillaCache: Already cached AudioClip {soundType} for {carId}");
+                return;
+            }
+
+            // Cache the current settings
+            var settings = new CachedAudioClipSettings(portReader);
+
+            if (!_audioClipCache.ContainsKey(carId))
+            {
+                _audioClipCache[carId] = new Dictionary<SoundType, CachedAudioClipSettings>();
+            }
+
+            _audioClipCache[carId][soundType] = settings;
+
+            Main.DebugLog(() => $"VanillaCache: Cached vanilla AudioClip settings for {carId}/{soundType} - " +
+                              $"pitch={settings.Pitch}, volume={settings.Volume}");
+        }
 
         /// <summary>
         /// Caches the current state of a LayeredAudio component if not already cached.
@@ -45,6 +80,26 @@ namespace DvMod.ZSounds.SoundHandler
         }
 
         /// <summary>
+        /// Restores the cached vanilla settings to an AudioClipPortReader.
+        /// </summary>
+        public bool RestoreCached(TrainCar car, SoundType soundType, AudioClipPortReader portReader)
+        {
+            var carId = car.logicCar.ID;
+
+            if (!_audioClipCache.ContainsKey(carId) || !_audioClipCache[carId].ContainsKey(soundType))
+            {
+                Main.DebugLog(() => $"VanillaCache: No cached AudioClip settings for {carId}/{soundType}");
+                return false;
+            }
+
+            var settings = _audioClipCache[carId][soundType];
+            settings.ApplyTo(portReader);
+
+            Main.mod?.Logger.Log($"VanillaCache: Restored vanilla AudioClip settings for {carId}/{soundType} - pitch={settings.Pitch}, volume={settings.Volume}");
+            return true;
+        }
+
+        /// <summary>
         /// Restores the cached vanilla settings to a LayeredAudio component.
         /// </summary>
         public bool RestoreCached(TrainCar car, SoundType soundType, LayeredAudio layeredAudio)
@@ -62,6 +117,35 @@ namespace DvMod.ZSounds.SoundHandler
 
             Main.DebugLog(() => $"VanillaCache: Restored vanilla settings for {carId}/{soundType}");
             return true;
+        }
+    }
+
+    /// <summary>
+    /// Stores the vanilla settings for an AudioClipPortReader.
+    /// </summary>
+    public class CachedAudioClipSettings
+    {
+        public float Pitch { get; }
+        public float Volume { get; }
+        public AudioClip[]? Clips { get; }
+
+        public CachedAudioClipSettings(AudioClipPortReader portReader)
+        {
+            Pitch = portReader.pitch;
+            Volume = portReader.volume;
+            // Deep copy the clips array to preserve original references
+            Clips = portReader.clips?.ToArray();
+        }
+
+        public void ApplyTo(AudioClipPortReader portReader)
+        {
+            portReader.pitch = Pitch;
+            portReader.volume = Volume;
+            // Restore original clips if they were cached
+            if (Clips != null)
+            {
+                portReader.clips = Clips.ToArray();
+            }
         }
     }
 
