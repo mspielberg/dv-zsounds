@@ -13,6 +13,7 @@ namespace DvMod.ZSounds.UI
         private bool isVisible = false;
         private string? currentSoundName = null;
         private string? currentConfigPath = null;
+        private SoundType currentSoundType = SoundType.Unknown;
         private SoundConfiguration? currentConfig = null;
         private SoundConfiguration? workingConfig = null; // Copy for editing
         private Action? onSaveCallback = null; // Callback for navigation
@@ -37,13 +38,22 @@ namespace DvMod.ZSounds.UI
 
         public bool IsVisible => isVisible;
 
-        public void Show(string soundName, string configPath, Action? saveCallback = null)
+        private bool IsAudioClipSound()
+        {
+            var result = SoundTypes.audioClipsSoundTypes.Contains(currentSoundType);
+            Main.mod?.Logger.Log($"IsAudioClipSound: currentSoundType={currentSoundType}, result={result}");
+            return result;
+        }
+
+        public void Show(string soundName, string configPath, SoundType soundType, Action? saveCallback = null)
         {
             Main.mod?.Logger.Log($"SoundConfigEditorWindow.Show called for: {soundName}");
             Main.mod?.Logger.Log($"Config path: {configPath}");
+            Main.mod?.Logger.Log($"Sound type: {soundType}");
 
             currentSoundName = soundName;
             currentConfigPath = configPath;
+            currentSoundType = soundType;
             onSaveCallback = saveCallback;
 
             // Load the configuration
@@ -75,6 +85,7 @@ namespace DvMod.ZSounds.UI
             isVisible = false;
             currentSoundName = null;
             currentConfigPath = null;
+            currentSoundType = SoundType.Unknown;
             currentConfig = null;
             workingConfig = null;
             onSaveCallback = null;
@@ -139,22 +150,44 @@ namespace DvMod.ZSounds.UI
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
 
+            // Show info banner for AudioClip sounds
+            if (IsAudioClipSound())
+            {
+                GUILayout.BeginVertical("box");
+                var infoStyle = new GUIStyle(GUI.skin.label);
+                infoStyle.wordWrap = true;
+                GUILayout.Label("ℹ️ AudioClip sounds only support absolute pitch and volume values. Curves, min/max ranges, and randomize start time are not available.", infoStyle);
+                GUILayout.EndVertical();
+                GUILayout.Space(10);
+            }
+
             // Only show configuration fields if enabled
             if (workingConfig.enabled ?? true)
             {
                 DrawBasicSettings();
                 GUILayout.Space(15);
-                DrawPitchSettings();
-                GUILayout.Space(15);
+
+                // Only show advanced settings for non-AudioClip sounds
+                if (!IsAudioClipSound())
+                {
+                    DrawPitchSettings();
+                    GUILayout.Space(15);
+                }
+
                 DrawVolumeSettings();
                 GUILayout.Space(15);
-                DrawOtherSettings();
-                GUILayout.Space(15);
-                DrawCurveEditor("Pitch Curve", ref pitchCurveExpanded, ref pitchCurveScroll,
-                    ref workingConfig.pitchCurveData, ref newPitchKeyTime, ref newPitchKeyValue);
-                GUILayout.Space(15);
-                DrawCurveEditor("Volume Curve", ref volumeCurveExpanded, ref volumeCurveScroll,
-                    ref workingConfig.volumeCurveData, ref newVolumeKeyTime, ref newVolumeKeyValue);
+
+                // Only show other settings and curves for non-AudioClip sounds
+                if (!IsAudioClipSound())
+                {
+                    DrawOtherSettings();
+                    GUILayout.Space(15);
+                    DrawCurveEditor("Pitch Curve", ref pitchCurveExpanded, ref pitchCurveScroll,
+                        ref workingConfig.pitchCurveData, ref newPitchKeyTime, ref newPitchKeyValue);
+                    GUILayout.Space(15);
+                    DrawCurveEditor("Volume Curve", ref volumeCurveExpanded, ref volumeCurveScroll,
+                        ref workingConfig.volumeCurveData, ref newVolumeKeyTime, ref newVolumeKeyValue);
+                }
             }
             else
             {
@@ -208,10 +241,19 @@ namespace DvMod.ZSounds.UI
 
         private void DrawVolumeSettings()
         {
-            GUILayout.Label("Volume Range", EditorStyles.BoldLabel);
-
-            DrawNullableFloatField("Min Volume:", "minVolume", ref workingConfig.minVolume, 0.0f, 1.0f);
-            DrawNullableFloatField("Max Volume:", "maxVolume", ref workingConfig.maxVolume, 0.0f, 1.0f);
+            if (IsAudioClipSound())
+            {
+                // For AudioClip sounds, only show a single volume field (using maxVolume)
+                GUILayout.Label("Volume", EditorStyles.BoldLabel);
+                DrawNullableFloatField("Volume:", "maxVolume", ref workingConfig.maxVolume, 0.0f, 1.0f);
+            }
+            else
+            {
+                // For LayeredAudio sounds, show volume range
+                GUILayout.Label("Volume Range", EditorStyles.BoldLabel);
+                DrawNullableFloatField("Min Volume:", "minVolume", ref workingConfig.minVolume, 0.0f, 1.0f);
+                DrawNullableFloatField("Max Volume:", "maxVolume", ref workingConfig.maxVolume, 0.0f, 1.0f);
+            }
         }
 
         private void DrawOtherSettings()
@@ -536,8 +578,6 @@ namespace DvMod.ZSounds.UI
                 if (_boldLabel == null)
                 {
                     _boldLabel = new GUIStyle(GUI.skin.label);
-                    // Note: Can't set fontStyle without UnityEngine.TextRenderingModule reference
-                    // Using regular label style as fallback
                 }
                 return _boldLabel;
             }
