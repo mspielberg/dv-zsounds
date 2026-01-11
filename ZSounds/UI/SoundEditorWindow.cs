@@ -644,21 +644,18 @@ namespace DvMod.ZSounds.UI
                 Main.mod?.Logger.Log("Created new SoundConfigEditorWindow instance");
             }
 
-            // Pass a callback that navigates back to Sound Editor when Save is clicked
             Action? saveCallback = null;
             if (onOpenConfigEditor != null)
             {
-                // We're in inline mode, provide a callback to navigate back
                 saveCallback = () =>
                 {
                     UI.SoundManagerUI.Instance.NavigateBackToSoundEditor();
                 };
             }
 
-            configEditorWindow.Show(sound.name, sound.configPath, saveCallback);
+            configEditorWindow.Show(sound.name, sound.configPath, sound.type, saveCallback);
             Main.mod?.Logger.Log($"Config editor window shown for {sound.name}");
 
-            // Trigger navigation to Config Editor if callback provided (for inline rendering)
             if (onOpenConfigEditor != null && currentLocomotive != null)
             {
                 onOpenConfigEditor(currentLocomotive);
