@@ -159,15 +159,26 @@ namespace DvMod.ZSounds.SoundHandler
 
             Main.DebugLog(() => $"SoundRestorator: Restoring AudioClip[] for {soundType}");
 
-            var originalClips = GetOriginalClips(car, soundType);
-            if (originalClips != null && originalClips.Length > 0)
+            // Try to restore from cache first (includes pitch, volume, and clips)
+            bool restoredFromCache = Main.vanillaCache?.RestoreCached(car, soundType, portReader) ?? false;
+
+            if (restoredFromCache)
             {
-                portReader.clips = originalClips;
-                Main.DebugLog(() => $"SoundRestorator: Restored {originalClips.Length} original clip(s) for {soundType}");
+                Main.mod?.Logger.Log($"SoundRestorator: Restored AudioClip settings from cache for {soundType}");
             }
             else
             {
-                Main.mod?.Logger.Warning($"SoundRestorator: Could not restore original clips for {car.carType}/{soundType}");
+                // Fallback: restore clips from prefab
+                var originalClips = GetOriginalClips(car, soundType);
+                if (originalClips != null && originalClips.Length > 0)
+                {
+                    portReader.clips = originalClips;
+                    Main.DebugLog(() => $"SoundRestorator: Restored {originalClips.Length} original clip(s) for {soundType} (no cache available)");
+                }
+                else
+                {
+                    Main.mod?.Logger.Warning($"SoundRestorator: Could not restore original clips for {car.carType}/{soundType}");
+                }
             }
         }
 
