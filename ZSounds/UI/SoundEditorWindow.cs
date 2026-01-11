@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 using DvMod.ZSounds.SoundHandler;
@@ -165,6 +166,16 @@ namespace DvMod.ZSounds.UI
                 GUILayout.Label($"Current: {displayName}", GUILayout.MinWidth(150), GUILayout.ExpandWidth(true));
 
                 GUILayout.FlexibleSpace();
+
+                // Config button for vanilla/default sound
+                if (currentSound == null)
+                {
+                    if (GUILayout.Button("Config", GUILayout.ExpandWidth(false)))
+                    {
+                        var vanillaSoundDef = CreateVanillaSoundDefinition(soundType);
+                        OpenConfigEditor(vanillaSoundDef, onOpenConfigEditor);
+                    }
+                }
 
                 // Toggle dropdown button
                 var isDropdownOpen = dropdownStates.ContainsKey(soundType) && dropdownStates[soundType];
@@ -467,7 +478,26 @@ namespace DvMod.ZSounds.UI
                 if (Main.registryService != null && Main.restoratorService != null && Main.applicatorService != null)
                 {
                     var soundSet = Main.registryService.GetSoundSet(currentLocomotive);
+
+                    // Get the current sound definition if one is selected
+                    if (soundSet.sounds.TryGetValue(soundType, out var currentSoundDef))
+                    {
+                        // Disable the config file for the selected sound
+                        if (currentSoundDef.configPath != null)
+                        {
+                            Main.loaderService?.DisableSoundConfiguration(currentSoundDef.configPath);
+                        }
+                    }
+
+                    // Remove from sound set
                     soundSet.sounds.Remove(soundType);
+
+                    // Also disable vanilla config if it exists
+                    var vanillaConfigPath = Main.loaderService?.GetVanillaConfigPath(soundType);
+                    if (vanillaConfigPath != null && File.Exists(vanillaConfigPath))
+                    {
+                        Main.loaderService?.DisableSoundConfiguration(vanillaConfigPath);
+                    }
 
                     // Restore the specific sound to default
                     Main.restoratorService.RestoreSound(currentLocomotive, soundType);
@@ -477,6 +507,9 @@ namespace DvMod.ZSounds.UI
 
                     // Save the updated sound state
                     Main.registryService.SaveSoundState(currentLocomotive, soundSet);
+
+                    // Reload sounds to apply config changes
+                    Main.loaderService?.ReloadAllSounds();
 
                     Main.mod?.Logger.Log($"Reset {soundType} sound for {currentLocomotive.ID}");
                 }
@@ -498,6 +531,31 @@ namespace DvMod.ZSounds.UI
                 if (Main.registryService != null && Main.restoratorService != null)
                 {
                     var soundSet = Main.registryService.GetSoundSet(currentLocomotive);
+
+                    // Disable config files for all currently selected custom sounds
+                    foreach (var kvp in soundSet.sounds)
+                    {
+                        if (kvp.Value.configPath != null)
+                        {
+                            Main.loaderService?.DisableSoundConfiguration(kvp.Value.configPath);
+                        }
+                    }
+
+                    // Get all sound types supported by this locomotive
+                    var supportedTypes = Main.discoveryService?.GetSupportedSoundTypes(currentLocomotive.carType)
+                                      ?? new HashSet<SoundType>();
+
+                    // Disable vanilla configs for all supported sound types
+                    foreach (var soundType in supportedTypes)
+                    {
+                        var vanillaConfigPath = Main.loaderService?.GetVanillaConfigPath(soundType);
+                        if (vanillaConfigPath != null && File.Exists(vanillaConfigPath))
+                        {
+                            Main.loaderService?.DisableSoundConfiguration(vanillaConfigPath);
+                        }
+                    }
+
+                    // Clear the sound set
                     soundSet.sounds.Clear();
 
                     // Restore all sounds to default
@@ -507,6 +565,9 @@ namespace DvMod.ZSounds.UI
 
                     // Remove from persistent state
                     Main.registryService.RemoveSoundState(currentLocomotive.ID);
+
+                    // Reload sounds to apply config changes
+                    Main.loaderService?.ReloadAllSounds();
 
                     Main.mod?.Logger.Log($"Reset all sounds for {currentLocomotive.ID}");
                 }
@@ -660,6 +721,22 @@ namespace DvMod.ZSounds.UI
             {
                 onOpenConfigEditor(currentLocomotive);
             }
+        }
+
+        private SoundDefinition CreateVanillaSoundDefinition(SoundType soundType)
+        {
+            // Create a special sound definition for the vanilla/default sound
+            var vanillaConfigPath = Main.loaderService?.GetVanillaConfigPath(soundType);
+
+            var soundDef = new SoundDefinition($"Vanilla_{soundType}", soundType)
+            {
+                configPath = vanillaConfigPath,
+                filename = null // No custom file, this represents the vanilla game sound
+            };
+
+            Main.mod?.Logger.Log($"Created vanilla sound definition for {soundType} with config path: {vanillaConfigPath}");
+
+            return soundDef;
         }
     }
 }

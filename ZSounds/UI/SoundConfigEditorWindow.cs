@@ -500,9 +500,33 @@ namespace DvMod.ZSounds.UI
 
         private void ResetToDefault()
         {
-            workingConfig = CreateDefaultConfig();
-            InitializeFloatFields();
-            Main.mod?.Logger.Log("Reset configuration to defaults");
+            if (currentConfigPath == null)
+                return;
+
+            try
+            {
+                // Disable the configuration file
+                Main.loaderService?.DisableSoundConfiguration(currentConfigPath);
+                Main.mod?.Logger.Log($"Disabled configuration file: {currentConfigPath}");
+
+                // Reload sounds to apply the changes
+                Main.loaderService?.ReloadAllSounds();
+                Main.mod?.Logger.Log("Reloaded sounds after disabling configuration");
+
+                // Close the editor
+                if (onSaveCallback != null)
+                {
+                    onSaveCallback();
+                }
+                else
+                {
+                    Hide();
+                }
+            }
+            catch (Exception ex)
+            {
+                Main.mod?.Logger.Error($"Failed to reset to default: {ex.Message}");
+            }
         }
 
         private void InitializeFloatFields()

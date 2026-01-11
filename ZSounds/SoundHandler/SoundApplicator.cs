@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿﻿using System.Linq;
 using UnityEngine;
 
 namespace DvMod.ZSounds.SoundHandler
@@ -89,10 +89,32 @@ namespace DvMod.ZSounds.SoundHandler
                 Main.vanillaCache?.CacheIfNeeded(car, soundType, portReader);
             }
 
-            // If no custom sound definition, keep original clips
+            // If no custom sound definition, check for vanilla configuration
             if (soundDefinition == null)
             {
-                Main.DebugLog(() => $"SoundApplicator: No custom sound definition for {soundType}, keeping original clips");
+                var vanillaConfig = _soundLoader.GetVanillaConfiguration(soundType);
+                if (vanillaConfig != null && portReader != null)
+                {
+                    Main.mod?.Logger.Log($"SoundApplicator: Applying vanilla configuration for {soundType}");
+
+                    // Apply pitch setting from vanilla config
+                    if (vanillaConfig.pitch.HasValue)
+                    {
+                        portReader.pitch = vanillaConfig.pitch.Value;
+                        Main.mod?.Logger.Log($"SoundApplicator: Applied vanilla pitch={vanillaConfig.pitch.Value} to {soundType}");
+                    }
+
+                    // Apply volume setting from vanilla config
+                    if (vanillaConfig.maxVolume.HasValue)
+                    {
+                        portReader.volume = vanillaConfig.maxVolume.Value;
+                        Main.mod?.Logger.Log($"SoundApplicator: Applied vanilla volume={vanillaConfig.maxVolume.Value} to {soundType}");
+                    }
+                }
+                else
+                {
+                    Main.DebugLog(() => $"SoundApplicator: No custom sound definition or vanilla config for {soundType}, keeping original clips");
+                }
                 return;
             }
 
@@ -161,10 +183,61 @@ namespace DvMod.ZSounds.SoundHandler
             var mainLayer = audio.layers[0];
             bool wasPlaying = mainLayer.source.isPlaying;
 
-            // If no custom sound definition, nothing to apply (restoration is handled by SoundRestorator)
+            // If no custom sound definition, check for vanilla configuration
             if (soundDefinition == null)
             {
-                Main.DebugLog(() => $"SoundApplicator: No custom sound definition for {soundType}, nothing to apply");
+                var vanillaConfig = _soundLoader.GetVanillaConfiguration(soundType);
+                if (vanillaConfig != null)
+                {
+                    Main.mod?.Logger.Log($"SoundApplicator: Applying vanilla configuration for {soundType}");
+
+                    // Apply pitch settings from vanilla config
+                    if (vanillaConfig.pitch.HasValue)
+                    {
+                        mainLayer.startPitch = vanillaConfig.pitch.Value;
+                        Main.mod?.Logger.Log($"SoundApplicator: Applied vanilla pitch={vanillaConfig.pitch.Value} to {soundType}");
+                    }
+
+                    // Apply pitch range from vanilla config
+                    if (vanillaConfig.minPitch.HasValue)
+                    {
+                        audio.minPitch = vanillaConfig.minPitch.Value;
+                        Main.mod?.Logger.Log($"SoundApplicator: Applied vanilla minPitch={vanillaConfig.minPitch.Value} to {soundType}");
+                    }
+                    if (vanillaConfig.maxPitch.HasValue)
+                    {
+                        audio.maxPitch = vanillaConfig.maxPitch.Value;
+                        Main.mod?.Logger.Log($"SoundApplicator: Applied vanilla maxPitch={vanillaConfig.maxPitch.Value} to {soundType}");
+                    }
+
+                    // Apply pitch curve from vanilla config
+                    if (vanillaConfig.PitchCurve != null)
+                    {
+                        mainLayer.pitchCurve = MakeCurve(vanillaConfig.PitchCurve, vanillaConfig.minPitch, vanillaConfig.maxPitch);
+                        Main.mod?.Logger.Log($"SoundApplicator: Applied vanilla pitch curve to {soundType}");
+                    }
+
+                    // Apply volume curve from vanilla config
+                    if (vanillaConfig.VolumeCurve != null)
+                    {
+                        mainLayer.volumeCurve = MakeCurve(vanillaConfig.VolumeCurve, vanillaConfig.minVolume, vanillaConfig.maxVolume);
+                        Main.mod?.Logger.Log($"SoundApplicator: Applied vanilla volume curve to {soundType}");
+                    }
+
+                    // Apply randomize start time from vanilla config
+                    if (vanillaConfig.randomizeStartTime.HasValue)
+                    {
+                        foreach (var layer in audio.layers)
+                        {
+                            layer.randomizeStartTime = vanillaConfig.randomizeStartTime.Value;
+                        }
+                        Main.mod?.Logger.Log($"SoundApplicator: Applied vanilla randomizeStartTime={vanillaConfig.randomizeStartTime.Value} to {soundType}");
+                    }
+                }
+                else
+                {
+                    Main.DebugLog(() => $"SoundApplicator: No custom sound definition or vanilla config for {soundType}, nothing to apply");
+                }
                 return;
             }
 

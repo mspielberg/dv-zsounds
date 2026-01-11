@@ -32,6 +32,9 @@ namespace DvMod.ZSounds.SoundHandler
         // This supports custom locomotives that don't have standard TrainCarType enum values
         private readonly Dictionary<string, Dictionary<SoundType, List<SoundDefinition>>> _trainSoundsByIdentifier = new();
 
+        // Vanilla sound configurations: SoundType -> SoundConfiguration
+        private readonly Dictionary<SoundType, SoundConfiguration> _vanillaConfigs = new();
+
         // Supported audio file extensions
         private static readonly Dictionary<string, AudioType> AudioTypes = new()
         {
@@ -58,6 +61,49 @@ namespace DvMod.ZSounds.SoundHandler
             Main.mod?.Logger.Log("Reloading all sounds from disk...");
             LoadAllSounds();
             Main.mod?.Logger.Log($"Reload complete: {_loadedSounds.Count} sounds available");
+
+            // Re-apply sound sets to all existing locomotives to apply updated configurations
+            ReapplyAllSoundSets();
+        }
+
+        /// <summary>
+        /// Re-applies sound sets to all locomotives in the world.
+        /// Used after reloading configurations to ensure changes take effect immediately.
+        /// </summary>
+        private void ReapplyAllSoundSets()
+        {
+            if (Main.applicatorService == null || Main.registryService == null)
+            {
+                Main.mod?.Logger.Warning("Cannot re-apply sounds - services not initialized");
+                return;
+            }
+
+            try
+            {
+                var allCars = UnityEngine.Object.FindObjectsOfType<TrainCar>();
+                var reappliedCount = 0;
+
+                foreach (var car in allCars)
+                {
+                    if (!Main.IsLoco(car.carLivery))
+                        continue;
+
+                    // Get the current sound set for this locomotive
+                    var soundSet = Main.registryService.GetSoundSet(car);
+
+                    // Re-apply the sound set (this will apply any updated vanilla configs)
+                    Main.applicatorService.ApplySoundSet(car, soundSet);
+                    reappliedCount++;
+
+                    Main.DebugLog(() => $"Re-applied sounds to {car.ID}");
+                }
+
+                Main.mod?.Logger.Log($"Re-applied sound sets to {reappliedCount} locomotives");
+            }
+            catch (Exception ex)
+            {
+                Main.mod?.Logger.Error($"Failed to re-apply sound sets: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -78,6 +124,7 @@ namespace DvMod.ZSounds.SoundHandler
             _loadedSounds.Clear();
             _trainSounds.Clear();
             _trainSoundsByIdentifier.Clear(); // Clear identifier cache to prevent duplicates on reload
+            _vanillaConfigs.Clear(); // Clear vanilla configs to reload them fresh
 
             // Determine if we're using new or legacy structure
             bool hasNewStructure = HasNewStructure();
@@ -308,6 +355,14 @@ namespace DvMod.ZSounds.SoundHandler
             return _loadedSounds;
         }
 
+        /// <summary>
+        /// Gets the vanilla configuration for a specific sound type, if one exists.
+        /// </summary>
+        public SoundConfiguration? GetVanillaConfiguration(SoundType soundType)
+        {
+            return _vanillaConfigs.TryGetValue(soundType, out var config) ? config : null;
+        }
+
         #endregion
 
         #region Public API - Audio Clip Loading
@@ -371,6 +426,20 @@ namespace DvMod.ZSounds.SoundHandler
 
         #endregion
 
+        #region Private - Vanilla Configuration Management
+
+        /// <summary>
+        /// Stores vanilla configuration for a sound type.
+        /// This configuration will be applied to vanilla sounds when no custom sound is selected.
+        /// </summary>
+        private void ApplyVanillaConfiguration(SoundType soundType, SoundConfiguration config)
+        {
+            _vanillaConfigs[soundType] = config;
+            Main.mod?.Logger.Log($"Stored vanilla configuration for {soundType}");
+        }
+
+        #endregion
+
         #region Private - Sound Loading
 
         /// <summary>
@@ -386,6 +455,22 @@ namespace DvMod.ZSounds.SoundHandler
             if (config != null)
             {
                 Main.DebugLog(() => $"SoundLoader: Loaded configuration for {soundType}");
+            }
+
+            // Check for and load vanilla sound configuration
+            var vanillaConfigPath = GetVanillaConfigPath(soundType);
+            var vanillaConfig = LoadSoundConfiguration(vanillaConfigPath);
+            if (vanillaConfig != null)
+            {
+                var isEnabled = vanillaConfig.enabled == null || vanillaConfig.enabled.Value;
+                Main.mod?.Logger.Log($"Found vanilla config for {soundType}: enabled={vanillaConfig.enabled?.ToString() ?? "null"}, will apply={isEnabled}");
+
+                if (isEnabled)
+                {
+                    // Apply vanilla configuration to the sound applicator
+                    // This will be picked up when applying sounds to locomotives
+                    ApplyVanillaConfiguration(soundType, vanillaConfig);
+                }
             }
 
             // Load sound files
@@ -778,6 +863,46 @@ namespace DvMod.ZSounds.SoundHandler
             Directory.CreateDirectory(soundTypeConfigPath);
 
             return Path.Combine(soundTypeConfigPath, $"config_{soundFileName}.json");
+        }
+
+        /// <summary>
+        /// Gets the configuration file path for a vanilla (default) sound.
+        /// Format: Sounds/Configs/[SoundType]/config_vanilla.json
+        /// </summary>
+        public string GetVanillaConfigPath(SoundType soundType)
+        {
+            var configsBasePath = Path.Combine(_baseSoundsPath, "Configs");
+            var soundTypeConfigPath = Path.Combine(configsBasePath, soundType.ToString());
+
+            // Ensure the directory exists
+            Directory.CreateDirectory(soundTypeConfigPath);
+
+            return Path.Combine(soundTypeConfigPath, "config_vanilla.json");
+        }
+
+        /// <summary>
+        /// Disables a configuration file by setting enabled=false.
+        /// </summary>
+        public void DisableSoundConfiguration(string configPath)
+        {
+            try
+            {
+                // Load existing config or create a new one
+                var config = LoadSoundConfiguration(configPath) ?? new SoundConfiguration();
+
+                // Set enabled to false
+                config.enabled = false;
+
+                // Save it
+                SaveSoundConfiguration(configPath, config);
+
+                Main.mod?.Logger.Log($"Disabled configuration: {Path.GetFileName(configPath)}");
+            }
+            catch (Exception ex)
+            {
+                Main.mod?.Logger.Error($"Failed to disable configuration {configPath}: {ex.Message}");
+                throw;
+            }
         }
 
         /// <summary>
