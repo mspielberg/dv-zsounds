@@ -72,6 +72,7 @@ namespace DvMod.ZSounds.SoundHandler
 
         /// <summary>
         /// Applies a sound definition to an AudioClip array (e.g., horn hit sounds).
+        /// This method is called with a ref to the AudioClipPortReader.clips array.
         /// </summary>
         public void ApplyToAudioClipArray(TrainCar car, SoundType soundType, SoundSet soundSet, ref AudioClip[] clips)
         {
@@ -81,6 +82,13 @@ namespace DvMod.ZSounds.SoundHandler
             var soundDefinition = soundSet[soundType];
             Main.DebugLog(() => $"SoundApplicator: Sound definition for {soundType}: {soundDefinition?.name ?? "NULL"}");
 
+            // Cache vanilla settings before making any modifications
+            var portReader = _soundDiscovery.GetAudioClipPortReader(car, soundType);
+            if (portReader != null)
+            {
+                Main.vanillaCache?.CacheIfNeeded(car, soundType, portReader);
+            }
+
             // If no custom sound definition, keep original clips
             if (soundDefinition == null)
             {
@@ -88,12 +96,7 @@ namespace DvMod.ZSounds.SoundHandler
                 return;
             }
 
-            // Note: AudioClip[] sounds don't support pitch/volume configuration
-            if (soundDefinition.pitch != null || soundDefinition.minPitch != null || soundDefinition.maxPitch != null)
-            {
-                Main.mod?.Logger.Warning($"SoundApplicator: Pitch settings ignored for {soundType} - AudioClip[] sounds don't support pitch configuration");
-            }
-
+            // Replace audio clips if specified
             if ((soundDefinition.filenames?.Length ?? 0) > 0)
             {
                 Main.DebugLog(() => $"SoundApplicator: Using custom filenames for {soundType}: {string.Join(", ", soundDefinition.filenames!)}");
@@ -107,6 +110,28 @@ namespace DvMod.ZSounds.SoundHandler
             else
             {
                 Main.DebugLog(() => $"SoundApplicator: No custom sounds found for {soundType}, keeping original clips");
+            }
+
+            // Apply pitch and volume settings if portReader is available
+            if (portReader != null)
+            {
+                // Apply pitch setting directly to portReader
+                if (soundDefinition.pitch.HasValue)
+                {
+                    portReader.pitch = soundDefinition.pitch.Value;
+                    Main.mod?.Logger.Log($"SoundApplicator: Applied pitch={soundDefinition.pitch.Value} to AudioSource for {soundType}");
+                }
+
+                // Apply volume setting directly to portReader
+                if (soundDefinition.maxVolume.HasValue)
+                {
+                    portReader.volume = soundDefinition.maxVolume.Value;
+                    Main.mod?.Logger.Log($"SoundApplicator: Applied volume={soundDefinition.maxVolume.Value} to AudioSource for {soundType}");
+                }
+            }
+            else
+            {
+                Main.DebugLog(() => $"SoundApplicator: Could not get AudioClipPortReader for {soundType} to apply pitch/volume");
             }
 
             var finalClipCount = clips.Length;
