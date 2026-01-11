@@ -234,7 +234,6 @@ namespace DvMod.ZSounds.SoundHandler
 
                 // Apply sound changes using the applicator service
                 Main.applicatorService.ApplySoundSet(car, soundSet);
-                Main.DebugLog(() => $"Applied {soundType} sound: {sound.name} to {car.ID}");
 
                 // Save the updated sound state persistently
                 Main.registryService.SaveSoundState(car, soundSet);
@@ -719,11 +718,6 @@ namespace DvMod.ZSounds.SoundHandler
 
             // Apply randomizeStartTime setting
             if (config.randomizeStartTime.HasValue) soundDef.randomizeStartTime = config.randomizeStartTime.Value;
-
-            Main.DebugLog(() => $"Applied configuration settings to {soundDef.name}: " +
-                              $"Pitch={config.pitch}, MinPitch={config.minPitch}, MaxPitch={config.maxPitch}, " +
-                              $"RandomizeStartTime={config.randomizeStartTime}, " +
-                              $"PitchCurve={config.PitchCurve != null}, VolumeCurve={config.VolumeCurve != null}");
         }
 
         private void ValidateSoundDefinition(SoundDefinition soundDef)
