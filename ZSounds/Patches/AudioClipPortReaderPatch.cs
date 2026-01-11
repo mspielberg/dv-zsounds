@@ -59,24 +59,9 @@ namespace DvMod.ZSounds.Patches
                     }
                 }
 
-                // Apply custom pitch if specified
-                if (soundDefinition.pitch.HasValue)
-                {
-                    ___pitch *= soundDefinition.pitch.Value;
-                    Main.DebugLog(() => $"AudioClipPortReaderPatch: Applied custom pitch {soundDefinition.pitch.Value} to {soundDefinition.name}");
-                }
+                if (soundDefinition.pitch.HasValue) ___pitch = soundDefinition.pitch.Value;
+                if (soundDefinition.maxVolume.HasValue) ___volume = soundDefinition.maxVolume.Value;
 
-                // Apply custom volume if specified (use maxVolume as the main volume control)
-                if (soundDefinition.maxVolume.HasValue)
-                {
-                    ___volume *= soundDefinition.maxVolume.Value;
-                    Main.DebugLog(() => $"AudioClipPortReaderPatch: Applied custom volume {soundDefinition.maxVolume.Value} to {soundDefinition.name}");
-                }
-
-                // Store final values for logging
-                var finalPitch = ___pitch;
-                var finalVolume = ___volume;
-                Main.DebugLog(() => $"AudioClipPortReaderPatch: Modified {soundDefinition.name} - pitch: {finalPitch}, volume: {finalVolume}");
             }
             catch (System.Exception ex)
             {
