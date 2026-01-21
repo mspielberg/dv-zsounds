@@ -176,6 +176,12 @@ namespace DvMod.ZSounds.UI
 
         private void DrawLocomotiveEntry(TrainCar locomotive)
         {
+            // Check if locomotive is valid (not null and not destroyed)
+            if (locomotive == null || !locomotive)
+            {
+                return;
+            }
+
             GUILayout.BeginHorizontal("box");
 
             // Locomotive info
@@ -224,7 +230,16 @@ namespace DvMod.ZSounds.UI
                 RefreshLocomotiveCache();
             }
 
-            return cachedLocomotives ?? new List<TrainCar>();
+            // Filter out any destroyed objects from cache
+            var validLocomotives = cachedLocomotives?.Where(l => l != null && l).ToList() ?? new List<TrainCar>();
+
+            // If we lost locomotives, update the cache
+            if (cachedLocomotives != null && validLocomotives.Count != cachedLocomotives.Count)
+            {
+                cachedLocomotives = validLocomotives;
+            }
+
+            return validLocomotives;
         }
 
         private void RefreshLocomotiveCache()

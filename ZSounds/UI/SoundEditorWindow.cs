@@ -413,9 +413,6 @@ namespace DvMod.ZSounds.UI
                 var identifier = SoundDiscovery.GetTrainIdentifier(currentLocomotive);
                 return sounds.OrderBy(s => GetSoundDisplayName(s)).ToList();
             }
-
-            var id = SoundDiscovery.GetTrainIdentifier(currentLocomotive);
-            Main.DebugLog(() => $"UI: No sounds found for {id}/{soundType}");
             return new List<SoundDefinition>();
         }
 
