@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DV.ModularAudioCar;
@@ -31,6 +31,9 @@ namespace DvMod.ZSounds.SoundHandler
 
         // Cache: Car GUID -> SoundType -> AudioClipPortReader (to keep references stable even if clips are swapped)
         private readonly Dictionary<string, Dictionary<SoundType, AudioClipPortReader>> _readerCache = new();
+
+        // Cache: Car GUID -> SoundType -> LayeredAudio (to keep references stable even if clips are swapped)
+        private readonly Dictionary<string, Dictionary<SoundType, LayeredAudio>> _layeredAudioCache = new();
 
         // Additional cache for custom locomotives: train identifier string -> TrainCarType
         private readonly Dictionary<string, TrainCarType> _identifierToCarType = new();
@@ -156,6 +159,7 @@ namespace DvMod.ZSounds.SoundHandler
             _genericSoundMappings.Clear();
             _audioPrefabCache.Clear();
             _readerCache.Clear();
+            _layeredAudioCache.Clear();
             Main.mod?.Logger.Log("SoundDiscovery: Cleared all cached mappings");
         }
 
@@ -202,6 +206,22 @@ namespace DvMod.ZSounds.SoundHandler
         /// </summary>
         public LayeredAudio? GetLayeredAudio(TrainAudio trainAudio, SoundType soundType)
         {
+            // Check cache first for spawned cars
+            var carGuid = trainAudio.car.logicCar?.carGuid;
+            var hasGuid = !string.IsNullOrEmpty(carGuid);
+            var carGuidNonNull = carGuid ?? string.Empty;
+
+            if (hasGuid && _layeredAudioCache.TryGetValue(carGuidNonNull, out var cache) && cache.TryGetValue(soundType, out var cachedAudio))
+            {
+                if (cachedAudio != null)
+                {
+                    Main.DebugLog(() => $"GetLayeredAudio: Using cached LayeredAudio for {soundType}");
+                    return cachedAudio;
+                }
+                // Clean up null refs
+                cache.Remove(soundType);
+            }
+
             if (!_soundMappings.TryGetValue(trainAudio.car.carType, out var mapping))
                 return null;
 
@@ -230,16 +250,38 @@ namespace DvMod.ZSounds.SoundHandler
             )?.layeredAudio;
 
             if (match != null)
+            {
+                // Cache the result for spawned cars
+                if (hasGuid)
+                {
+                    if (!_layeredAudioCache.TryGetValue(carGuidNonNull, out var dict))
+                    {
+                        dict = new Dictionary<SoundType, LayeredAudio>();
+                        _layeredAudioCache[carGuidNonNull] = dict;
+                    }
+                    dict[soundType] = match;
+                }
                 return match;
+            }
 
-            // For steam chuff sounds, search more deeply in the hierarchy
+            // For steam chuff sounds, search in ChuffClipsSimReader
             if (IsChuffSoundType(soundType))
             {
-                match = FindChuffLayeredAudio(simAudio.transform, path);
+                match = FindChuffLayeredAudioInChuffReader(trainAudio.car, simAudio, soundType, path);
             }
 
             if (match == null)
                 Main.DebugLog(() => $"Could not find LayeredAudio: carType={trainAudio.car.carType}, soundType={soundType}, path={path}");
+            else if (hasGuid)
+            {
+                // Cache the result for spawned cars
+                if (!_layeredAudioCache.TryGetValue(carGuidNonNull, out var dict))
+                {
+                    dict = new Dictionary<SoundType, LayeredAudio>();
+                    _layeredAudioCache[carGuidNonNull] = dict;
+                }
+                dict[soundType] = match;
+            }
 
             return match;
         }
@@ -1165,25 +1207,144 @@ namespace DvMod.ZSounds.SoundHandler
                    soundType == SoundType.SteamChuff8HzAsh;
         }
 
-        private LayeredAudio? FindChuffLayeredAudio(Transform parent, string targetName)
+        private LayeredAudio? FindChuffLayeredAudioInChuffReader(TrainCar trainCar, SimAudioModule simAudio, SoundType soundType, string clipName)
         {
-            for (int i = 0; i < parent.childCount; i++)
+            // Find ChuffClipsSimReader in audioClipSimReadersController
+            if (simAudio.audioClipSimReadersController?.entries == null)
+                return null;
+
+            foreach (var entry in simAudio.audioClipSimReadersController.entries)
             {
-                var child = parent.GetChild(i);
-
-                var layeredAudio = child.GetComponent<LayeredAudio>();
-                if (layeredAudio != null && child.name == targetName)
+                if (entry is ChuffClipsSimReader chuffReader)
                 {
-                    Main.DebugLog(() => $"Found nested LayeredAudio: {targetName} at path: {GetTransformPath(child)}");
-                    return layeredAudio;
-                }
+                    // Search in regular chuff loops
+                    if (chuffReader.chuffLoops != null)
+                    {
+                        foreach (var chuffLoop in chuffReader.chuffLoops)
+                        {
+                            if (chuffLoop?.chuffLoop != null)
+                            {
+                                // PRIORITY 1: Try matching by frequency pattern in GameObject name first
+                                // This is more stable than clip name matching since it doesn't change when clips are replaced
+                                if (TryExtractChuffFrequency(clipName, out var frequency))
+                                {
+                                    var gameObjectName = chuffLoop.chuffLoop.gameObject.name;
+                                    if (gameObjectName.Contains(frequency) && !gameObjectName.Contains("Water") && !gameObjectName.Contains("Ash"))
+                                    {
+                                        Main.DebugLog(() => $"Found chuff LayeredAudio by frequency pattern: {clipName} -> {gameObjectName}");
+                                        return chuffLoop.chuffLoop;
+                                    }
+                                }
 
-                var found = FindChuffLayeredAudio(child, targetName);
-                if (found != null)
-                    return found;
+                                // PRIORITY 2: Fallback to clip name matching (only works before clip replacement)
+                                if (chuffLoop.chuffLoop.layers != null)
+                                {
+                                    foreach (var layer in chuffLoop.chuffLoop.layers)
+                                    {
+                                        if (layer?.source?.clip != null &&
+                                            string.Equals(layer.source.clip.name, clipName, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            Main.DebugLog(() => $"Found chuff LayeredAudio in ChuffClipsSimReader by clip name: {clipName}");
+                                            return chuffLoop.chuffLoop;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Search in water chuff loops
+                    if (chuffReader.waterChuffLoops != null)
+                    {
+                        foreach (var chuffLoop in chuffReader.waterChuffLoops)
+                        {
+                            if (chuffLoop?.chuffLoop != null)
+                            {
+                                // PRIORITY 1: Try frequency pattern match
+                                if (TryExtractChuffFrequency(clipName, out var frequency))
+                                {
+                                    var gameObjectName = chuffLoop.chuffLoop.gameObject.name;
+                                    if (gameObjectName.Contains(frequency) && gameObjectName.Contains("Water"))
+                                    {
+                                        Main.DebugLog(() => $"Found water chuff LayeredAudio by frequency pattern: {clipName} -> {gameObjectName}");
+                                        return chuffLoop.chuffLoop;
+                                    }
+                                }
+
+                                // PRIORITY 2: Fallback to clip name match
+                                if (chuffLoop.chuffLoop.layers != null)
+                                {
+                                    foreach (var layer in chuffLoop.chuffLoop.layers)
+                                    {
+                                        if (layer?.source?.clip != null &&
+                                            string.Equals(layer.source.clip.name, clipName, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            Main.DebugLog(() => $"Found water chuff LayeredAudio by clip name: {clipName}");
+                                            return chuffLoop.chuffLoop;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Search in ash chuff loops
+                    if (chuffReader.ashChuffLoops != null)
+                    {
+                        foreach (var chuffLoop in chuffReader.ashChuffLoops)
+                        {
+                            if (chuffLoop?.chuffLoop != null)
+                            {
+                                // PRIORITY 1: Try frequency pattern match
+                                if (TryExtractChuffFrequency(clipName, out var frequency))
+                                {
+                                    var gameObjectName = chuffLoop.chuffLoop.gameObject.name;
+                                    if (gameObjectName.Contains(frequency) && gameObjectName.Contains("Ash"))
+                                    {
+                                        Main.DebugLog(() => $"Found ash chuff LayeredAudio by frequency pattern: {clipName} -> {gameObjectName}");
+                                        return chuffLoop.chuffLoop;
+                                    }
+                                }
+
+                                // PRIORITY 2: Fallback to clip name match
+                                if (chuffLoop.chuffLoop.layers != null)
+                                {
+                                    foreach (var layer in chuffLoop.chuffLoop.layers)
+                                    {
+                                        if (layer?.source?.clip != null &&
+                                            string.Equals(layer.source.clip.name, clipName, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            Main.DebugLog(() => $"Found ash chuff LayeredAudio by clip name: {clipName}");
+                                            return chuffLoop.chuffLoop;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Extracts the frequency pattern from a chuff clip name.
+        /// E.g., "Steam_ChuffLoop2.67s_01" → "2.67"
+        /// </summary>
+        private bool TryExtractChuffFrequency(string clipName, out string frequency)
+        {
+            frequency = string.Empty;
+
+            // Pattern: ChuffLoop{frequency}s or ChuffLoop{frequency}Hz
+            var match = System.Text.RegularExpressions.Regex.Match(clipName, @"ChuffLoop(\d+\.?\d*)");
+            if (match.Success && match.Groups.Count > 1)
+            {
+                frequency = match.Groups[1].Value;
+                return true;
+            }
+
+            return false;
         }
 
         private string GetTransformPath(Transform transform)
