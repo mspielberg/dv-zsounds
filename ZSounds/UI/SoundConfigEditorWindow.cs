@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -141,7 +141,7 @@ namespace DvMod.ZSounds.UI
             // Enabled checkbox
             GUILayout.BeginHorizontal();
             GUILayout.Label("Enabled:", GUILayout.ExpandWidth(false));
-            var enabled = workingConfig.enabled ?? true;
+            var enabled = workingConfig!.enabled ?? true;
             var newEnabled = GUILayout.Toggle(enabled, enabled ? "Yes (Config is active)" : "No (Using defaults)");
             if (newEnabled != enabled)
             {
@@ -228,15 +228,15 @@ namespace DvMod.ZSounds.UI
             GUILayout.Label("Basic Settings", EditorStyles.BoldLabel);
 
             // Pitch
-            DrawNullableFloatField("Pitch:", "pitch", ref workingConfig.pitch, 0.1f, 3.0f);
+            DrawNullableFloatField("Pitch:", "pitch", ref workingConfig!.pitch, 0.1f, 3.0f);
         }
 
         private void DrawPitchSettings()
         {
             GUILayout.Label("Pitch Range (Random)", EditorStyles.BoldLabel);
 
-            DrawNullableFloatField("Min Pitch:", "minPitch", ref workingConfig.minPitch, 0.1f, 3.0f);
-            DrawNullableFloatField("Max Pitch:", "maxPitch", ref workingConfig.maxPitch, 0.1f, 3.0f);
+            DrawNullableFloatField("Min Pitch:", "minPitch", ref workingConfig!.minPitch, 0.1f, 3.0f);
+            DrawNullableFloatField("Max Pitch:", "maxPitch", ref workingConfig!.maxPitch, 0.1f, 3.0f);
         }
 
         private void DrawVolumeSettings()
@@ -245,14 +245,14 @@ namespace DvMod.ZSounds.UI
             {
                 // For AudioClip sounds, only show a single volume field (using maxVolume)
                 GUILayout.Label("Volume", EditorStyles.BoldLabel);
-                DrawNullableFloatField("Volume:", "maxVolume", ref workingConfig.maxVolume, 0.0f, 1.0f);
+                DrawNullableFloatField("Volume:", "maxVolume", ref workingConfig!.maxVolume, 0.0f, 1.0f);
             }
             else
             {
                 // For LayeredAudio sounds, show volume range
                 GUILayout.Label("Volume Range", EditorStyles.BoldLabel);
-                DrawNullableFloatField("Min Volume:", "minVolume", ref workingConfig.minVolume, 0.0f, 1.0f);
-                DrawNullableFloatField("Max Volume:", "maxVolume", ref workingConfig.maxVolume, 0.0f, 1.0f);
+                DrawNullableFloatField("Min Volume:", "minVolume", ref workingConfig!.minVolume, 0.0f, 1.0f);
+                DrawNullableFloatField("Max Volume:", "maxVolume", ref workingConfig!.maxVolume, 0.0f, 1.0f);
             }
         }
 
@@ -262,7 +262,7 @@ namespace DvMod.ZSounds.UI
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Randomize Start Time:", GUILayout.Width(150));
-            var randomize = workingConfig.randomizeStartTime ?? false;
+            var randomize = workingConfig!.randomizeStartTime ?? false;
             var newRandomize = GUILayout.Toggle(randomize, "");
             if (newRandomize != randomize)
             {

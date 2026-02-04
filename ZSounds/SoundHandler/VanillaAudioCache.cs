@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DV.Simulation.Ports;
@@ -64,8 +64,13 @@ namespace DvMod.ZSounds.SoundHandler
                 return;
             }
 
+            // Determine if this sound type uses dynamic pitch control (e.g., chuff sounds)
+            // For these sounds, we don't cache minPitch/maxPitch because they're controlled at runtime
+            bool isChuffSound = IsChuffSoundType(soundType);
+            bool cachePitchRange = !isChuffSound;
+
             // Cache the current settings
-            var settings = new CachedAudioSettings(layeredAudio);
+            var settings = new CachedAudioSettings(layeredAudio, cachePitchRange);
 
             if (!_cache.ContainsKey(carId))
             {
@@ -74,9 +79,27 @@ namespace DvMod.ZSounds.SoundHandler
 
             _cache[carId][soundType] = settings;
 
+            var pitchInfo = isChuffSound ? "(dynamic pitch - not cached)" : $"[{settings.MinPitch}, {settings.MaxPitch}]";
             Main.DebugLog(() => $"VanillaCache: Cached vanilla settings for {carId}/{soundType} - " +
-                              $"pitch range [{settings.MinPitch}, {settings.MaxPitch}], " +
+                              $"pitch range {pitchInfo}, " +
                               $"layers: {settings.LayerSettings.Count}");
+        }
+
+        private bool IsChuffSoundType(SoundType soundType)
+        {
+            return soundType == SoundType.SteamChuff2_67Hz ||
+                   soundType == SoundType.SteamChuff3Hz ||
+                   soundType == SoundType.SteamChuff4Hz ||
+                   soundType == SoundType.SteamChuff5_33Hz ||
+                   soundType == SoundType.SteamChuff8Hz ||
+                   soundType == SoundType.SteamChuff10_67Hz ||
+                   soundType == SoundType.SteamChuff16Hz ||
+                   soundType == SoundType.SteamChuff4HzWater ||
+                   soundType == SoundType.SteamChuff8HzWater ||
+                   soundType == SoundType.SteamChuff16HzWater ||
+                   soundType == SoundType.SteamChuff2HzAsh ||
+                   soundType == SoundType.SteamChuff4HzAsh ||
+                   soundType == SoundType.SteamChuff8HzAsh;
         }
 
         /// <summary>
@@ -158,10 +181,22 @@ namespace DvMod.ZSounds.SoundHandler
         public float MaxPitch { get; }
         public List<CachedLayerSettings> LayerSettings { get; }
 
-        public CachedAudioSettings(LayeredAudio layeredAudio)
+        public CachedAudioSettings(LayeredAudio layeredAudio, bool cachePitchRange = true)
         {
-            MinPitch = layeredAudio.minPitch;
-            MaxPitch = layeredAudio.maxPitch;
+            // For chuff sounds, don't cache minPitch/maxPitch because they're controlled dynamically by ChuffClipsSimReader
+            // Caching them would lock the pitch and prevent speed-dependent pitch changes
+            if (cachePitchRange)
+            {
+                MinPitch = layeredAudio.minPitch;
+                MaxPitch = layeredAudio.maxPitch;
+            }
+            else
+            {
+                // Use default values that allow full pitch range
+                MinPitch = 0f;
+                MaxPitch = 3f;
+            }
+            
             LayerSettings = new List<CachedLayerSettings>();
 
             if (layeredAudio.layers != null)

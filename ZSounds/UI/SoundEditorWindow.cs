@@ -424,7 +424,7 @@ namespace DvMod.ZSounds.UI
             // Use registryService
             var soundSet = Main.registryService?.GetSoundSet(currentLocomotive);
 
-            if (soundSet.sounds.TryGetValue(soundType, out var soundDef))
+            if (soundSet != null && soundSet.sounds.TryGetValue(soundType, out var soundDef))
             {
                 return GetSoundDisplayName(soundDef);
             }
@@ -496,17 +496,14 @@ namespace DvMod.ZSounds.UI
                         Main.loaderService?.DisableSoundConfiguration(vanillaConfigPath);
                     }
 
-                    // Restore the specific sound to default
+                    // Reload sounds to apply config changes (must happen before restore to clear vanilla configs from memory)
+                    Main.loaderService?.ReloadAllSounds();
+
+                    // Restore the specific sound to default from vanilla cache
                     Main.restoratorService.RestoreSound(currentLocomotive, soundType);
 
-                    // Apply the updated sound set
-                    Main.applicatorService.ApplySoundSet(currentLocomotive, soundSet);
-
-                    // Save the updated sound state
+                    // Save the updated sound state (no need to ApplySoundSet - restore already applied the cached values)
                     Main.registryService.SaveSoundState(currentLocomotive, soundSet);
-
-                    // Reload sounds to apply config changes
-                    Main.loaderService?.ReloadAllSounds();
 
                     Main.mod?.Logger.Log($"Reset {soundType} sound for {currentLocomotive.ID}");
                 }
@@ -555,16 +552,16 @@ namespace DvMod.ZSounds.UI
                     // Clear the sound set
                     soundSet.sounds.Clear();
 
-                    // Restore all sounds to default
+                    // Reload sounds to apply config changes (must happen before restore to clear vanilla configs from memory)
+                    Main.loaderService?.ReloadAllSounds();
+
+                    // Restore all sounds to default from vanilla cache
                     Main.restoratorService.RestoreAllSounds(currentLocomotive);
 
                     Main.registryService.ClearCustomization(currentLocomotive);
 
                     // Remove from persistent state
                     Main.registryService.RemoveSoundState(currentLocomotive.ID);
-
-                    // Reload sounds to apply config changes
-                    Main.loaderService?.ReloadAllSounds();
 
                     Main.mod?.Logger.Log($"Reset all sounds for {currentLocomotive.ID}");
                 }
