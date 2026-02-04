@@ -592,11 +592,18 @@ namespace DvMod.ZSounds.SoundHandler
             if (simAudio.audioClipSimReadersController?.entries != null)
             {
                 var processedReaders = new HashSet<AudioClipPortReader>();
+                var processedChuffReaders = new HashSet<ChuffClipsSimReader>();
                 Main.DebugLog(() => $"SoundDiscovery: Scanning {simAudio.audioClipSimReadersController.entries.Length} AudioClipPortReader entries from spawned car");
 
                 foreach (var entry in simAudio.audioClipSimReadersController.entries)
                 {
-                    if (entry is AudioClipPortReader reader && !processedReaders.Contains(reader))
+                    // Handle ChuffClipsSimReader separately (it extends AudioClipPortReader but needs special handling)
+                    if (entry is ChuffClipsSimReader chuffReader && !processedChuffReaders.Contains(chuffReader))
+                    {
+                        processedChuffReaders.Add(chuffReader);
+                        discoveredCount += ScanChuffClipsSimReader(carType, chuffReader);
+                    }
+                    else if (entry is AudioClipPortReader reader && !processedReaders.Contains(reader))
                     {
                         processedReaders.Add(reader);
                         discoveredCount += ScanAudioClipPortReader(carType, reader);
@@ -607,6 +614,11 @@ namespace DvMod.ZSounds.SoundHandler
             if (discoveredCount > 0)
             {
                 Main.mod?.Logger.Log($"SoundDiscovery: Discovered {discoveredCount} sounds for {carType} from spawned car");
+                
+                // IMPORTANT: Cache vanilla values NOW before any modifications are applied
+                // This ensures we capture the true vanilla values from the game, not values modified by vanilla configs
+                CacheVanillaValuesForCar(car, trainAudio);
+                
                 return true;
             }
             else
@@ -869,6 +881,104 @@ namespace DvMod.ZSounds.SoundHandler
             return count;
         }
 
+        private int ScanChuffClipsSimReader(TrainCarType carType, ChuffClipsSimReader chuffReader)
+        {
+            int count = 0;
+            var hierarchyPath = GetTransformPath(chuffReader.transform);
+
+            // Scan regular chuff loops
+            if (chuffReader.chuffLoops != null)
+            {
+                foreach (var chuffLoop in chuffReader.chuffLoops)
+                {
+                    if (chuffLoop?.chuffLoop != null)
+                    {
+                        var layeredAudio = chuffLoop.chuffLoop;
+                        var firstClipName = GetFirstClipNameFromLayeredAudio(layeredAudio);
+                        
+                        if (!string.IsNullOrEmpty(firstClipName))
+                        {
+                            var soundType = DetermineSoundType(layeredAudio.gameObject.name, hierarchyPath, firstClipName!);
+                            
+                            if (soundType != SoundType.Unknown)
+                            {
+                                AddMapping(carType, soundType, firstClipName!, hierarchyPath);
+                                count++;
+                                Main.DebugLog(() => $"SoundDiscovery: Mapped {soundType} -> {firstClipName} (ChuffClipsSimReader regular chuff, clip: {firstClipName})");
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Scan water chuff loops
+            if (chuffReader.waterChuffLoops != null)
+            {
+                foreach (var chuffLoop in chuffReader.waterChuffLoops)
+                {
+                    if (chuffLoop?.chuffLoop != null)
+                    {
+                        var layeredAudio = chuffLoop.chuffLoop;
+                        var firstClipName = GetFirstClipNameFromLayeredAudio(layeredAudio);
+                        
+                        if (!string.IsNullOrEmpty(firstClipName))
+                        {
+                            var soundType = DetermineSoundType(layeredAudio.gameObject.name, hierarchyPath, firstClipName!);
+                            
+                            if (soundType != SoundType.Unknown)
+                            {
+                                AddMapping(carType, soundType, firstClipName!, hierarchyPath);
+                                count++;
+                                Main.DebugLog(() => $"SoundDiscovery: Mapped {soundType} -> {firstClipName} (ChuffClipsSimReader water chuff, clip: {firstClipName})");
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Scan ash chuff loops (if available)
+            if (chuffReader.ashChuffLoops != null)
+            {
+                foreach (var chuffLoop in chuffReader.ashChuffLoops)
+                {
+                    if (chuffLoop?.chuffLoop != null)
+                    {
+                        var layeredAudio = chuffLoop.chuffLoop;
+                        var firstClipName = GetFirstClipNameFromLayeredAudio(layeredAudio);
+                        
+                        if (!string.IsNullOrEmpty(firstClipName))
+                        {
+                            var soundType = DetermineSoundType(layeredAudio.gameObject.name, hierarchyPath, firstClipName!);
+                            
+                            if (soundType != SoundType.Unknown)
+                            {
+                                AddMapping(carType, soundType, firstClipName!, hierarchyPath);
+                                count++;
+                                Main.DebugLog(() => $"SoundDiscovery: Mapped {soundType} -> {firstClipName} (ChuffClipsSimReader ash chuff, clip: {firstClipName})");
+                            }
+                        }
+                    }
+                }
+            }
+
+            return count;
+        }
+
+        private string? GetFirstClipNameFromLayeredAudio(LayeredAudio layeredAudio)
+        {
+            if (layeredAudio?.layers != null)
+            {
+                foreach (var layer in layeredAudio.layers)
+                {
+                    if (layer?.source?.clip != null)
+                    {
+                        return layer.source.clip.name;
+                    }
+                }
+            }
+            return null;
+        }
+
         private int ScanGameObjectForAudio(TrainCarType carType, Transform transform)
         {
             int discoveredCount = 0;
@@ -1087,7 +1197,27 @@ namespace DvMod.ZSounds.SoundHandler
             if (clipName.Contains("CompressionBrake") || baseName.Contains("jakebrake") || baseName.Contains("jake"))
                 return SoundType.JakeBrake;
 
-            // Steam locomotive sounds
+            // Steam locomotive sounds - general (checked before path-specific ones)
+            if (clipName.Contains("Dynamo"))
+                return SoundType.Dynamo;
+            if (clipName.Contains("ValveGear"))
+                return SoundType.SteamValveGear;
+            if (clipName.Contains("SteamRelease"))
+                return SoundType.SteamRelease;
+            if (lowerPath.Contains("admission") || clipName.Contains("Admission"))
+                return SoundType.SteamChestAdmission;
+            if (clipName.Contains("Injector"))
+                return SoundType.WaterInFlow;
+            if (clipName.Contains("RunningGear_Grind"))
+                return SoundType.DamagedMechanism;
+            if (clipName.Contains("Lubrication") || clipName.Contains("OilPour"))
+                return SoundType.Lubricator;
+            if (clipName.Contains("WaterDump"))
+                return SoundType.CrownSheetBoiling;
+            if (lowerName.Contains("primingcrank") || lowerPath.Contains("priming"))
+                return SoundType.PrimingCrank;
+
+            // Steam chuff sounds (path-specific)
             if (lowerPath.Contains("steam"))
             {
                 // Chuff sounds
@@ -1121,26 +1251,6 @@ namespace DvMod.ZSounds.SoundHandler
                     return SoundType.SteamChuff4HzAsh;
                 if (clipName.Contains("ChuffAshLoop8s"))
                     return SoundType.SteamChuff8HzAsh;
-
-                // Other steam sounds
-                if (clipName.Contains("Dynamo"))
-                    return SoundType.Dynamo;
-                if (clipName.Contains("ValveGear"))
-                    return SoundType.SteamValveGear;
-                if (clipName.Contains("SteamRelease"))
-                    return SoundType.SteamRelease;
-                if (lowerPath.Contains("admission") || clipName.Contains("Admission"))
-                    return SoundType.SteamChestAdmission;
-                if (clipName.Contains("Injector"))
-                    return SoundType.WaterInFlow;
-                if (clipName.Contains("RunningGear_Grind"))
-                    return SoundType.DamagedMechanism;
-                if (clipName.Contains("Lubrication") || clipName.Contains("OilPour"))
-                    return SoundType.Lubricator;
-                if (clipName.Contains("WaterDump"))
-                    return SoundType.CrownSheetBoiling;
-                if (lowerName.Contains("primingcrank") || lowerPath.Contains("priming"))
-                    return SoundType.PrimingCrank;
             }
 
             // Fire
@@ -1352,6 +1462,48 @@ namespace DvMod.ZSounds.SoundHandler
             if (transform.parent == null)
                 return transform.name;
             return GetTransformPath(transform.parent) + "/" + transform.name;
+        }
+
+        /// <summary>
+        /// Caches the vanilla values for all discovered sounds on a car.
+        /// This must be called during initial scan BEFORE any vanilla configs or custom sounds are applied.
+        /// </summary>
+        private void CacheVanillaValuesForCar(TrainCar car, TrainAudio trainAudio)
+        {
+            if (Main.vanillaCache == null)
+                return;
+
+            var carType = car.carType;
+            Main.DebugLog(() => $"SoundDiscovery: Caching vanilla values for {carType}...");
+
+            int cachedCount = 0;
+
+            // Cache all AudioClipPortReader sounds
+            foreach (var soundType in SoundTypes.audioClipsSoundTypes)
+            {
+                var portReader = GetAudioClipPortReader(trainAudio, soundType);
+                if (portReader != null)
+                {
+                    Main.vanillaCache.CacheIfNeeded(car, soundType, portReader);
+                    cachedCount++;
+                }
+            }
+
+            // Cache all LayeredAudio sounds
+            foreach (var soundType in SoundTypes.layeredAudioSoundTypes)
+            {
+                var layeredAudio = GetLayeredAudio(trainAudio, soundType);
+                if (layeredAudio != null)
+                {
+                    Main.vanillaCache.CacheIfNeeded(car, soundType, layeredAudio);
+                    cachedCount++;
+                }
+            }
+
+            if (cachedCount > 0)
+            {
+                Main.mod?.Logger.Log($"SoundDiscovery: Cached {cachedCount} vanilla sound values for {carType}");
+            }
         }
 
         #endregion
