@@ -180,6 +180,24 @@ namespace DvMod.ZSounds
             SoundType.GearGrind,
             SoundType.SteamCylinderCrack,
         ];
+
+        public static bool IsChuffSoundType(SoundType soundType)
+        {
+            return soundType == SoundType.SteamChuffLoop ||
+                   soundType == SoundType.SteamChuff2_67Hz ||
+                   soundType == SoundType.SteamChuff3Hz ||
+                   soundType == SoundType.SteamChuff4Hz ||
+                   soundType == SoundType.SteamChuff5_33Hz ||
+                   soundType == SoundType.SteamChuff8Hz ||
+                   soundType == SoundType.SteamChuff10_67Hz ||
+                   soundType == SoundType.SteamChuff16Hz ||
+                   soundType == SoundType.SteamChuff4HzWater ||
+                   soundType == SoundType.SteamChuff8HzWater ||
+                   soundType == SoundType.SteamChuff16HzWater ||
+                   soundType == SoundType.SteamChuff2HzAsh ||
+                   soundType == SoundType.SteamChuff4HzAsh ||
+                   soundType == SoundType.SteamChuff8HzAsh;
+        }
     }
 
     public class SoundDefinition

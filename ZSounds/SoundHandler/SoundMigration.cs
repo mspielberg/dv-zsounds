@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -188,7 +188,7 @@ namespace DvMod.ZSounds.SoundHandler
                             // Get or initialize counter for this filename
                             if (!soundFileCounters[soundTypeName].ContainsKey(fileName))
                             {
-                                soundFileCounters[soundTypeName][fileName] = 1;
+                                soundFileCounters[soundTypeName][fileName] = 0;
                             }
 
                             var counter = ++soundFileCounters[soundTypeName][fileName];

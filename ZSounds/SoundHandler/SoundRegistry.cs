@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -37,12 +37,19 @@ namespace DvMod.ZSounds.SoundHandler
 
         #region Public API - Sound Set Management
 
+        private static string GetCarGuid(TrainCar car)
+        {
+            if (car?.logicCar == null)
+                throw new InvalidOperationException($"TrainCar {car?.ID ?? "null"} has no logicCar");
+            return car.logicCar.carGuid;
+        }
+
         /// <summary>
         /// Gets the sound set for a train car, creating one if it doesn't exist.
         /// </summary>
         public SoundSet GetSoundSet(TrainCar car)
         {
-            var carGuid = car.logicCar.carGuid;
+            var carGuid = GetCarGuid(car);
 
             if (!_soundSets.TryGetValue(carGuid, out var soundSet))
             {
@@ -58,7 +65,7 @@ namespace DvMod.ZSounds.SoundHandler
         /// </summary>
         public void SetSoundSet(TrainCar car, SoundSet soundSet)
         {
-            var carGuid = car.logicCar.carGuid;
+            var carGuid = GetCarGuid(car);
             _soundSets[carGuid] = soundSet;
         }
 
@@ -67,7 +74,7 @@ namespace DvMod.ZSounds.SoundHandler
         /// </summary>
         public void ClearSoundSet(TrainCar car)
         {
-            var carGuid = car.logicCar.carGuid;
+            var carGuid = GetCarGuid(car);
             _soundSets.Remove(carGuid);
         }
 
@@ -80,7 +87,7 @@ namespace DvMod.ZSounds.SoundHandler
         /// </summary>
         public void MarkAsCustomized(TrainCar car)
         {
-            _customizedCars.Add(car.logicCar.carGuid);
+            _customizedCars.Add(GetCarGuid(car));
         }
 
         /// <summary>
@@ -88,6 +95,7 @@ namespace DvMod.ZSounds.SoundHandler
         /// </summary>
         public bool IsCustomized(TrainCar car)
         {
+            if (car?.logicCar == null) return false;
             return _customizedCars.Contains(car.logicCar.carGuid);
         }
 
@@ -96,7 +104,7 @@ namespace DvMod.ZSounds.SoundHandler
         /// </summary>
         public void ClearCustomization(TrainCar car)
         {
-            _customizedCars.Remove(car.logicCar.carGuid);
+            _customizedCars.Remove(GetCarGuid(car));
         }
 
         #endregion

@@ -15,7 +15,6 @@ namespace DvMod.ZSounds.Patches
         // Performance caches to avoid expensive repeated operations
         private static readonly Dictionary<int, (TrainCar trainCar, SoundType soundType)?> _trainInfoCache = new Dictionary<int, (TrainCar, SoundType)?>();
         private static readonly Dictionary<int, bool> _hasPitchCurveCache = new Dictionary<int, bool>();
-        private static readonly Dictionary<string, TrainCar> _trainCarCache = new Dictionary<string, TrainCar>();
 
         private static string GetHierarchyPath(Transform transform)
         {
@@ -193,53 +192,11 @@ namespace DvMod.ZSounds.Patches
                 // Fast TrainCar lookup using GetComponentInParent first (most efficient)
                 var trainCar = layeredAudio.GetComponentInParent<TrainCar>();
 
-                // If GetComponentInParent fails, check cache first, then fall back to search
+                // If GetComponentInParent fails, use TrainCarTracker
                 if (trainCar == null)
                 {
                     var hierarchyPath = GetHierarchyPath(layeredAudio.transform);
-
-                    // Extract the base locomotive name from path for caching
-                    string? cacheKey = null;
-                    if (hierarchyPath.Contains("LocoS282A")) cacheKey = "LocoS282A";
-                    else if (hierarchyPath.Contains("LocoS060")) cacheKey = "LocoS060";
-                    else if (hierarchyPath.Contains("LocoDH4")) cacheKey = "LocoDH4";
-                    else if (hierarchyPath.Contains("LocoDM3")) cacheKey = "LocoDM3";
-                    else if (hierarchyPath.Contains("LocoDM1U")) cacheKey = "LocoDM1U";
-                    else if (hierarchyPath.Contains("LocoShunter")) cacheKey = "LocoShunter";
-                    else if (hierarchyPath.Contains("LocoMicroshunter")) cacheKey = "LocoMicroshunter";
-
-                    if (cacheKey != null)
-                    {
-                        // Check cache first
-                        if (_trainCarCache.TryGetValue(cacheKey, out trainCar) && trainCar != null)
-                        {
-                            // Verify cached trainCar is still valid
-                            if (trainCar.gameObject == null)
-                            {
-                                _trainCarCache.Remove(cacheKey);
-                                trainCar = null;
-                            }
-                        }
-
-                        // If not in cache or invalid, do targeted search
-                        if (trainCar == null)
-                        {
-                            var carType = GetCarTypeFromPattern(cacheKey);
-                            var allTrainCars = UnityEngine.Object.FindObjectsOfType<TrainCar>();
-                            foreach (var candidate in allTrainCars)
-                            {
-                                if (candidate.name.Contains(cacheKey) &&
-                                    !candidate.name.Contains("[interior]") &&
-                                    !candidate.name.Contains("Audio") &&
-                                    candidate.carType == carType)
-                                {
-                                    trainCar = candidate;
-                                    _trainCarCache[cacheKey] = trainCar; // Cache the result
-                                    break;
-                                }
-                            }
-                        }
-                    }
+                    trainCar = SoundHandler.TrainCarTracker.FindFromHierarchyPath(hierarchyPath);
                 }
 
                 if (trainCar == null)
@@ -261,25 +218,17 @@ namespace DvMod.ZSounds.Patches
             }
         }
 
-        // Get TrainCarType from locomotive pattern - avoiding string analysis
-        private static TrainCarType GetCarTypeFromPattern(string pattern)
-        {
-            switch (pattern)
-            {
-                case "LocoS282A": return TrainCarType.LocoSteamHeavy;
-                case "LocoS060": return TrainCarType.LocoS060;
-                case "LocoDH4": return TrainCarType.LocoDH4;
-                case "LocoDM3": return TrainCarType.LocoDM3;
-                case "LocoDM1U": return TrainCarType.LocoDM1U;
-                case "LocoShunter": return TrainCarType.LocoShunter;
-                case "LocoMicroshunter": return TrainCarType.LocoMicroshunter;
-                default: return TrainCarType.NotSet;
-            }
-        }
-
         // Determine sound type from path and audio name - more efficient than the old method
         private static SoundType DetermineSoundTypeFromPath(string audioName, string hierarchyPath)
         {
+            // Check declarative rules first
+            if (Main.ruleEngine != null)
+            {
+                var ruleResult = Main.ruleEngine.Evaluate(audioName, hierarchyPath, audioName);
+                if (ruleResult.HasValue)
+                    return ruleResult.Value;
+            }
+
             // Steam chuff sound detection - check for chuff frequency patterns
             if (audioName.Contains("ChuffsPerSecond") || hierarchyPath.Contains("ChuffsPerSecond"))
             {
@@ -312,7 +261,6 @@ namespace DvMod.ZSounds.Patches
         {
             _trainInfoCache.Clear();
             _hasPitchCurveCache.Clear();
-            _trainCarCache.Clear();
         }
     }
 }

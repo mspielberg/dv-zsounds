@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -156,8 +156,9 @@ namespace DvMod.ZSounds
             {
                 var soundTypeName = Path.GetFileName(soundTypeFolder);
 
-                // Skip Configs folder
-                if (soundTypeName.Equals("Configs", StringComparison.OrdinalIgnoreCase))
+                // Skip Configs and Other folders
+                if (soundTypeName.Equals("Configs", StringComparison.OrdinalIgnoreCase) ||
+                    soundTypeName.Equals("Other", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }

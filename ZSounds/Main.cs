@@ -19,6 +19,7 @@ namespace DvMod.ZSounds
 
         // New service architecture
         public static SoundDiscovery? discoveryService;
+        public static SoundRules.SoundRuleEngine? ruleEngine;
         public static SoundLoader? loaderService;
         public static SoundApplicator? applicatorService;
         public static SoundRestorator? restoratorService;
@@ -59,6 +60,9 @@ namespace DvMod.ZSounds
 
             // Service 1: Sound Discovery (no dependencies)
             discoveryService = new SoundDiscovery();
+            discoveryService.LoadRules(modEntry.Path);
+            discoveryService.LoadManifests(modEntry.Path);
+            ruleEngine = discoveryService.GetRuleEngine();
             modEntry.Logger.Log("- SoundDiscovery initialized");
 
             // Perform migration if needed (must happen after discovery but before loading)
@@ -186,6 +190,9 @@ namespace DvMod.ZSounds
                 // Clear performance caches
                 LayeredAudioSetPitchPatch.ClearCaches();
                 AudioSourcePitchPatch.ClearCaches();
+                SoundHandler.TrainCarTracker.Clear();
+                vanillaCache?.ClearAll();
+                loaderService?.ClearAudioCache();
 
                 // Cleanup CommsRadio API integration
                 try
@@ -260,6 +267,19 @@ namespace DvMod.ZSounds
             try
             {
                 mod?.Logger.Log("World loading finished - scanning audio prefabs and applying saved locomotive sounds");
+
+                // Register CCL manifest patterns for TrainCarTracker
+                if (discoveryService != null)
+                {
+                    foreach (var manifest in discoveryService.GetManifestLoader().Manifests.Values)
+                    {
+                        if (manifest.audioPrefabPattern is { } pattern)
+                            SoundHandler.TrainCarTracker.RegisterManifestPattern(pattern);
+                    }
+                }
+
+                // Build TrainCarTracker cache for pitch patches
+                SoundHandler.TrainCarTracker.Rebuild();
 
                 // Scan all locomotive audio prefabs to discover sounds (new service)
                 discoveryService?.ScanAllLocomotives();

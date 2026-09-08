@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using UnityEngine;
 
 namespace DvMod.ZSounds.SoundHandler
@@ -307,6 +307,25 @@ namespace DvMod.ZSounds.SoundHandler
             // Mute other layers for full-layer replacement
             for (int i = 1; i < audio.layers.Length; i++)
                 audio.layers[i].source.mute = true;
+
+            // Mute any OTHER LayeredAudio components matching this sound type
+            // (e.g., S282A has multiple bell-related LayeredAudio components)
+            var trainAudio = car.interior?.GetComponentInChildren<TrainAudio>();
+            if (trainAudio != null)
+            {
+                var allMatching = _soundDiscovery.GetAllMatchingLayeredAudio(trainAudio, soundType);
+                foreach (var other in allMatching)
+                {
+                    if (other == audio || other.layers == null)
+                        continue;
+                    for (int i = 0; i < other.layers.Length; i++)
+                    {
+                        if (other.layers[i].source != null)
+                            other.layers[i].source.mute = true;
+                    }
+                    Main.DebugLog(() => $"SoundApplicator: Muted secondary LayeredAudio for {soundType}");
+                }
+            }
 
             // For EngineLoop sounds, ensure they're stopped after applying to prevent unwanted playback
             if (soundType == SoundType.EngineLoop)

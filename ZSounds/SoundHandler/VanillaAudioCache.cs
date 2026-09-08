@@ -66,7 +66,7 @@ namespace DvMod.ZSounds.SoundHandler
 
             // Determine if this sound type uses dynamic pitch control (e.g., chuff sounds)
             // For these sounds, we don't cache minPitch/maxPitch because they're controlled at runtime
-            bool isChuffSound = IsChuffSoundType(soundType);
+            bool isChuffSound = SoundTypes.IsChuffSoundType(soundType);
             bool cachePitchRange = !isChuffSound;
 
             // Cache the current settings
@@ -85,22 +85,7 @@ namespace DvMod.ZSounds.SoundHandler
                               $"layers: {settings.LayerSettings.Count}");
         }
 
-        private bool IsChuffSoundType(SoundType soundType)
-        {
-            return soundType == SoundType.SteamChuff2_67Hz ||
-                   soundType == SoundType.SteamChuff3Hz ||
-                   soundType == SoundType.SteamChuff4Hz ||
-                   soundType == SoundType.SteamChuff5_33Hz ||
-                   soundType == SoundType.SteamChuff8Hz ||
-                   soundType == SoundType.SteamChuff10_67Hz ||
-                   soundType == SoundType.SteamChuff16Hz ||
-                   soundType == SoundType.SteamChuff4HzWater ||
-                   soundType == SoundType.SteamChuff8HzWater ||
-                   soundType == SoundType.SteamChuff16HzWater ||
-                   soundType == SoundType.SteamChuff2HzAsh ||
-                   soundType == SoundType.SteamChuff4HzAsh ||
-                   soundType == SoundType.SteamChuff8HzAsh;
-        }
+
 
         /// <summary>
         /// Restores the cached vanilla settings to an AudioClipPortReader.
@@ -140,6 +125,18 @@ namespace DvMod.ZSounds.SoundHandler
 
             Main.DebugLog(() => $"VanillaCache: Restored vanilla settings for {carId}/{soundType}");
             return true;
+        }
+
+        public void RemoveCar(string carId)
+        {
+            _cache.Remove(carId);
+            _audioClipCache.Remove(carId);
+        }
+
+        public void ClearAll()
+        {
+            _cache.Clear();
+            _audioClipCache.Clear();
         }
     }
 

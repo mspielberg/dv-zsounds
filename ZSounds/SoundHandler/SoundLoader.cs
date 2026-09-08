@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -393,7 +393,7 @@ namespace DvMod.ZSounds.SoundHandler
 
             while (!async.isDone)
             {
-                // Wait for request to complete
+                System.Threading.Thread.Sleep(1);
             }
 
             if (webRequest.isNetworkError || webRequest.isHttpError)
@@ -420,8 +420,15 @@ namespace DvMod.ZSounds.SoundHandler
         /// </summary>
         public void ClearAudioCache()
         {
+            foreach (var clip in _audioClipCache.Values)
+            {
+                if (clip != null)
+                {
+                    clip.UnloadAudioData();
+                }
+            }
             _audioClipCache.Clear();
-            Main.mod?.Logger.Log("SoundLoader: Cleared audio clip cache");
+            Main.mod?.Logger.Log("SoundLoader: Cleared audio clip cache and unloaded audio data");
         }
 
         #endregion
@@ -487,7 +494,24 @@ namespace DvMod.ZSounds.SoundHandler
             Main.DebugLog(() => $"SoundLoader: Found {soundFiles.Length} sound files in {folder}");
 
             // Get all train types that support this sound type
-            var supportedTrainTypes = GetTrainTypesSupportingSoundType(soundType);
+            // For Unknown/Other sounds, register under ALL locomotive types since they're generic
+            List<TrainCarType> supportedTrainTypes;
+            if (soundType == SoundType.Unknown)
+            {
+                supportedTrainTypes = new List<TrainCarType>();
+                if (Main.discoveryService != null)
+                {
+                    foreach (var trainType in Enum.GetValues(typeof(TrainCarType)).Cast<TrainCarType>())
+                    {
+                        if (Main.discoveryService.GetSupportedSoundTypes(trainType).Count > 0)
+                            supportedTrainTypes.Add(trainType);
+                    }
+                }
+            }
+            else
+            {
+                supportedTrainTypes = GetTrainTypesSupportingSoundType(soundType);
+            }
 
             foreach (var soundFile in soundFiles)
             {
@@ -807,7 +831,11 @@ namespace DvMod.ZSounds.SoundHandler
 
         private void ValidateSoundDefinition(SoundDefinition soundDef)
         {
-            void ValidateFile(string f) => LoadAudioClip(f);
+            void ValidateFile(string f)
+            {
+                if (!File.Exists(f))
+                    Main.mod?.Logger.Warning($"Sound file not found: {f}");
+            }
 
             if (soundDef.filename != null)
                 ValidateFile(soundDef.filename);

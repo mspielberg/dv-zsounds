@@ -46,7 +46,9 @@ namespace DvMod.ZSounds
                     }
 
                     // Debug info when logging is enabled
-                    var debugInfo = enableLogging ? $" (Customized: {isCustomized}, GUID: {currentCar.CarGUID.Substring(0, 8)}...)" : "";
+                    var guid = currentCar.CarGUID;
+                    var guidShort = guid.Length >= 8 ? guid.Substring(0, 8) : guid;
+                    var debugInfo = enableLogging ? $" (Customized: {isCustomized}, GUID: {guidShort}...)" : "";
                     GUILayout.Label($"Custom Sounds Applied: {customSoundsCount}{debugInfo}", GUILayout.ExpandWidth(false));
 
                     // Folder-based sound info

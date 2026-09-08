@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using DV.ModularAudioCar;
 using DV.Simulation.Controllers;
 using DV.Simulation.Ports;
 using DV.ThingTypes;
+using DvMod.ZSounds.CCL;
+using DvMod.ZSounds.SoundRules;
 using UnityEngine;
 
 namespace DvMod.ZSounds.SoundHandler
@@ -16,6 +19,9 @@ namespace DvMod.ZSounds.SoundHandler
     public class SoundDiscovery
     {
         private const string ENGINE_HIERARCHY_NAME = "[sim] Engine";
+
+        private readonly SoundRuleEngine _ruleEngine = new();
+        private readonly SoundManifestLoader _manifestLoader = new();
 
         // Cache: TrainCarType -> SoundType -> clip name(s)
         private readonly Dictionary<TrainCarType, Dictionary<SoundType, string>> _soundMappings = new();
@@ -265,13 +271,15 @@ namespace DvMod.ZSounds.SoundHandler
             }
 
             // For steam chuff sounds, search in ChuffClipsSimReader
-            if (IsChuffSoundType(soundType))
+            if (SoundTypes.IsChuffSoundType(soundType))
             {
                 match = FindChuffLayeredAudioInChuffReader(trainAudio.car, simAudio, soundType, path);
             }
 
             if (match == null)
+            {
                 Main.DebugLog(() => $"Could not find LayeredAudio: carType={trainAudio.car.carType}, soundType={soundType}, path={path}");
+            }
             else if (hasGuid)
             {
                 // Cache the result for spawned cars
@@ -284,6 +292,50 @@ namespace DvMod.ZSounds.SoundHandler
             }
 
             return match;
+        }
+
+        /// <summary>
+        /// Gets ALL LayeredAudio components matching a sound type, including duplicates not in the primary mapping.
+        /// Used to mute secondary components that play the same sound (e.g., bell on S282A).
+        /// </summary>
+        public List<LayeredAudio> GetAllMatchingLayeredAudio(TrainAudio trainAudio, SoundType soundType)
+        {
+            var results = new List<LayeredAudio>();
+
+            if (!_soundMappings.TryGetValue(trainAudio.car.carType, out var mapping))
+                return results;
+
+            if (!mapping.TryGetValue(soundType, out var path))
+                return results;
+
+            var modularAudio = trainAudio as CarModularAudio;
+            if (modularAudio == null)
+                return results;
+
+            var simAudio = modularAudio.audioModules?.OfType<SimAudioModule>().FirstOrDefault();
+            if (simAudio?.layeredAudioSimReadersController?.entries == null)
+                return results;
+
+            foreach (var entry in simAudio.layeredAudioSimReadersController.entries)
+            {
+                if (entry is not LayeredAudioPortReader reader)
+                    continue;
+
+                var la = reader.layeredAudio;
+                if (la == null)
+                    continue;
+
+                bool matches = string.Equals(reader.name, path, StringComparison.OrdinalIgnoreCase) ||
+                               string.Equals(reader.gameObject.name, path, StringComparison.OrdinalIgnoreCase) ||
+                               (la.layers != null && la.layers.Any(layer =>
+                                   layer?.source?.clip != null &&
+                                   string.Equals(layer.source.clip.name, path, StringComparison.OrdinalIgnoreCase)));
+
+                if (matches)
+                    results.Add(la);
+            }
+
+            return results;
         }
 
         /// <summary>
@@ -695,20 +747,23 @@ namespace DvMod.ZSounds.SoundHandler
             }
         }
 
+        public static readonly Dictionary<TrainCarType, string> AudioPrefabPatterns = new()
+        {
+            { TrainCarType.LocoShunter, "LocoDE2" },
+            { TrainCarType.LocoDiesel, "LocoDE6" },
+            { TrainCarType.LocoSteamHeavy, "LocoS282" },
+            { TrainCarType.LocoS060, "LocoS060" },
+            { TrainCarType.LocoDH4, "LocoDH4" },
+            { TrainCarType.LocoDM3, "LocoDM3" },
+            { TrainCarType.LocoDM1U, "LocoDM1U" },
+            { TrainCarType.LocoMicroshunter, "LocoMicroshunter" },
+        };
+
         private string GetExpectedAudioPrefabName(TrainCarType carType)
         {
-            return carType switch
-            {
-                TrainCarType.LocoShunter => "LocoDE2",
-                TrainCarType.LocoDiesel => "LocoDE6",
-                TrainCarType.LocoSteamHeavy => "LocoS282",
-                TrainCarType.LocoS060 => "LocoS060",
-                TrainCarType.LocoDH4 => "LocoDH4",
-                TrainCarType.LocoDM3 => "LocoDM3",
-                TrainCarType.LocoDM1U => "LocoDM1U",
-                TrainCarType.LocoMicroshunter => "LocoMicroshunter",
-                _ => carType.ToString()
-            };
+            if (AudioPrefabPatterns.TryGetValue(carType, out var name))
+                return name;
+            return carType.ToString();
         }
 
         private Transform? FindEngineHierarchy(Transform root)
@@ -1096,8 +1151,28 @@ namespace DvMod.ZSounds.SoundHandler
             return discoveredCount;
         }
 
+        public void LoadRules(string modPath)
+        {
+            _ruleEngine.LoadRules(modPath);
+        }
+
+        public SoundRuleEngine GetRuleEngine() => _ruleEngine;
+
+        public SoundManifestLoader GetManifestLoader() => _manifestLoader;
+
+        public void LoadManifests(string modPath)
+        {
+            var modsDir = Path.GetDirectoryName(modPath);
+            if (modsDir != null)
+                _manifestLoader.DiscoverManifests(modsDir);
+        }
+
         private SoundType DetermineSoundType(string gameObjectName, string hierarchyPath, string clipName)
         {
+            var ruleResult = _ruleEngine.Evaluate(gameObjectName, hierarchyPath, clipName);
+            if (ruleResult.HasValue)
+                return ruleResult.Value;
+
             var lowerName = gameObjectName.ToLower();
             var lowerPath = hierarchyPath.ToLower();
             var lowerClipName = clipName.ToLower();
@@ -1115,6 +1190,12 @@ namespace DvMod.ZSounds.SoundHandler
             if (baseName.Contains("whistle") || lowerPath.Contains("whistle"))
                 return SoundType.Whistle;
 
+            // Bell pump (steam locomotives) — must check before generic bell
+            if ((baseName.Contains("bell") && baseName.Contains("pump")) ||
+                (lowerPath.Contains("bell") && lowerPath.Contains("pump")) ||
+                baseName.Contains("bellpump") || baseName.Contains("bell_pump"))
+                return SoundType.BellPump;
+
             // Bell
             if (baseName.Contains("bell") || lowerPath.Contains("bell"))
                 return SoundType.Bell;
@@ -1131,7 +1212,7 @@ namespace DvMod.ZSounds.SoundHandler
                 if (baseName.Contains("ignition") || baseName.Contains("starter") || clipName.Contains("Starter"))
                     return SoundType.EngineStartup;
 
-                if (baseName.Contains("throttle") || baseName.Contains("load") || baseName.Contains("gear"))
+                if (baseName.Contains("throttle") || baseName.Contains("throttling") || baseName.Contains("load") || baseName.Contains("gear"))
                     return SoundType.EngineLoadLoop;
 
                 if (clipName.Contains("FuelCutoff"))
@@ -1161,8 +1242,9 @@ namespace DvMod.ZSounds.SoundHandler
             if (baseName.Contains("activecooler") || baseName.Contains("cooler"))
                 return SoundType.ActiveCooler;
 
-            // Compressor
-            if (baseName.Contains("compressor") || lowerPath.Contains("compressor"))
+            // Compressor / Air pump (steam locos)
+            if (baseName.Contains("compressor") || lowerPath.Contains("compressor") ||
+                baseName.Contains("airpump"))
                 return SoundType.AirCompressor;
 
             // Sand flow
@@ -1198,24 +1280,31 @@ namespace DvMod.ZSounds.SoundHandler
                 return SoundType.JakeBrake;
 
             // Steam locomotive sounds - general (checked before path-specific ones)
-            if (clipName.Contains("Dynamo"))
+            if (clipName.Contains("CylinderCrack") || lowerName.Contains("cylindercrack"))
+                return SoundType.SteamCylinderCrack;
+            if (clipName.Contains("Dynamo") || lowerName.Contains("dynamo"))
                 return SoundType.Dynamo;
-            if (clipName.Contains("ValveGear"))
+            // Mechanism (normal) — must check before DamagedMechanism
+            if (baseName.Contains("mechanism") && !baseName.Contains("damaged"))
                 return SoundType.SteamValveGear;
-            if (clipName.Contains("SteamRelease"))
+            if (clipName.Contains("ValveGear") || lowerName.Contains("valvegear"))
+                return SoundType.SteamValveGear;
+            if (clipName.Contains("SteamRelease") || lowerName.Contains("steamrelease"))
                 return SoundType.SteamRelease;
-            if (lowerPath.Contains("admission") || clipName.Contains("Admission"))
+            if (lowerPath.Contains("admission") || clipName.Contains("Admission") || lowerName.Contains("admission"))
                 return SoundType.SteamChestAdmission;
-            if (clipName.Contains("Injector"))
+            if (clipName.Contains("Injector") || lowerName.Contains("waterinflow"))
                 return SoundType.WaterInFlow;
-            if (clipName.Contains("RunningGear_Grind"))
+            if (clipName.Contains("RunningGear_Grind") || lowerName.Contains("damagedmechanism"))
                 return SoundType.DamagedMechanism;
-            if (clipName.Contains("Lubrication") || clipName.Contains("OilPour"))
+            if (clipName.Contains("Lubrication") || clipName.Contains("OilPour") || lowerName.Contains("lubricator"))
                 return SoundType.Lubricator;
-            if (clipName.Contains("WaterDump"))
+            if (clipName.Contains("WaterDump") || lowerName.Contains("crownsheetboiling"))
                 return SoundType.CrownSheetBoiling;
             if (lowerName.Contains("primingcrank") || lowerPath.Contains("priming"))
                 return SoundType.PrimingCrank;
+            if (clipName.Contains("NoOil") || clipName.Contains("OilingPoints") || lowerName.Contains("nooil"))
+                return SoundType.NoOilOilingPoints;
 
             // Steam chuff sounds (path-specific)
             if (lowerPath.Contains("steam"))
@@ -1299,23 +1388,7 @@ namespace DvMod.ZSounds.SoundHandler
 
         #region Private: Helper Methods
 
-        private bool IsChuffSoundType(SoundType soundType)
-        {
-            return soundType == SoundType.SteamChuffLoop ||
-                   soundType == SoundType.SteamChuff2_67Hz ||
-                   soundType == SoundType.SteamChuff3Hz ||
-                   soundType == SoundType.SteamChuff4Hz ||
-                   soundType == SoundType.SteamChuff5_33Hz ||
-                   soundType == SoundType.SteamChuff8Hz ||
-                   soundType == SoundType.SteamChuff10_67Hz ||
-                   soundType == SoundType.SteamChuff16Hz ||
-                   soundType == SoundType.SteamChuff4HzWater ||
-                   soundType == SoundType.SteamChuff8HzWater ||
-                   soundType == SoundType.SteamChuff16HzWater ||
-                   soundType == SoundType.SteamChuff2HzAsh ||
-                   soundType == SoundType.SteamChuff4HzAsh ||
-                   soundType == SoundType.SteamChuff8HzAsh;
-        }
+
 
         private LayeredAudio? FindChuffLayeredAudioInChuffReader(TrainCar trainCar, SimAudioModule simAudio, SoundType soundType, string clipName)
         {

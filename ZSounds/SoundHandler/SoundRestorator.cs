@@ -213,7 +213,7 @@ namespace DvMod.ZSounds.SoundHandler
             Main.DebugLog(() => $"SoundRestorator: Restoring AudioClip[] for {soundType}");
 
             // Try to restore from cache first (includes pitch, volume, and clips)
-            bool restoredFromCache = false; //Main.vanillaCache?.RestoreCached(car, soundType, portReader) ?? false;
+            bool restoredFromCache = Main.vanillaCache?.RestoreCached(car, soundType, portReader) ?? false;
 
             if (restoredFromCache)
             {
@@ -259,7 +259,7 @@ namespace DvMod.ZSounds.SoundHandler
             });
             
             // Log full curve details for chuff sounds
-            if (IsChuffSoundType(soundType) && layeredAudio.layers.Length > 0)
+            if (SoundTypes.IsChuffSoundType(soundType) && layeredAudio.layers.Length > 0)
             {
                 var layer0 = layeredAudio.layers[0];
                 LogCurveDetails("BEFORE", layer0.pitchCurve, "pitchCurve");
@@ -300,7 +300,7 @@ namespace DvMod.ZSounds.SoundHandler
             });
             
             // Log full curve details for chuff sounds
-            if (IsChuffSoundType(soundType) && prefabLayeredAudio.layers != null && prefabLayeredAudio.layers.Length > 0)
+            if (SoundTypes.IsChuffSoundType(soundType) && prefabLayeredAudio.layers != null && prefabLayeredAudio.layers.Length > 0)
             {
                 var prefabLayer0 = prefabLayeredAudio.layers[0];
                 LogCurveDetails("PREFAB", prefabLayer0.pitchCurve, "pitchCurve");
@@ -309,7 +309,7 @@ namespace DvMod.ZSounds.SoundHandler
 
             // Reset the LayeredAudio to ensure it's in a clean state
             // EXCEPT for chuff sounds - Reset() breaks their dynamic pitch control
-            bool isChuffSound = IsChuffSoundType(soundType);
+            bool isChuffSound = SoundTypes.IsChuffSoundType(soundType);
             if (!isChuffSound)
             {
                 layeredAudio.Reset();
@@ -380,7 +380,7 @@ namespace DvMod.ZSounds.SoundHandler
             });
             
             // Log full curve details for chuff sounds
-            if (IsChuffSoundType(soundType) && layeredAudio.layers.Length > 0)
+            if (SoundTypes.IsChuffSoundType(soundType) && layeredAudio.layers.Length > 0)
             {
                 var layer0 = layeredAudio.layers[0];
                 LogCurveDetails("AFTER", layer0.pitchCurve, "pitchCurve");
@@ -388,22 +388,7 @@ namespace DvMod.ZSounds.SoundHandler
             }
         }
     
-        private bool IsChuffSoundType(SoundType soundType)
-        {
-            return soundType == SoundType.SteamChuff2_67Hz ||
-                   soundType == SoundType.SteamChuff3Hz ||
-                   soundType == SoundType.SteamChuff4Hz ||
-                   soundType == SoundType.SteamChuff5_33Hz ||
-                   soundType == SoundType.SteamChuff8Hz ||
-                   soundType == SoundType.SteamChuff10_67Hz ||
-                   soundType == SoundType.SteamChuff16Hz ||
-                   soundType == SoundType.SteamChuff4HzWater ||
-                   soundType == SoundType.SteamChuff8HzWater ||
-                   soundType == SoundType.SteamChuff16HzWater ||
-                   soundType == SoundType.SteamChuff2HzAsh ||
-                   soundType == SoundType.SteamChuff4HzAsh ||
-                   soundType == SoundType.SteamChuff8HzAsh;
-        }
+
 
         #endregion
 
