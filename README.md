@@ -10,7 +10,8 @@ Sound replacement mod for Derail Valley. Replace train sounds using folders and 
 - UI for editing the sound config files
 - Support for editing vanilla sound values like pitch
 - Saving of the last applied sounds of a locomotive between sessions
-- Experimental support for CCL Locos. Not guaranteed to work
+- Declarative sound rules via `sound_rules.json` (extensible without code changes)
+- CCL locomotive support via `sound_manifest.json`
 
 ## Installation
 
@@ -37,6 +38,63 @@ Sound replacement mod for Derail Valley. Replace train sounds using folders and 
 
 - Press the Config Button next to a sound in the UI to edit the config for it.
 - Alternatively the configs are also stored as .json files in the `Sounds/Config` folder.
+
+### Custom Sound Rules
+
+The mod uses a `sound_rules.json` file to identify which audio components belong to which sound type. You can add your own rules to customize sound detection without modifying the mod.
+
+**Built-in rules:** `Mods/ZSounds/sound_rules.json` (do not edit — overwritten on update)
+
+**Custom rules:** Place your rules in one of these locations:
+- `Mods/ZSounds/Sounds/custom_rules.json` — single file
+- `Mods/ZSounds/Sounds/rules/*.json` — one or more files
+
+User rules take priority over built-in rules. Rule format:
+```json
+{
+  "version": 1,
+  "rules": [
+    {
+      "pattern": "MyCustomHorn",
+      "matchField": "name",
+      "soundType": "HornLoop",
+      "priority": 100,
+      "description": "My custom horn sound"
+    }
+  ]
+}
+```
+
+- `pattern`: Regex pattern to match against
+- `matchField`: What to match — `"name"` (GameObject name), `"path"` (hierarchy path), `"clip"` (audio clip name), or `"any"` (all three)
+- `soundType`: Must match a `SoundType` enum value (e.g., `HornLoop`, `EngineLoop`, `Bell`, `Whistle`)
+- `priority`: Higher values are checked first (default: 100)
+
+### CCL Locomotive Support
+
+Custom Car Loader locomotives are supported via sound manifests. CCL authors can place a `sound_manifest.json` in their mod folder (`Mods/<ModName>/sound_manifest.json`) to declare their audio hierarchy:
+
+```json
+{
+  "version": "1",
+  "liveryId": "MyCustomLoco_Livery",
+  "audioPrefabPattern": "MyCustomLoco",
+  "sounds": [
+    {
+      "soundType": "EngineLoop",
+      "gameObjectName": "engine_layered",
+      "componentType": "LayeredAudio"
+    },
+    {
+      "soundType": "HornLoop",
+      "gameObjectName": "horn_layered",
+      "componentType": "LayeredAudio"
+    }
+  ]
+}
+```
+
+See `Examples/sound_manifest.example.json` for a complete reference.
 
 ## Additional Information
 

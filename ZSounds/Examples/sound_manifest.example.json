@@ -1,0 +1,53 @@
+{
+  "version": "1",
+  "liveryId": "MyCustomLoco_Livery",
+  "audioPrefabPattern": "MyCustomLoco",
+  "sounds": [
+    {
+      "soundType": "EngineLoop",
+      "gameObjectName": "engine_layered",
+      "componentType": "LayeredAudio"
+    },
+    {
+      "soundType": "EngineLoadLoop",
+      "gameObjectName": "engine_load_layered",
+      "componentType": "LayeredAudio"
+    },
+    {
+      "soundType": "HornLoop",
+      "gameObjectName": "horn_layered",
+      "componentType": "LayeredAudio"
+    },
+    {
+      "soundType": "HornHit",
+      "gameObjectName": "HornPulse",
+      "clipNamePattern": ".*Pulse.*",
+      "componentType": "AudioClip"
+    },
+    {
+      "soundType": "Bell",
+      "gameObjectName": "bell_layered",
+      "componentType": "LayeredAudio"
+    },
+    {
+      "soundType": "AirCompressor",
+      "gameObjectName": "compressor_layered",
+      "componentType": "LayeredAudio"
+    },
+    {
+      "soundType": "TractionMotors",
+      "gameObjectName": "traction_motor_layered",
+      "componentType": "LayeredAudio"
+    },
+    {
+      "soundType": "ContactorOn",
+      "clipNamePattern": "ContactorOn",
+      "componentType": "AudioClip"
+    },
+    {
+      "soundType": "ContactorOff",
+      "clipNamePattern": "ContactorOff",
+      "componentType": "AudioClip"
+    }
+  ]
+}
